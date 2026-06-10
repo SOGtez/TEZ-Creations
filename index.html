@@ -3,13 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEZ Creations</title>
+  <title>TEZ Creations — Something great is on the way</title>
+  <meta name="description" content="TEZ Creations is a home for the things I make — free for anyone to use. Launching soon." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="glow"></div>
+
+  <header class="top">
+    <div class="wordmark">TEZ<span>✦</span></div>
+    <div class="status"><span class="dot"></span>Launching soon</div>
+  </header>
+
   <main class="hero">
-    <h1>TEZ Creations</h1>
-    <p>Something great is on the way.</p>
+    <p class="eyebrow">A home for the things I make</p>
+    <h1>
+      <span class="line">Everything I make,</span>
+      <span class="line">yours to use.</span>
+    </h1>
+    <p class="rotating">
+      Now crafting <span class="rotator"><span class="word" id="word">tools</span></span><span class="cursor"></span> for you.
+    </p>
+    <p class="sub">
+      TEZ Creations is where I share everything I build — free for anyone to use.
+      Something great is on the way.
+    </p>
   </main>
+
+  <div class="bottom">
+    <div class="marquee">
+      <div class="marquee-track">
+        <span>Tools</span><span>Apps</span><span>Templates</span><span>Websites</span><span>Designs</span><span>Experiments</span><span>Tools</span><span>Apps</span><span>Templates</span><span>Websites</span><span>Designs</span><span>Experiments</span>
+      </div>
+    </div>
+    <footer>© 2026 TEZ Creations</footer>
+  </div>
+
+  <script>
+    const words = ["tools", "apps", "templates", "websites", "designs", "experiments"];
+    const el = document.getElementById("word");
+    let i = 0;
+
+    setInterval(() => {
+      el.classList.add("out");
+      setTimeout(() => {
+        i = (i + 1) % words.length;
+        el.textContent = words[i];
+        el.classList.remove("out");
+      }, 400);
+    }, 2200);
+  </script>
 </body>
 </html>
