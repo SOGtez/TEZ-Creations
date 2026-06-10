@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sports Tracker — Builder</title>
+  <meta name="theme-color" content="#050806" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <style>
+    .builder {
+      position: relative;
+      z-index: 3;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 8px clamp(24px, 5vw, 64px) 64px;
+    }
+
+    .game-line {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .game-line strong { color: var(--text); font-weight: 700; }
+
+    .builder h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.75rem, 5vw, 2.75rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 24px;
+      text-shadow: 0 0 70px rgba(43, 212, 106, 0.12);
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+
+    /* ---- Preview ---- */
+    .stage-wrap {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(80% 90% at 50% 12%, #1d2733 0%, transparent 60%),
+        linear-gradient(180deg, #131a22 0%, #0b0f14 70%, #161310 100%);
+    }
+    .stage::before {
+      content: "YOUR STREAM";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.05);
+    }
+    .stage iframe {
+      /* Render at real stream size, scaled down to fit — so position and
+         proportions in the preview match OBS exactly */
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: top left;
+      border: 0;
+      background: transparent;
+      pointer-events: none;
+    }
+    .stage-note {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: rgba(143, 163, 148, 0.7);
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* ---- Controls ---- */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .ctl label {
+      display: block;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .pos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 240px;
+    }
+    .pos-btn {
+      aspect-ratio: 1.6;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .pos-btn::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 7px;
+      border-radius: 2px;
+      background: var(--muted);
+      transition: background 0.2s ease;
+    }
+    .pos-btn[data-pos="tl"]::after { top: 5px; left: 5px; }
+    .pos-btn[data-pos="tc"]::after { top: 5px; left: 50%; transform: translateX(-50%); }
+    .pos-btn[data-pos="tr"]::after { top: 5px; right: 5px; }
+    .pos-btn[data-pos="c"]::after  { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .pos-btn[data-pos="bl"]::after { bottom: 5px; left: 5px; }
+    .pos-btn[data-pos="bc"]::after { bottom: 5px; left: 50%; transform: translateX(-50%); }
+    .pos-btn[data-pos="br"]::after { bottom: 5px; right: 5px; }
+    .pos-btn:hover { border-color: rgba(255, 255, 255, 0.25); }
+    .pos-btn.on {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .pos-btn.on::after { background: var(--accent-bright); }
+
+    .select {
+      width: 100%;
+      max-width: 240px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+    .select option { background: #0a0f0b; }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .check input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+    .check small { color: var(--muted); display: block; font-size: 12px; }
+
+    /* ---- Link box ---- */
+    .linkbox label {
+      display: block;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+      margin-bottom: 8px;
+    }
+    .link-row { display: flex; gap: 8px; }
+    .link-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(43, 212, 106, 0.3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: "Space Mono", monospace;
+      font-size: 12px;
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .copy-btn { flex: none; }
+    .copied { color: var(--accent-bright); font-family: var(--font-sans); font-size: 13px; margin-top: 8px; opacity: 0; transition: opacity 0.3s ease; }
+    .copied.show { opacity: 1; }
+
+    .steps {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+      padding-left: 20px;
+    }
+    .steps strong { color: var(--text); }
+  </style>
+</head>
+<body class="page fade-in">
+  <div class="grid-wrap"><div class="grid"></div></div>
+  <div class="grain"></div>
+
+  <header class="site-head">
+    <a class="wordmark" href="../../home.html">TEZ<span class="star">✦</span></a>
+    <a class="back-link" href="index.html">&larr; pick a different game</a>
+  </header>
+
+  <main class="builder">
+    <p class="game-line" id="gameLine">Loading game…</p>
+    <h1>Set up your tracker</h1>
+
+    <div class="cols">
+      <div>
+        <div class="stage-wrap">
+          <div class="stage"><iframe id="preview" title="Tracker preview"></iframe></div>
+          <p class="stage-note">Live preview — this is exactly what OBS will show (background is your stream, the tracker is transparent).</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ctl">
+          <label>Position on screen</label>
+          <div class="pos-grid" id="posGrid">
+            <button class="pos-btn" data-pos="tl" aria-label="Top left"></button>
+            <button class="pos-btn" data-pos="tc" aria-label="Top center"></button>
+            <button class="pos-btn" data-pos="tr" aria-label="Top right"></button>
+            <button class="pos-btn" data-pos="bl" aria-label="Bottom left"></button>
+            <button class="pos-btn on" data-pos="bc" aria-label="Bottom center"></button>
+            <button class="pos-btn" data-pos="br" aria-label="Bottom right"></button>
+            <button class="pos-btn" data-pos="c" aria-label="Center"></button>
+          </div>
+        </div>
+
+        <div class="ctl">
+          <label for="poll">Update speed</label>
+          <select class="select" id="poll">
+            <option value="10">Every 10 seconds</option>
+            <option value="15" selected>Every 15 seconds</option>
+            <option value="30">Every 30 seconds</option>
+            <option value="60">Every minute</option>
+          </select>
+        </div>
+
+        <div class="ctl">
+          <label class="check">
+            <input type="checkbox" id="setup" />
+            <span>Show positioning outline
+              <small>Helps you place the source in OBS — turn off before going live</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="linkbox">
+          <label>Your OBS browser source link</label>
+          <div class="link-row">
+            <input class="link-input" id="link" readonly />
+            <button class="btn btn-primary copy-btn" id="copy">Copy</button>
+          </div>
+          <p class="copied" id="copied">Copied! Paste it into OBS.</p>
+        </div>
+
+        <div class="ctl">
+          <label>Add it to OBS</label>
+          <ol class="steps">
+            <li>In OBS: <strong>Sources → + → Browser</strong></li>
+            <li><strong>Paste the link</strong> into the URL field</li>
+            <li>Set size to <strong>1920 × 1080</strong> and hit OK</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-foot">© 2026 TEZ Creations</footer>
+
+  <script>
+    const P = new URLSearchParams(location.search);
+    const GAME = P.get("game");
+    const LEAGUE = P.get("league") || "nba";
+
+    if (!GAME) location.replace("index.html");
+
+    const LEAGUE_PATHS = {
+      nba:'basketball/nba', wnba:'basketball/wnba',
+      ncaam:'basketball/mens-college-basketball', ncaaw:'basketball/womens-college-basketball',
+      nfl:'football/nfl', ncaaf:'football/college-football',
+      mlb:'baseball/mlb', nhl:'hockey/nhl',
+      mls:'soccer/usa.1', epl:'soccer/eng.1', laliga:'soccer/esp.1', ucl:'soccer/uefa.champions'
+    };
+
+    const preview = document.getElementById("preview");
+    const linkEl = document.getElementById("link");
+    const state = { pos: "bc", poll: "15", setup: false };
+
+    /* Scale the 1920×1080 preview down to fit the stage */
+    function fitPreview() {
+      const stage = preview.parentElement;
+      preview.style.transform = `scale(${stage.clientWidth / 1920})`;
+    }
+    window.addEventListener("resize", fitPreview);
+
+    function overlayParams(forOBS) {
+      const q = new URLSearchParams({ game: GAME, league: LEAGUE, pos: state.pos });
+      if (state.poll !== "15") q.set("poll", state.poll);
+      if (state.setup) q.set("setup", "1");
+      return q.toString();
+    }
+
+    function update() {
+      preview.src = "overlay.html?" + overlayParams();
+      const onWeb = location.protocol === "http:" || location.protocol === "https:";
+      if (onWeb) {
+        const base = location.origin + location.pathname.replace(/builder\.html$/, "");
+        linkEl.value = base + "overlay.html?" + overlayParams(true);
+      } else {
+        linkEl.value = "(push the site live to get your real OBS link)";
+      }
+    }
+
+    document.getElementById("posGrid").addEventListener("click", (e) => {
+      const btn = e.target.closest(".pos-btn");
+      if (!btn) return;
+      state.pos = btn.dataset.pos;
+      document.querySelectorAll(".pos-btn").forEach((b) => b.classList.toggle("on", b === btn));
+      update();
+    });
+
+    document.getElementById("poll").addEventListener("change", (e) => {
+      state.poll = e.target.value;
+      update();
+    });
+
+    document.getElementById("setup").addEventListener("change", (e) => {
+      state.setup = e.target.checked;
+      update();
+    });
+
+    document.getElementById("copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(linkEl.value);
+      } catch (_) {
+        linkEl.select();
+        document.execCommand("copy");
+      }
+      const c = document.getElementById("copied");
+      c.classList.add("show");
+      setTimeout(() => c.classList.remove("show"), 2200);
+    });
+
+    update();
+    fitPreview();
+
+    /* ---- Show which game this is ---- */
+    async function loadGameLine() {
+      const el = document.getElementById("gameLine");
+      try {
+        let g = null;
+        try {
+          const r = await fetch(`/api/score?game=${GAME}&league=${LEAGUE}`, { cache: "no-store" });
+          if (r.ok) g = await r.json();
+          else throw new Error("api");
+        } catch (_) {
+          const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${LEAGUE_PATHS[LEAGUE]}/scoreboard`, { cache: "no-store" });
+          const board = await r.json();
+          const ev = (board.events || []).find((e) => String(e.id) === String(GAME));
+          if (ev) {
+            const comp = ev.competitions[0];
+            const status = comp.status || ev.status;
+            const teams = comp.competitors.map((c) => ({
+              side: c.homeAway,
+              abbrev: c.team.abbreviation || c.team.shortDisplayName
+            }));
+            teams.sort((a, b) => (a.side === "away" ? -1 : 1));
+            g = { teams, detail: status.type.shortDetail };
+          }
+        }
+        el.innerHTML = g
+          ? `<strong>${g.teams[0].abbrev} @ ${g.teams[1].abbrev}</strong> &middot; ${g.detail}`
+          : "Game not on the board yet — the tracker will pick it up on game day.";
+      } catch (e) {
+        el.textContent = "";
+      }
+    }
+    loadGameLine();
+
+    /* Grid mouse warp */
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports Tracker — Live Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --team-a:#444;--team-b:#444;
+    --glass:rgba(15,17,21,.64);--ink:#f4f6f8;--ink-dim:#9aa1aa;--hair:rgba(255,255,255,.10);--win:transparent;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);overflow:hidden;
+    background:transparent;display:block;
+  }
+  body.bg-dark{background:#0c0e11;background-image:radial-gradient(circle at 22% 8%,#191c22 0,#0c0e11 55%);}
+
+  #bounds{position:fixed;inset:0;border:2px dashed rgba(255,255,255,.35);pointer-events:none;z-index:40;display:none;}
+  body.show-bounds #bounds{display:block;}
+  #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;}
+
+  .bug{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    display:inline-flex;z-index:1;border-radius:16px;background:var(--glass);
+    backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
+    border:1px solid var(--hair);box-shadow:0 16px 40px -16px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.08);
+    overflow:hidden;padding:12px 16px;transition:box-shadow .4s ease;
+  }
+  .bug.celebrate{box-shadow:0 16px 40px -16px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.08), 0 0 46px -4px var(--win);}
+  .bug::before,.bug::after{content:"";position:absolute;top:0;bottom:0;width:44%;z-index:0;opacity:.42;}
+  .bug::before{left:0;background:linear-gradient(90deg,color-mix(in srgb,var(--team-a) 70%, transparent) 0%, transparent 100%);}
+  .bug::after{right:0;background:linear-gradient(270deg,color-mix(in srgb,var(--team-b) 70%, transparent) 0%, transparent 100%);}
+
+  .row{position:relative;z-index:1;display:flex;align-items:center;gap:14px;}
+  .team{display:flex;align-items:center;gap:9px;}
+  .team.right{flex-direction:row-reverse;}
+  .crest{width:36px;height:36px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;background:rgba(255,255,255,.94);border:2px solid var(--c,#888);box-shadow:0 3px 10px -2px rgba(0,0,0,.5);}
+  .crest img{width:100%;height:100%;object-fit:contain;padding:3px;display:block;}
+  .crest .fb{display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;background:var(--c,#888);}
+  .meta{display:flex;flex-direction:column;gap:2px;}
+  .team.right .meta{align-items:flex-end;}
+  .abbr{font-size:12px;font-weight:800;letter-spacing:.02em;line-height:1;}
+  .rec{font-size:9px;font-weight:600;color:var(--ink-dim);letter-spacing:.03em;line-height:1;}
+  .rec:empty{display:none;}
+  .score{font-size:34px;font-weight:900;line-height:.85;letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+    min-width:46px;text-align:center;transition:color .25s ease, text-shadow .25s ease;}
+  .score.trail{color:var(--ink-dim);font-weight:800;text-shadow:none;}
+  .score.lead.a{color:var(--ink);text-shadow:0 0 16px color-mix(in srgb,var(--team-a) 80%, transparent);}
+  .score.lead.b{color:var(--ink);text-shadow:0 0 16px color-mix(in srgb,var(--team-b) 80%, transparent);}
+  .score.pop{animation:pop .45s ease;}
+  @keyframes pop{0%{transform:scale(1);}32%{transform:scale(1.22);}100%{transform:scale(1);}}
+  .center{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none;}
+  .live{display:inline-flex;align-items:center;gap:5px;font-size:8px;font-weight:800;letter-spacing:.14em;
+    padding:3px 8px;border-radius:999px;background:rgba(255,70,70,.14);color:#ff6a6a;border:1px solid rgba(255,70,70,.30);transition:all .3s ease;}
+  .live.dim{background:rgba(255,255,255,.08);color:var(--ink-dim);border-color:var(--hair);letter-spacing:.16em;}
+  .dot{width:5px;height:5px;border-radius:50%;background:#ff5252;animation:pulse 1.6s ease-in-out infinite;}
+  .live.dim .dot{display:none;}
+  .clock{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em;min-width:62px;text-align:center;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.7);}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none;}}
+
+  #msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+    font-size:13px;font-weight:600;color:var(--ink-dim);background:rgba(15,17,21,.7);
+    border:1px solid var(--hair);padding:14px 18px;border-radius:12px;display:none;text-align:center;backdrop-filter:blur(8px);}
+</style>
+</head>
+<body>
+  <div id="bounds"></div>
+  <canvas id="fx"></canvas>
+  <div id="msg"></div>
+
+  <div class="bug" id="bug" style="display:none">
+    <div class="row">
+      <div class="team">
+        <div class="crest" id="crestA" style="--c:#888"><img id="logoA" alt=""><span class="fb" id="fbA"></span></div>
+        <div class="meta"><span class="abbr" id="abbrA"></span><span class="rec" id="recA"></span></div>
+        <span class="score" id="scoreA">0</span>
+      </div>
+      <div class="center">
+        <span class="live" id="pill"><span class="dot"></span><span id="state">—</span></span>
+        <span class="clock" id="clock"></span>
+      </div>
+      <div class="team right">
+        <div class="crest" id="crestB" style="--c:#888"><img id="logoB" alt=""><span class="fb" id="fbB"></span></div>
+        <div class="meta"><span class="abbr" id="abbrB"></span><span class="rec" id="recB"></span></div>
+        <span class="score" id="scoreB">0</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- options ----------
+   ?game=ID        (required)  ESPN event id
+   ?league=nba     nba wnba ncaam ncaaw nfl ncaaf mlb nhl mls epl laliga ucl
+   ?path=...       raw ESPN sport path override (e.g. football/nfl)
+   ?pos=br         tl tr bl br tc bc c   (placement)
+   ?setup=1        show source-bounds outline while positioning in OBS
+   ?bg=dark        dark preview background (omit for transparent / OBS)
+   ?poll=15        seconds between updates
+-------------------------------- */
+const P=new URLSearchParams(location.search);
+const GAME=P.get('game'), LEAGUE=P.get('league')||'nba', PATH=P.get('path');
+const POLL=Math.max(5,parseInt(P.get('poll')||'15',10))*1000;
+const $=id=>document.getElementById(id);
+const bug=$('bug'),msg=$('msg');
+
+const LEAGUES={nba:'basketball/nba',wnba:'basketball/wnba',
+  ncaam:'basketball/mens-college-basketball',ncaaw:'basketball/womens-college-basketball',
+  nfl:'football/nfl',ncaaf:'football/college-football',
+  mlb:'baseball/mlb',nhl:'hockey/nhl',
+  mls:'soccer/usa.1',epl:'soccer/eng.1',laliga:'soccer/esp.1',ucl:'soccer/uefa.champions'};
+
+if(P.get('bg')==='dark')document.body.classList.add('bg-dark');
+if(P.get('setup'))document.body.classList.add('show-bounds');
+const POS=P.get('pos');
+if(POS){const m='18px';const set=s=>Object.assign(bug.style,s);bug.style.transform='none';
+  if(POS==='tl')set({top:m,left:m});else if(POS==='tr')set({top:m,right:m,left:'auto'});
+  else if(POS==='bl')set({bottom:m,left:m,top:'auto'});else if(POS==='br')set({bottom:m,right:m,top:'auto',left:'auto'});
+  else if(POS==='tc')set({top:m,left:'50%',transform:'translateX(-50%)'});
+  else if(POS==='bc')set({bottom:m,top:'auto',left:'50%',transform:'translateX(-50%)'});
+  else set({top:'50%',left:'50%',transform:'translate(-50%,-50%)'});
+}
+
+function showMsg(t){msg.textContent=t;msg.style.display='block';}
+function hideMsg(){msg.style.display='none';}
+
+/* ---------- render ---------- */
+let prevA=null,prevB=null,celebrated=false,timer=null;
+function flash(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+function setCrest(side,t){
+  const c=$('crest'+side),img=$('logo'+side),fb=$('fb'+side);
+  c.style.setProperty('--c',t.color);fb.textContent=t.abbrev;
+  if(t.logo){img.src=t.logo;img.style.display='';fb.style.display='none';
+    img.onerror=()=>{img.style.display='none';fb.style.display='flex';};}
+  else{img.style.display='none';fb.style.display='flex';}
+  $('abbr'+side).textContent=t.abbrev||t.name;
+  $('rec'+side).textContent=t.record||'';
+}
+function apply(d){
+  hideMsg();bug.style.display='inline-flex';
+  const [A,B]=d.teams;
+  document.documentElement.style.setProperty('--team-a',A.color);
+  document.documentElement.style.setProperty('--team-b',B.color);
+  setCrest('A',A);setCrest('B',B);
+
+  const sA=$('scoreA'),sB=$('scoreB');
+  if(prevA!==null&&A.score!==prevA)flash(sA);
+  if(prevB!==null&&B.score!==prevB)flash(sB);
+  prevA=A.score;prevB=B.score;
+  sA.textContent=A.score;sB.textContent=B.score;
+  sA.className='score';sB.className='score';
+  if(A.score>B.score){sA.classList.add('lead','a');sB.classList.add('trail');}
+  else if(B.score>A.score){sB.classList.add('lead','b');sA.classList.add('trail');}
+
+  const live=d.state==='in';
+  $('pill').classList.toggle('dim',!live);
+  $('state').textContent=live?'LIVE':d.state==='post'?'FINAL':'SOON';
+  $('clock').textContent=d.detail||d.clock||'';
+
+  if(d.state==='post'){
+    const w=A.score>B.score?A:B.score>A.score?B:null;
+    if(w&&!celebrated){celebrated=true;startCelebration(w.color);stopPolling();}
+  }else if(celebrated){celebrated=false;stopCelebration();}
+}
+
+/* ---------- polling ---------- */
+// Tries the site's /api/score first (cached, kind to ESPN). If that route
+// isn't reachable (e.g. local preview), falls back to ESPN directly.
+function normalizeEvent(ev){
+  const comp=ev.competitions[0];const status=comp.status||ev.status;
+  const teams=comp.competitors.map(c=>({
+    side:c.homeAway,
+    name:c.team.shortDisplayName||c.team.name||c.team.displayName,
+    abbrev:c.team.abbreviation||'',
+    logo:c.team.logo||'',
+    color:'#'+(c.team.color||'888888'),
+    alt:'#'+(c.team.alternateColor||'444444'),
+    score:parseInt(c.score||'0',10),
+    record:(c.records&&c.records[0]&&c.records[0].summary)||''
+  }));
+  teams.sort((a,b)=>(a.side==='away'?-1:1));
+  return{state:status.type.state,detail:status.type.shortDetail,clock:status.displayClock||'',period:status.period||0,teams};
+}
+async function fetchDirect(){
+  const sportPath=PATH||LEAGUES[LEAGUE];
+  const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sportPath}/scoreboard`,{cache:'no-store'});
+  const board=await r.json();
+  const ev=(board.events||[]).find(e=>String(e.id)===String(GAME));
+  return ev?normalizeEvent(ev):null;
+}
+async function poll(){
+  try{
+    let d=null;
+    try{
+      const q=new URLSearchParams({game:GAME,league:LEAGUE});if(PATH)q.set('path',PATH);
+      const r=await fetch('/api/score?'+q.toString(),{cache:'no-store'});
+      if(r.ok){d=await r.json();}
+      else if(r.status===404){showMsg('Game not on the scoreboard yet — hang tight.');return;}
+      else{throw new Error('api');}
+    }catch(_){
+      d=await fetchDirect();
+      if(!d){showMsg('Game not on the scoreboard yet — hang tight.');return;}
+    }
+    apply(d);
+  }catch(e){ /* keep last shown; retry next tick */ }
+}
+function startPolling(){poll();timer=setInterval(poll,POLL);}
+function stopPolling(){if(timer){clearInterval(timer);timer=null;}}
+
+if(!GAME){showMsg('Add ?game=ESPN_ID&league=nba to the URL');}
+else{startPolling();}
+
+/* ---------- confetti + fireworks (contained, scales to box) ---------- */
+const cv=$('fx'),ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1,SCALE=1;
+function size(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);SCALE=Math.max(0.4,Math.min(1.2,Math.min(W,H)/420));}
+size();addEventListener('resize',size);
+let parts=[],celebrating=false,winColor='#fff',palette=[],cycleStart=0,lastFw=0,lastConf=0;
+function lighten(hex,amt){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');
+  let r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16);
+  return'rgb('+Math.round(r+(255-r)*amt)+','+Math.round(g+(255-g)*amt)+','+Math.round(b+(255-b)*amt)+')';}
+function bugC(){const r=bug.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,w:r.width};}
+function cannon(){const c=bugC();const n=Math.round(130*SCALE);
+  for(let i=0;i<n;i++){const a=-Math.PI/2+(Math.random()-0.5)*2.6,s=(5+Math.random()*11)*SCALE;
+    parts.push({t:'c',x:c.x+(Math.random()-0.5)*c.w,y:c.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+      w:(5+Math.random()*5)*SCALE,h:(8+Math.random()*6)*SCALE,rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.4,
+      flip:Math.random()*6.28,col:palette[Math.random()*palette.length|0]});}}
+function drizzle(){for(let i=0;i<5;i++){parts.push({t:'c',x:Math.random()*W,y:-20,
+    vx:(Math.random()-0.5)*1.5,vy:1.5+Math.random()*2,w:(5+Math.random()*5)*SCALE,h:(8+Math.random()*6)*SCALE,
+    rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.4,flip:Math.random()*6.28,col:palette[Math.random()*palette.length|0]});}}
+function firework(){const mx=Math.min(W*0.4,80*SCALE),my=Math.min(H*0.4,80*SCALE);
+  const x=mx+Math.random()*(W-2*mx),y=my+Math.random()*(Math.max(H*0.6,my+1)-my);
+  const n=Math.round((34+Math.random()*14)*Math.min(1,SCALE+0.2));
+  for(let i=0;i<n;i++){const a=(i/n)*6.28+Math.random()*0.2,s=(2+Math.random()*5.5)*SCALE;
+    parts.push({t:'s',x,y,px:x,py:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,decay:0.012+Math.random()*0.012,
+      col:Math.random()<0.78?winColor:palette[Math.random()*palette.length|0]});}}
+function startCelebration(color){winColor=color;palette=[color,color,lighten(color,.45),'#ffffff',lighten(color,.7)];
+  document.documentElement.style.setProperty('--win',color);bug.classList.add('celebrate');
+  celebrating=true;cycleStart=performance.now();lastFw=0;lastConf=0;cannon();firework();}
+function stopCelebration(){celebrating=false;parts=[];bug.classList.remove('celebrate');
+  document.documentElement.style.setProperty('--win','transparent');}
+function loop(now){ctx.clearRect(0,0,W,H);
+  if(celebrating){const e=now-cycleStart;const spawning=e<4500;
+    if(e>=8000){cycleStart=now;cannon();firework();lastFw=now;lastConf=now;}
+    if(spawning){if(now-lastFw>620){firework();lastFw=now;}if(now-lastConf>110){drizzle();lastConf=now;}}}
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+    if(p.t==='c'){p.vy+=0.18;p.vx*=0.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.flip+=0.15;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;
+      const sw=p.w*Math.abs(Math.cos(p.flip));ctx.fillRect(-sw/2,-p.h/2,sw,p.h);ctx.restore();
+      if(p.y>H+30)parts.splice(i,1);}
+    else{p.px=p.x;p.py=p.y;p.vy+=0.075;p.vx*=0.97;p.vy*=0.97;p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+      ctx.globalAlpha=Math.max(0,p.life);ctx.strokeStyle=p.col;ctx.lineWidth=2;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.globalAlpha=1;
+      if(p.life<=0)parts.splice(i,1);}}
+  requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

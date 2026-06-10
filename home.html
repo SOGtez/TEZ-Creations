@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEZ Creations — Drops</title>
+  <meta name="description" content="Random creations, dropped for you to use." />
+  <meta name="theme-color" content="#050806" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page fade-in">
+  <div class="grid-wrap"><div class="grid"></div></div>
+  <div class="grain"></div>
+
+  <header class="site-head">
+    <a class="wordmark" href="home.html">TEZ<span class="star">✦</span></a>
+    <p class="tagline">random creations, dropped for you</p>
+  </header>
+
+  <main class="feed" id="feed"></main>
+
+  <footer class="site-foot">© 2026 TEZ Creations</footer>
+
+  <script src="drops.js"></script>
+  <script>
+    /* Soft gate: bounce to the front door if they haven't entered the password */
+    if (!sessionStorage.getItem("tez_access")) {
+      location.replace("index.html");
+    }
+
+    /* ---- Render the feed (newest first, latest drop featured) ---- */
+    const feed = document.getElementById("feed");
+    const sorted = [...DROPS].sort((a, b) => Number(b.id) - Number(a.id));
+
+    function fmtDate(iso) {
+      return new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function coverHTML(drop) {
+      if (drop.image) {
+        return `<img class="cover-img" src="${drop.image}" alt="${drop.title}" loading="lazy" />`;
+      }
+      // auto-generated cover when there's no image yet
+      return `<div class="cover-gen"><span>#${drop.id}</span></div>`;
+    }
+
+    feed.innerHTML = sorted
+      .map((drop, i) => {
+        const featured = i === 0 ? " featured" : "";
+        const fresh = i === 0 ? `<span class="fresh">Latest drop</span>` : "";
+        return `
+        <a class="card${featured}" href="drop.html?id=${drop.id}" style="--tilt:${(i % 2 ? 1 : -1) * 0.4}deg">
+          <div class="cover">${coverHTML(drop)}${fresh}</div>
+          <div class="card-body">
+            <span class="num">#${drop.id}</span>
+            <h3>${drop.title}</h3>
+            <p>${drop.description}</p>
+            <time>${fmtDate(drop.date)}</time>
+          </div>
+        </a>`;
+      })
+      .join("");
+
+    /* ---- Subtle card tilt toward the cursor ---- */
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) {
+      document.querySelectorAll(".card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          card.style.transform = `perspective(900px) rotateX(${(-y * 2.4).toFixed(2)}deg) rotateY(${(x * 2.4).toFixed(2)}deg) translateY(-3px)`;
+        });
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = "";
+        });
+      });
+    }
+
+    /* ---- Grid mouse warp (same as the front door) ---- */
+    const grid = document.querySelector(".grid");
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>

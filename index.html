@@ -42,7 +42,7 @@
     <!-- View 3: Access granted (placeholder — no homepage yet) -->
     <section class="view granted" id="granted">
       <h2 class="gate-title">You're in.</h2>
-      <p class="sub-muted">The site is still being built — check back soon.</p>
+      <p class="sub-muted">Taking you to the drops&hellip;</p>
     </section>
 
   </div>
@@ -104,10 +104,14 @@
       e.preventDefault();
       if (pw.value === PASSWORD) {
         err.classList.remove("show");
-        // Flip the pill, blink it green, then pan to the "You're in" screen
+        sessionStorage.setItem("tez_access", "1");
+        // Flip the pill, blink it green, pan to "You're in", then enter the site
         gateTag.textContent = "Access granted";
         gateTag.classList.add("granted-flash");
         setTimeout(() => panTo(2), 1250);
+        // Let "You're in" breathe, fade to dark, then enter the site
+        setTimeout(() => document.body.classList.add("fading"), 3000);
+        setTimeout(() => { location.href = "home.html"; }, 3750);
       } else {
         err.classList.add("show");
         form.classList.remove("shake");

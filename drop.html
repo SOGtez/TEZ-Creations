@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEZ Creations — Drop</title>
+  <meta name="theme-color" content="#050806" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page fade-in">
+  <div class="grid-wrap"><div class="grid"></div></div>
+  <div class="grain"></div>
+
+  <header class="site-head">
+    <a class="wordmark" href="home.html">TEZ<span class="star">✦</span></a>
+    <a class="back-link" href="home.html">&larr; all drops</a>
+  </header>
+
+  <main class="drop-detail" id="detail"></main>
+
+  <footer class="site-foot">© 2026 TEZ Creations</footer>
+
+  <script src="drops.js"></script>
+  <script>
+    if (!sessionStorage.getItem("tez_access")) {
+      location.replace("index.html");
+    }
+
+    const id = new URLSearchParams(location.search).get("id");
+    const drop = DROPS.find((d) => d.id === id);
+    const detail = document.getElementById("detail");
+
+    function fmtDate(iso) {
+      return new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    if (!drop) {
+      detail.innerHTML = `
+        <div class="not-found">
+          <h1 class="gate-title">Drop not found</h1>
+          <p class="sub-muted">That one doesn't exist (yet).</p>
+        </div>`;
+    } else {
+      document.title = `TEZ Creations — ${drop.title}`;
+
+      const cover = drop.image
+        ? `<img class="cover-img" src="${drop.image}" alt="${drop.title}" />`
+        : `<div class="cover-gen big"><span>#${drop.id}</span></div>`;
+
+      const btn =
+        drop.action.kind === "download"
+          ? `<a class="btn btn-primary" href="${drop.action.url}" download>Download <span aria-hidden="true">&darr;</span></a>`
+          : `<a class="btn btn-primary" href="${drop.action.url}">Use it <span aria-hidden="true">&rarr;</span></a>`;
+
+      detail.innerHTML = `
+        <div class="detail-cover">${cover}</div>
+        <div class="detail-info">
+          <div class="detail-meta">
+            <span class="num">#${drop.id}</span>
+            <span class="type-tag">${drop.type}</span>
+            <time>${fmtDate(drop.date)}</time>
+          </div>
+          <h1>${drop.title}</h1>
+          <p>${drop.description}</p>
+          ${btn}
+        </div>`;
+    }
+
+    /* Grid mouse warp */
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>

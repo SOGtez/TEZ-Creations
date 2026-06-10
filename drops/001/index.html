@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sports Tracker — TEZ Creations</title>
+  <meta name="description" content="Pick a game, copy a link, get a live score tracker on your stream." />
+  <meta name="theme-color" content="#050806" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <style>
+    .tool-head {
+      position: relative;
+      z-index: 3;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 8px clamp(24px, 6vw, 96px) 0;
+      text-align: left;
+    }
+    .tool-head h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2rem, 6vw, 3.25rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      text-shadow: 0 0 70px rgba(43, 212, 106, 0.12);
+    }
+    .tool-head p {
+      font-family: var(--font-sans);
+      color: var(--muted);
+      font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+      line-height: 1.6;
+      max-width: 56ch;
+    }
+
+    .finder {
+      position: relative;
+      z-index: 3;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px clamp(24px, 6vw, 96px) 64px;
+    }
+
+    .league-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .league-row::-webkit-scrollbar { display: none; }
+
+    .league-btn {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 9px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .league-btn:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.2); }
+    .league-btn.on {
+      color: #04160b;
+      background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
+      border-color: var(--accent-deep);
+      box-shadow: 0 0 20px rgba(43, 212, 106, 0.25), inset 0 1px rgba(255, 255, 255, 0.45);
+    }
+
+    .filter {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 13px 18px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 24px;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .filter::placeholder { color: rgba(255, 255, 255, 0.25); }
+    .filter:focus {
+      border-color: rgba(43, 212, 106, 0.5);
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .games { display: flex; flex-direction: column; gap: 12px; }
+
+    .game {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 16px 20px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .game:hover {
+      border-color: rgba(43, 212, 106, 0.35);
+      box-shadow: 0 0 28px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .matchup { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .side img { width: 28px; height: 28px; object-fit: contain; flex: none; }
+    .side .nm {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .side .rc { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .at { font-family: "Space Mono", monospace; font-size: 11px; color: var(--muted); flex: none; }
+
+    .game-state { text-align: right; flex: none; }
+    .game-state .pill {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-bottom: 4px;
+    }
+    .pill.live { color: #ff6a6a; background: rgba(255, 70, 70, 0.12); border: 1px solid rgba(255, 70, 70, 0.3); }
+    .pill.pre { color: var(--accent-bright); background: rgba(43, 212, 106, 0.1); border: 1px solid rgba(43, 212, 106, 0.3); }
+    .pill.post { color: var(--muted); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .game-state .det {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .game-state .sc {
+      display: block;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .empty {
+      text-align: center;
+      font-family: var(--font-sans);
+      color: var(--muted);
+      padding: 48px 0;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 560px) {
+      .side .rc { display: none; }
+      .side .nm { font-size: 13px; }
+    }
+  </style>
+</head>
+<body class="page fade-in">
+  <div class="grid-wrap"><div class="grid"></div></div>
+  <div class="grain"></div>
+
+  <header class="site-head">
+    <a class="wordmark" href="../../home.html">TEZ<span class="star">✦</span></a>
+    <a class="back-link" href="../../home.html">&larr; all drops</a>
+  </header>
+
+  <div class="tool-head">
+    <h1>Sports Tracker</h1>
+    <p>Pick a game below and get a live score tracker for your stream. Games show up here on game day.</p>
+  </div>
+
+  <main class="finder">
+    <div class="league-row" id="leagues"></div>
+    <input class="filter" id="filter" type="text" placeholder="Filter by team…" />
+    <div class="games" id="games"><p class="empty">Loading games…</p></div>
+  </main>
+
+  <footer class="site-foot">© 2026 TEZ Creations</footer>
+
+  <script>
+    const LEAGUES = [
+      { key: "nba", label: "NBA", path: "basketball/nba" },
+      { key: "nfl", label: "NFL", path: "football/nfl" },
+      { key: "mlb", label: "MLB", path: "baseball/mlb" },
+      { key: "nhl", label: "NHL", path: "hockey/nhl" },
+      { key: "wnba", label: "WNBA", path: "basketball/wnba" },
+      { key: "mls", label: "MLS", path: "soccer/usa.1" },
+      { key: "epl", label: "Premier League", path: "soccer/eng.1" },
+      { key: "laliga", label: "La Liga", path: "soccer/esp.1" },
+      { key: "ucl", label: "Champions League", path: "soccer/uefa.champions" },
+      { key: "ncaam", label: "NCAA M", path: "basketball/mens-college-basketball" },
+      { key: "ncaaw", label: "NCAA W", path: "basketball/womens-college-basketball" },
+      { key: "ncaaf", label: "College Football", path: "football/college-football" }
+    ];
+
+    let current = "nba";
+    let games = [];
+    let refreshTimer = null;
+
+    const leaguesEl = document.getElementById("leagues");
+    const gamesEl = document.getElementById("games");
+    const filterEl = document.getElementById("filter");
+
+    leaguesEl.innerHTML = LEAGUES.map(
+      (l) => `<button class="league-btn${l.key === current ? " on" : ""}" data-k="${l.key}">${l.label}</button>`
+    ).join("");
+
+    leaguesEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".league-btn");
+      if (!btn) return;
+      current = btn.dataset.k;
+      document.querySelectorAll(".league-btn").forEach((b) => b.classList.toggle("on", b === btn));
+      load();
+    });
+
+    filterEl.addEventListener("input", render);
+
+    function normalizeEvent(ev) {
+      const comp = ev.competitions[0];
+      const status = comp.status || ev.status;
+      const teams = comp.competitors.map((c) => ({
+        side: c.homeAway,
+        name: c.team.shortDisplayName || c.team.name || c.team.displayName,
+        abbrev: c.team.abbreviation || "",
+        logo: c.team.logo || "",
+        score: parseInt(c.score || "0", 10),
+        record: (c.records && c.records[0] && c.records[0].summary) || ""
+      }));
+      teams.sort((a, b) => (a.side === "away" ? -1 : 1));
+      return { id: String(ev.id), state: status.type.state, detail: status.type.shortDetail, date: ev.date, teams };
+    }
+
+    async function fetchGames(league) {
+      // Try the site's cached API first; fall back to ESPN directly
+      try {
+        const r = await fetch(`/api/score?league=${league}`, { cache: "no-store" });
+        if (r.ok) return (await r.json()).games;
+        throw new Error("api");
+      } catch (_) {
+        const path = LEAGUES.find((l) => l.key === league).path;
+        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`, { cache: "no-store" });
+        const board = await r.json();
+        return (board.events || []).map(normalizeEvent);
+      }
+    }
+
+    const ORDER = { in: 0, pre: 1, post: 2 };
+
+    async function load() {
+      gamesEl.innerHTML = `<p class="empty">Loading games…</p>`;
+      try {
+        games = await fetchGames(current);
+        games.sort((a, b) => (ORDER[a.state] - ORDER[b.state]) || (new Date(a.date) - new Date(b.date)));
+        render();
+      } catch (e) {
+        gamesEl.innerHTML = `<p class="empty">Couldn't load games right now.<br/>Give it a second and try another league or refresh.</p>`;
+      }
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(load, 30000);
+    }
+
+    function sideHTML(t) {
+      const logo = t.logo ? `<img src="${t.logo}" alt="" loading="lazy" />` : "";
+      return `<span class="side">${logo}<span><span class="nm">${t.abbrev || t.name}</span> <span class="rc">${t.record}</span></span></span>`;
+    }
+
+    function render() {
+      const q = filterEl.value.trim().toLowerCase();
+      const list = q
+        ? games.filter((g) => g.teams.some((t) => (t.name + " " + t.abbrev).toLowerCase().includes(q)))
+        : games;
+
+      if (!list.length) {
+        gamesEl.innerHTML = `<p class="empty">${q ? "No games match that team." : "No games on the board for this league today.<br/>Check back on game day."}</p>`;
+        return;
+      }
+
+      gamesEl.innerHTML = list
+        .map((g) => {
+          const [A, B] = g.teams;
+          const pillCls = g.state === "in" ? "live" : g.state === "post" ? "post" : "pre";
+          const pillTxt = g.state === "in" ? "Live" : g.state === "post" ? "Final" : "Upcoming";
+          const score =
+            g.state === "pre" ? `<span class="det">${g.detail}</span>` : `<span class="sc">${A.score} – ${B.score}</span><span class="det">${g.detail}</span>`;
+          return `
+          <a class="game" href="builder.html?game=${g.id}&league=${current}">
+            <span class="matchup">${sideHTML(A)}<span class="at">@</span>${sideHTML(B)}</span>
+            <span class="game-state"><span class="pill ${pillCls}">${pillTxt}</span>${score}</span>
+          </a>`;
+        })
+        .join("");
+    }
+
+    load();
+
+    /* Grid mouse warp */
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>
