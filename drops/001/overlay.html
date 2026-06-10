@@ -99,7 +99,9 @@
    ?game=ID        (required)  ESPN event id
    ?league=nba     nba wnba ncaam ncaaw nfl ncaaf mlb nhl mls epl laliga ucl
    ?path=...       raw ESPN sport path override (e.g. football/nfl)
-   ?pos=br         tl tr bl br tc bc c   (placement)
+   ?pos=br         tl tr bl br tc bc c   (preset placement)
+   ?x=50&y=88      free placement — percent of screen, overrides pos
+   ?scale=1.25     tracker size (0.4–2)
    ?setup=1        show source-bounds outline while positioning in OBS
    ?bg=dark        dark preview background (omit for transparent / OBS)
    ?poll=15        seconds between updates
@@ -118,14 +120,41 @@ const LEAGUES={nba:'basketball/nba',wnba:'basketball/wnba',
 
 if(P.get('bg')==='dark')document.body.classList.add('bg-dark');
 if(P.get('setup'))document.body.classList.add('show-bounds');
-const POS=P.get('pos');
-if(POS){const m='18px';const set=s=>Object.assign(bug.style,s);bug.style.transform='none';
-  if(POS==='tl')set({top:m,left:m});else if(POS==='tr')set({top:m,right:m,left:'auto'});
-  else if(POS==='bl')set({bottom:m,left:m,top:'auto'});else if(POS==='br')set({bottom:m,right:m,top:'auto',left:'auto'});
-  else if(POS==='tc')set({top:m,left:'50%',transform:'translateX(-50%)'});
-  else if(POS==='bc')set({bottom:m,top:'auto',left:'50%',transform:'translateX(-50%)'});
-  else set({top:'50%',left:'50%',transform:'translate(-50%,-50%)'});
+
+/* ---------- placement + size (presets, free x/y, scale) ---------- */
+const placement={
+  pos:P.get('pos')||'c',
+  x:parseFloat(P.get('x')),
+  y:parseFloat(P.get('y')),
+  scale:Math.min(2,Math.max(0.4,parseFloat(P.get('scale')||'1')))
+};
+function applyPlacement(){
+  const m='18px',s=placement.scale;
+  bug.style.top=bug.style.left=bug.style.right=bug.style.bottom='auto';
+  const set=(styles,origin,transform)=>{Object.assign(bug.style,styles);
+    bug.style.transformOrigin=origin;bug.style.transform=transform;};
+  if(!isNaN(placement.x)&&!isNaN(placement.y)){
+    set({left:placement.x+'%',top:placement.y+'%'},'center',`translate(-50%,-50%) scale(${s})`);return;}
+  const p=placement.pos;
+  if(p==='tl')set({top:m,left:m},'top left',`scale(${s})`);
+  else if(p==='tr')set({top:m,right:m},'top right',`scale(${s})`);
+  else if(p==='bl')set({bottom:m,left:m},'bottom left',`scale(${s})`);
+  else if(p==='br')set({bottom:m,right:m},'bottom right',`scale(${s})`);
+  else if(p==='tc')set({top:m,left:'50%'},'top center',`translateX(-50%) scale(${s})`);
+  else if(p==='bc')set({bottom:m,left:'50%'},'bottom center',`translateX(-50%) scale(${s})`);
+  else set({top:'50%',left:'50%'},'center',`translate(-50%,-50%) scale(${s})`);
 }
+applyPlacement();
+
+/* Live updates from the builder preview (no reload needed) */
+addEventListener('message',e=>{
+  const d=e.data;if(!d||d.type!=='tez-overlay')return;
+  if(d.scale!=null)placement.scale=Math.min(2,Math.max(0.4,d.scale));
+  if(d.pos!=null){placement.pos=d.pos;placement.x=NaN;placement.y=NaN;}
+  if(d.x!=null){placement.x=d.x;placement.y=d.y;}
+  if(d.setup!=null)document.body.classList.toggle('show-bounds',!!d.setup);
+  applyPlacement();
+});
 
 function showMsg(t){msg.textContent=t;msg.style.display='block';}
 function hideMsg(){msg.style.display='none';}

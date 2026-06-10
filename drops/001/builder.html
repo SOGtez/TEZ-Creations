@@ -83,6 +83,8 @@
       background: transparent;
       pointer-events: none;
     }
+    .stage.draggable { cursor: grab; }
+    .stage.dragging { cursor: grabbing; }
     .stage-note {
       font-family: var(--font-sans);
       font-size: 12px;
@@ -161,6 +163,47 @@
     }
     .select option { background: #0a0f0b; }
 
+    /* ---- Size slider ---- */
+    .size-row { display: flex; align-items: center; gap: 14px; max-width: 280px; }
+    .size-val {
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent-bright);
+      min-width: 46px;
+      text-align: right;
+    }
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
+      border: 1px solid var(--accent-deep);
+      box-shadow: 0 0 14px rgba(43, 212, 106, 0.4), inset 0 1px rgba(255, 255, 255, 0.5);
+      cursor: grab;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
+      border: 1px solid var(--accent-deep);
+      box-shadow: 0 0 14px rgba(43, 212, 106, 0.4);
+      cursor: grab;
+    }
+
     .check {
       display: flex;
       align-items: center;
@@ -231,8 +274,8 @@
     <div class="cols">
       <div>
         <div class="stage-wrap">
-          <div class="stage"><iframe id="preview" title="Tracker preview"></iframe></div>
-          <p class="stage-note">Live preview — this is exactly what OBS will show (background is your stream, the tracker is transparent).</p>
+          <div class="stage draggable" id="stage"><iframe id="preview" title="Tracker preview"></iframe></div>
+          <p class="stage-note">Live preview — exactly what OBS will show. <strong style="color: var(--text)">Click &amp; drag the tracker</strong> to place it anywhere, or use the preset spots.</p>
         </div>
       </div>
 
@@ -247,6 +290,14 @@
             <button class="pos-btn on" data-pos="bc" aria-label="Bottom center"></button>
             <button class="pos-btn" data-pos="br" aria-label="Bottom right"></button>
             <button class="pos-btn" data-pos="c" aria-label="Center"></button>
+          </div>
+        </div>
+
+        <div class="ctl">
+          <label for="size">Tracker size</label>
+          <div class="size-row">
+            <input type="range" id="size" min="50" max="200" step="5" value="100" />
+            <span class="size-val" id="sizeVal">100%</span>
           </div>
         </div>
 
@@ -285,6 +336,11 @@
             <li><strong>Paste the link</strong> into the URL field</li>
             <li>Set size to <strong>1920 × 1080</strong> and hit OK</li>
           </ol>
+          <p class="steps" style="padding-left: 0; margin-top: 8px;">
+            Scores update on their own — set it and forget it. If you change the
+            position or size here later, <strong>copy the new link</strong> and paste it
+            into your existing OBS source (double-click it → replace the URL).
+          </p>
         </div>
       </div>
     </div>
@@ -308,50 +364,104 @@
     };
 
     const preview = document.getElementById("preview");
+    const stage = document.getElementById("stage");
     const linkEl = document.getElementById("link");
-    const state = { pos: "bc", poll: "15", setup: false };
+    // mode "preset" uses pos; mode "custom" uses free x/y (percent of screen)
+    const state = { mode: "preset", pos: "bc", x: 50, y: 88, size: 100, poll: "15", setup: false };
 
     /* Scale the 1920×1080 preview down to fit the stage */
     function fitPreview() {
-      const stage = preview.parentElement;
       preview.style.transform = `scale(${stage.clientWidth / 1920})`;
     }
     window.addEventListener("resize", fitPreview);
 
-    function overlayParams(forOBS) {
-      const q = new URLSearchParams({ game: GAME, league: LEAGUE, pos: state.pos });
+    function overlayParams() {
+      const q = new URLSearchParams({ game: GAME, league: LEAGUE });
+      if (state.mode === "custom") {
+        q.set("x", state.x.toFixed(1));
+        q.set("y", state.y.toFixed(1));
+      } else {
+        q.set("pos", state.pos);
+      }
+      if (state.size !== 100) q.set("scale", String(state.size / 100));
       if (state.poll !== "15") q.set("poll", state.poll);
       if (state.setup) q.set("setup", "1");
       return q.toString();
     }
 
-    function update() {
-      preview.src = "overlay.html?" + overlayParams();
+    function updateLink() {
       const onWeb = location.protocol === "http:" || location.protocol === "https:";
       if (onWeb) {
         const base = location.origin + location.pathname.replace(/builder\.html$/, "");
-        linkEl.value = base + "overlay.html?" + overlayParams(true);
+        linkEl.value = base + "overlay.html?" + overlayParams();
       } else {
         linkEl.value = "(push the site live to get your real OBS link)";
       }
     }
 
+    /* Send live changes into the preview without reloading it */
+    function send(msg) {
+      preview.contentWindow && preview.contentWindow.postMessage({ type: "tez-overlay", ...msg }, "*");
+    }
+
+    function reloadPreview() {
+      preview.src = "overlay.html?" + overlayParams();
+    }
+
     document.getElementById("posGrid").addEventListener("click", (e) => {
       const btn = e.target.closest(".pos-btn");
       if (!btn) return;
+      state.mode = "preset";
       state.pos = btn.dataset.pos;
       document.querySelectorAll(".pos-btn").forEach((b) => b.classList.toggle("on", b === btn));
-      update();
+      send({ pos: state.pos });
+      updateLink();
+    });
+
+    const sizeEl = document.getElementById("size");
+    const sizeVal = document.getElementById("sizeVal");
+    sizeEl.addEventListener("input", () => {
+      state.size = parseInt(sizeEl.value, 10);
+      sizeVal.textContent = state.size + "%";
+      send({ scale: state.size / 100 });
+      updateLink();
     });
 
     document.getElementById("poll").addEventListener("change", (e) => {
       state.poll = e.target.value;
-      update();
+      reloadPreview(); // poll interval is set at load, so this one needs a refresh
+      updateLink();
     });
 
     document.getElementById("setup").addEventListener("change", (e) => {
       state.setup = e.target.checked;
-      update();
+      send({ setup: state.setup });
+      updateLink();
+    });
+
+    /* ---- Click & drag the tracker anywhere in the preview ---- */
+    let dragging = false;
+    function dragMove(e) {
+      const r = stage.getBoundingClientRect();
+      state.x = Math.min(96, Math.max(4, ((e.clientX - r.left) / r.width) * 100));
+      state.y = Math.min(94, Math.max(6, ((e.clientY - r.top) / r.height) * 100));
+      send({ x: state.x, y: state.y });
+    }
+    stage.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      stage.classList.add("dragging");
+      stage.setPointerCapture(e.pointerId);
+      state.mode = "custom";
+      document.querySelectorAll(".pos-btn").forEach((b) => b.classList.remove("on"));
+      dragMove(e);
+    });
+    stage.addEventListener("pointermove", (e) => {
+      if (dragging) dragMove(e);
+    });
+    stage.addEventListener("pointerup", () => {
+      dragging = false;
+      stage.classList.remove("dragging");
+      updateLink();
     });
 
     document.getElementById("copy").addEventListener("click", async () => {
@@ -366,7 +476,8 @@
       setTimeout(() => c.classList.remove("show"), 2200);
     });
 
-    update();
+    reloadPreview();
+    updateLink();
     fitPreview();
 
     /* ---- Show which game this is ---- */
