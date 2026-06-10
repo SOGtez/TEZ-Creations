@@ -1,14 +1,22 @@
-/* ===== TEZ Creations — coming soon ===== */
+/* ===== TEZ Creations — coming soon (Moltorino-inspired, green) ===== */
 
 :root {
-  --bg: #0a0a0b;
-  --text: #f4f4ef;
-  --muted: #8d8d86;
-  --accent: #ff6a3d;
-  --accent-soft: rgba(255, 106, 61, 0.18);
+  /* Dark, warm-cool near-black with a faint green cast */
+  --bg: #050806;
+  --bg-2: #0a0f0b;
+
+  /* Soft mint-tinted text instead of pure white */
+  --text: #eaf2ec;
+  --muted: #8fa394;
+
+  /* Green accent system (parallels Moltorino's orange) */
+  --accent: #2bd46a;
+  --accent-bright: #4ade80;
+  --accent-deep: #16a34a;
+  --accent-glow: rgba(43, 212, 106, 0.16);
 
   --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * {
@@ -18,9 +26,11 @@
 }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent 70%),
+    var(--bg);
   color: var(--text);
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -29,91 +39,206 @@ body {
   position: relative;
 }
 
-/* Soft breathing glow behind the title */
+/* Animated grid drifting in the background.
+   Wrapper holds the screen-space fade mask; inner layer is larger so it can
+   pan/parallax behind everything without revealing its edges. */
+.grid-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 85% at 50% 50%,
+    #000 25%,
+    transparent 80%
+  );
+  mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 25%, transparent 80%);
+}
+
+/* Parallax layer: pans 40% of the camera's travel, in sync with .deck */
+.grid-pan {
+  position: absolute;
+  inset: 0;
+  transform: translateY(calc(var(--pan, 0) * -40vh));
+  transition: transform 1.15s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+.grid {
+  position: absolute;
+  top: -110%;
+  left: -20%;
+  width: 140%;
+  height: 320%;
+  background-image:
+    linear-gradient(to right, rgba(120, 200, 150, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 200, 150, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  animation: grid-drift 28s linear infinite;
+  /* warp + parallax transform applied via JS */
+  transform: perspective(1200px) scale(1.08);
+  will-change: transform;
+}
+
+@keyframes grid-drift {
+  to {
+    background-position: 64px 64px;
+  }
+}
+
+/* Vignette to deepen the edges */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55));
+}
+
+/* Breathing green glow blobs behind the title */
 .glow {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 70vw;
-  height: 70vw;
-  max-width: 720px;
-  max-height: 720px;
+  width: 64vw;
+  height: 64vw;
+  max-width: 680px;
+  max-height: 680px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 62%);
-  filter: blur(20px);
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+  filter: blur(40px);
   pointer-events: none;
   z-index: 0;
-  animation: breathe 7s ease-in-out infinite;
+  animation: breathe 8s ease-in-out infinite;
+}
+
+.glow::before {
+  content: "";
+  position: absolute;
+  top: 18%;
+  left: 12%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.12) 0%, transparent 65%);
+  filter: blur(40px);
 }
 
 @keyframes breathe {
   0%,
   100% {
-    opacity: 0.75;
+    opacity: 0.7;
     transform: translate(-50%, -50%) scale(1);
   }
   50% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.07);
+    transform: translate(-50%, -50%) scale(1.08);
   }
 }
 
-.hero {
+/* Fine film grain overlay for that premium texture */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== Panning deck (camera moves vertically between screens) ===== */
+.deck {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  transform: translateY(calc(var(--pan, 0) * -100vh));
+  transition: transform 1.15s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+.view {
   position: relative;
-  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 2rem;
 }
 
-/* TEZ Creations wordmark with an animated shimmer sweep */
+/* Small glassy "coming soon" tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 10px 20px;
+  margin-bottom: 40px;
+  text-indent: 0.26em;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  animation: rise 0.9s ease forwards 0.05s;
+}
+
+/* Pill flips to "Access granted" and hard-blinks its text green before the reveal */
+.tag.granted-flash {
+  opacity: 1;
+  animation: tag-blink 0.4s steps(1, end) 3 both;
+}
+
+@keyframes tag-blink {
+  0% {
+    color: var(--muted);
+  }
+  50% {
+    color: var(--accent-bright);
+  }
+}
+
+/* Display title — bold modern sans */
 .hero h1 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.75rem, 11vw, 7rem);
-  line-height: 1.05;
+  font-size: clamp(2.9rem, 11vw, 7.5rem);
+  line-height: 1.02;
   letter-spacing: -0.02em;
-  margin-bottom: 1.25rem;
+  margin-bottom: 24px;
+  color: var(--text);
+  text-shadow: 0 0 70px rgba(43, 212, 106, 0.12);
   opacity: 0;
-  animation: rise 0.9s ease forwards 0.1s;
-
-  background: linear-gradient(
-    100deg,
-    var(--text) 0%,
-    var(--text) 38%,
-    var(--accent) 50%,
-    var(--text) 62%,
-    var(--text) 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rise 0.9s ease forwards 0.1s, shimmer 6s ease-in-out infinite 1s;
+  animation: rise 1s ease forwards 0.15s;
 }
 
-@keyframes shimmer {
-  0%,
-  100% {
-    background-position: 130% 50%;
-  }
-  50% {
-    background-position: -30% 50%;
-  }
+.hero h1 .accent {
+  font-style: italic;
+  color: var(--accent-bright);
 }
 
 .hero p {
-  font-size: clamp(1rem, 3.2vw, 1.5rem);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  line-height: 1.6;
   color: var(--muted);
   letter-spacing: 0.01em;
   opacity: 0;
-  animation: rise 0.9s ease forwards 0.32s;
+  animation: rise 1s ease forwards 0.38s;
 }
 
-/* Animated trailing dots on "on the way" */
+/* Animated trailing dots */
 .hero p .dots span {
   opacity: 0;
-  animation: dot 1.6s infinite;
-  color: var(--accent);
+  color: var(--accent-bright);
+  animation: blink 1.6s infinite;
 }
 
 .hero p .dots span:nth-child(1) {
@@ -126,7 +251,7 @@ body {
   animation-delay: 0.5s;
 }
 
-@keyframes dot {
+@keyframes blink {
   0%,
   60%,
   100% {
@@ -140,7 +265,7 @@ body {
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -148,13 +273,181 @@ body {
   }
 }
 
+/* ===== Buttons ===== */
+.btn {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  padding: 15px 32px;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.25s ease, box-shadow 0.25s ease,
+    transform 0.15s ease, border-color 0.25s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
+  border: 1px solid var(--accent-deep);
+  color: #04160b;
+  font-weight: 700;
+  box-shadow:
+    0 0 28px rgba(43, 212, 106, 0.3),
+    0 8px 18px rgba(0, 0, 0, 0.4),
+    inset 0 1px rgba(255, 255, 255, 0.5),
+    inset 0 -1px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #5eea8f 0%, #1bb255 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 38px rgba(43, 212, 106, 0.45),
+    0 12px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 -1px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 22px rgba(43, 212, 106, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.4),
+    inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.btn span {
+  transition: transform 0.2s ease;
+}
+
+.btn-primary:hover span {
+  transform: translateX(3px);
+}
+
+/* Enter button fades in with the hero */
+.hero .enter {
+  margin-top: 40px;
+  opacity: 0;
+  animation: rise 1s ease forwards 0.55s;
+}
+
+/* ===== Password gate ===== */
+.gate-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 32px;
+  color: var(--text);
+  text-shadow: 0 0 70px rgba(43, 212, 106, 0.12);
+}
+
+.gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  letter-spacing: 0.15em;
+  text-align: center;
+  width: min(320px, 80vw);
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.3em;
+}
+
+.input:focus {
+  border-color: rgba(43, 212, 106, 0.5);
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+
+.err {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #f78a8a;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.err.show {
+  opacity: 1;
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+
+.back {
+  position: absolute;
+  top: clamp(20px, 5vw, 40px);
+  left: clamp(20px, 5vw, 40px);
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1;
+  padding: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.back:hover {
+  color: var(--text);
+  transform: translateY(-3px);
+}
+
+.sub-muted {
+  font-family: var(--font-sans);
+  color: var(--muted);
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  line-height: 1.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glow,
+  .grid,
   .hero h1,
-  .hero p .dots span {
+  .hero p,
+  .hero p .dots span,
+  .tag,
+  .hero .enter {
     animation: none;
+    opacity: 1;
   }
-  .hero h1 {
-    -webkit-text-fill-color: var(--text);
+  .deck,
+  .grid-pan {
+    transition: none;
   }
 }

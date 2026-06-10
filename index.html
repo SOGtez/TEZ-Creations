@@ -5,17 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TEZ Creations — Something great is on the way</title>
   <meta name="description" content="TEZ Creations — something great is on the way." />
+  <meta name="theme-color" content="#050806" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="grid-wrap"><div class="grid-pan"><div class="grid"></div></div></div>
   <div class="glow"></div>
+  <div class="grain"></div>
 
-  <main class="hero">
-    <h1>TEZ Creations</h1>
-    <p>Something great is on the way<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
-  </main>
+  <!-- Panning deck: screens stacked vertically, camera pans between them -->
+  <div class="deck" id="deck">
+
+    <!-- View 1: Hero / waiting screen -->
+    <main class="view hero" id="hero">
+      <span class="tag">Launching soon</span>
+      <h1>TEZ Creations</h1>
+      <p>Something great is on the way<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
+      <button class="btn btn-primary enter" id="enterBtn">Enter <span aria-hidden="true">&rarr;</span></button>
+    </main>
+
+    <!-- View 2: Password gate -->
+    <section class="view gate" id="gate">
+      <button class="back" id="backBtn" aria-label="Go back">&uarr;</button>
+      <span class="tag" id="gateTag">Members only</span>
+      <h2 class="gate-title">Enter password</h2>
+      <form id="gateForm" class="gate-form" autocomplete="off">
+        <input type="password" id="pw" class="input" placeholder="••••••••" aria-label="Password" />
+        <button type="submit" class="btn btn-primary">Unlock</button>
+      </form>
+      <p class="err" id="err">Incorrect password. Try again.</p>
+    </section>
+
+    <!-- View 3: Access granted (placeholder — no homepage yet) -->
+    <section class="view granted" id="granted">
+      <h2 class="gate-title">You're in.</h2>
+      <p class="sub-muted">The site is still being built — check back soon.</p>
+    </section>
+
+  </div>
+
+  <script>
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ---- Grid: subtle mouse warp (parallax pan handled by CSS) ---- */
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+
+    /* ---- Camera-pan navigation + password gate ---- */
+    // NOTE: client-side only — not truly secure. Change this to your real password.
+    const PASSWORD = "tez2026";
+
+    const err = document.getElementById("err");
+    const form = document.getElementById("gateForm");
+    const pw = document.getElementById("pw");
+    const gateTag = document.getElementById("gateTag");
+
+    function resetGate() {
+      err.classList.remove("show");
+      gateTag.textContent = "Members only";
+      gateTag.classList.remove("granted-flash");
+    }
+
+    // Drive both the deck pan and the grid parallax from one root variable,
+    // so they share the exact same CSS transition (timing + easing).
+    function panTo(index) {
+      document.documentElement.style.setProperty("--pan", index);
+    }
+
+    document.getElementById("enterBtn").addEventListener("click", () => {
+      resetGate();
+      panTo(1);
+      setTimeout(() => pw.focus(), 1150);
+    });
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+      resetGate();
+      pw.value = "";
+      panTo(0);
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (pw.value === PASSWORD) {
+        err.classList.remove("show");
+        // Flip the pill, blink it green, then pan to the "You're in" screen
+        gateTag.textContent = "Access granted";
+        gateTag.classList.add("granted-flash");
+        setTimeout(() => panTo(2), 1250);
+      } else {
+        err.classList.add("show");
+        form.classList.remove("shake");
+        void form.offsetWidth; // restart the shake animation
+        form.classList.add("shake");
+      }
+    });
+  </script>
 </body>
 </html>
