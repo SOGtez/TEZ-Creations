@@ -382,6 +382,15 @@
         </div>
 
         <div class="ctl">
+          <label for="res">Stream resolution</label>
+          <select class="select" id="res">
+            <option value="1080" selected>1080p (1920 × 1080)</option>
+            <option value="1440">1440p (2560 × 1440)</option>
+            <option value="2160">4K (3840 × 2160)</option>
+          </select>
+        </div>
+
+        <div class="ctl">
           <label for="poll">Update speed</label>
           <select class="select" id="poll">
             <option value="10">Every 10 seconds</option>
@@ -414,7 +423,7 @@
           <ol class="steps">
             <li>In OBS: <strong>Sources → + → Browser</strong></li>
             <li><strong>Paste the link</strong> into the URL field</li>
-            <li>Set size to <strong>1920 × 1080</strong> and hit OK</li>
+            <li>Set size to <strong id="obsSize">1920 × 1080</strong> and hit OK</li>
           </ol>
           <p class="steps" style="padding-left: 0; margin-top: 8px;">
             Scores update on their own — set it and forget it. If you change the
@@ -440,14 +449,15 @@
       ncaam:'basketball/mens-college-basketball', ncaaw:'basketball/womens-college-basketball',
       nfl:'football/nfl', ncaaf:'football/college-football',
       mlb:'baseball/mlb', nhl:'hockey/nhl',
-      mls:'soccer/usa.1', epl:'soccer/eng.1', laliga:'soccer/esp.1', ucl:'soccer/uefa.champions'
+      mls:'soccer/usa.1', epl:'soccer/eng.1', laliga:'soccer/esp.1', ucl:'soccer/uefa.champions',
+      worldcup:'soccer/fifa.world'
     };
 
     const preview = document.getElementById("preview");
     const stage = document.getElementById("stage");
     const linkEl = document.getElementById("link");
     // mode "preset" uses pos; mode "custom" uses free x/y (percent of screen)
-    const state = { mode: "preset", pos: "bc", x: 50, y: 88, size: 100, poll: "15", setup: false };
+    const state = { mode: "preset", pos: "bc", x: 50, y: 88, size: 100, poll: "15", setup: false, res: "1080" };
 
     /* Scale the 1920×1080 preview down to fit the stage */
     function fitPreview() {
@@ -455,7 +465,7 @@
     }
     window.addEventListener("resize", fitPreview);
 
-    function overlayParams() {
+    function overlayParams(includeRes) {
       const q = new URLSearchParams({ game: GAME, league: LEAGUE });
       if (state.mode === "custom") {
         q.set("x", state.x.toFixed(1));
@@ -466,6 +476,9 @@
       if (state.size !== 100) q.set("scale", String(state.size / 100));
       if (state.poll !== "15") q.set("poll", state.poll);
       if (state.setup) q.set("setup", "1");
+      // res only goes in the OBS link — the preview renders at 1080 and the
+      // result is proportionally identical, so it stays accurate
+      if (includeRes && state.res !== "1080") q.set("res", state.res);
       return q.toString();
     }
 
@@ -473,7 +486,7 @@
       const onWeb = location.protocol === "http:" || location.protocol === "https:";
       if (onWeb) {
         const base = location.origin + location.pathname.replace(/builder\.html$/, "");
-        linkEl.value = base + "overlay.html?" + overlayParams();
+        linkEl.value = base + "overlay.html?" + overlayParams(true);
       } else {
         linkEl.value = "(push the site live to get your real OBS link)";
       }
@@ -510,6 +523,13 @@
     document.getElementById("poll").addEventListener("change", (e) => {
       state.poll = e.target.value;
       reloadPreview(); // poll interval is set at load, so this one needs a refresh
+      updateLink();
+    });
+
+    const RES_SIZES = { "1080": "1920 × 1080", "1440": "2560 × 1440", "2160": "3840 × 2160" };
+    document.getElementById("res").addEventListener("change", (e) => {
+      state.res = e.target.value;
+      document.getElementById("obsSize").textContent = RES_SIZES[state.res];
       updateLink();
     });
 

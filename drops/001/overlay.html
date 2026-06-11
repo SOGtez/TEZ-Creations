@@ -105,6 +105,8 @@
    ?setup=1        show source-bounds outline while positioning in OBS
    ?bg=dark        dark preview background (omit for transparent / OBS)
    ?poll=15        seconds between updates
+   ?res=2160       stream height: 1080 (default) 1440 2160 — set the OBS
+                   browser source to the matching size for crisp rendering
 -------------------------------- */
 const P=new URLSearchParams(location.search);
 const GAME=P.get('game'), LEAGUE=P.get('league')||'nba', PATH=P.get('path');
@@ -116,7 +118,8 @@ const LEAGUES={nba:'basketball/nba',wnba:'basketball/wnba',
   ncaam:'basketball/mens-college-basketball',ncaaw:'basketball/womens-college-basketball',
   nfl:'football/nfl',ncaaf:'football/college-football',
   mlb:'baseball/mlb',nhl:'hockey/nhl',
-  mls:'soccer/usa.1',epl:'soccer/eng.1',laliga:'soccer/esp.1',ucl:'soccer/uefa.champions'};
+  mls:'soccer/usa.1',epl:'soccer/eng.1',laliga:'soccer/esp.1',ucl:'soccer/uefa.champions',
+  worldcup:'soccer/fifa.world'};
 
 if(P.get('bg')==='dark')document.body.classList.add('bg-dark');
 if(P.get('setup'))document.body.classList.add('show-bounds');
@@ -128,8 +131,11 @@ const placement={
   y:parseFloat(P.get('y')),
   scale:Math.min(2,Math.max(0.4,parseFloat(P.get('scale')||'1')))
 };
+// Resolution factor: at ?res=2160 (4K source) everything renders 2x so it
+// stays pixel-perfect instead of OBS upscaling a 1080p image.
+const RES=Math.min(2.5,Math.max(1,parseFloat(P.get('res')||'1080')/1080));
 function applyPlacement(){
-  const m='18px',s=placement.scale;
+  const m=(18*RES)+'px',s=placement.scale*RES;
   bug.style.top=bug.style.left=bug.style.right=bug.style.bottom='auto';
   const set=(styles,origin,transform)=>{Object.assign(bug.style,styles);
     bug.style.transformOrigin=origin;bug.style.transform=transform;};

@@ -10,7 +10,8 @@ const LEAGUES = {
   ncaam:'basketball/mens-college-basketball', ncaaw:'basketball/womens-college-basketball',
   nfl:'football/nfl', ncaaf:'football/college-football',
   mlb:'baseball/mlb', nhl:'hockey/nhl',
-  mls:'soccer/usa.1', epl:'soccer/eng.1', laliga:'soccer/esp.1', ucl:'soccer/uefa.champions'
+  mls:'soccer/usa.1', epl:'soccer/eng.1', laliga:'soccer/esp.1', ucl:'soccer/uefa.champions',
+  worldcup:'soccer/fifa.world'
 };
 
 const cache = {}; // { sportPath: { t, data } }
