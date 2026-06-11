@@ -87,6 +87,9 @@
     .stage.draggable { cursor: grab; }
     .stage.dragging { cursor: grabbing; }
     .stage.has-stream::before { display: none; }
+    /* Interact mode: clicks go to the stream player instead of dragging */
+    .stage.interact { cursor: default; }
+    .stage.interact .stream-bg { pointer-events: auto; }
     .stream-bg {
       position: absolute;
       inset: 0;
@@ -351,6 +354,7 @@
           <span class="q">Want your stream on the preview?</span>
           <input class="stream-input" id="streamUrl" type="text" placeholder="Paste your Twitch, YouTube, or Kick link…" />
           <button class="btn-small" id="streamLoad">Load</button>
+          <button class="btn-small btn-ghost" id="streamInteract">&#9654; Interact with stream</button>
           <button class="btn-small btn-ghost" id="streamClear">Remove</button>
           <p class="stream-err" id="streamErr"></p>
         </div>
@@ -549,6 +553,7 @@
       send({ x: state.x, y: state.y });
     }
     stage.addEventListener("pointerdown", (e) => {
+      if (stage.classList.contains("interact")) return;
       dragging = true;
       stage.classList.add("dragging");
       stage.setPointerCapture(e.pointerId);
@@ -618,17 +623,32 @@
       if (streamFrame) streamFrame.remove();
       streamFrame = document.createElement("iframe");
       streamFrame.className = "stream-bg";
-      streamFrame.allow = "autoplay; encrypted-media";
+      streamFrame.allow = "autoplay; encrypted-media; fullscreen";
       streamFrame.src = src;
       stage.prepend(streamFrame); // behind the tracker preview
       stage.classList.add("has-stream");
       streamClear.style.display = "inline-block";
+      streamInteract.style.display = "inline-block";
+      setInteract(false);
+    });
+
+    /* Toggle between dragging the tracker and clicking the stream player */
+    const streamInteract = document.getElementById("streamInteract");
+    function setInteract(on) {
+      stage.classList.toggle("interact", on);
+      stage.classList.toggle("draggable", !on);
+      streamInteract.innerHTML = on ? "&#10003; Done — back to positioning" : "&#9654; Interact with stream";
+    }
+    streamInteract.addEventListener("click", () => {
+      setInteract(!stage.classList.contains("interact"));
     });
 
     streamClear.addEventListener("click", () => {
       if (streamFrame) { streamFrame.remove(); streamFrame = null; }
       stage.classList.remove("has-stream");
+      setInteract(false);
       streamClear.style.display = "none";
+      streamInteract.style.display = "none";
       streamErr.classList.remove("show");
       streamUrlEl.value = "";
     });
