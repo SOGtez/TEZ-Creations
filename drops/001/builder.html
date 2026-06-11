@@ -70,9 +70,10 @@
       letter-spacing: 0.2em;
       color: rgba(255, 255, 255, 0.05);
     }
-    .stage iframe {
-      /* Render at real stream size, scaled down to fit — so position and
-         proportions in the preview match OBS exactly */
+    .stage { overflow: hidden; }
+    .stage #preview {
+      /* Tracker renders at real stream size, scaled down to fit — so position
+         and proportions in the preview match OBS exactly */
       position: absolute;
       top: 0;
       left: 0;
