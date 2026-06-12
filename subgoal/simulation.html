@@ -12,6 +12,7 @@
     --c1:#2BD46A; --c2:#4ADE80; --gold:#FFD66B;
     --ink:#F0F7F2; --muted:rgba(240,247,242,.62);
     --glass:rgba(9,15,11,.58); --edge:rgba(255,255,255,.14);
+    --font:'Bricolage Grotesque',sans-serif;
     /* twitch chrome */
     --tw-bg:#0e0e10; --tw-panel:#18181b; --tw-panel2:#1f1f23;
     --tw-edge:#303034; --tw-text:#efeff1; --tw-dim:#adadb8;
@@ -125,7 +126,7 @@
     -webkit-backdrop-filter:blur(14px) saturate(1.25);
     border:1px solid var(--edge);
     box-shadow:0 10px 30px rgba(0,0,0,.45);
-    font-family:'Bricolage Grotesque',sans-serif;
+    font-family:var(--font);
   }
   .glow{position:absolute;width:65%;height:160%;filter:blur(26px);opacity:.5;pointer-events:none}
   .glow.g1{left:-25%;top:-40%;background:radial-gradient(closest-side,var(--c1),transparent 70%)}
@@ -165,6 +166,10 @@
                 0 2px 6px rgba(0,0,0,.85)}
   body.style-bare #card.celebrating{animation:barepulse .7s ease-in-out infinite alternate}
   @keyframes barepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+
+  /* matched numbers: count and goal identical */
+  body.match #cur,body.match #tgt,body.match .sep{
+    font-size:34px;font-weight:800;color:var(--ink)}
 
   /* ================= CONTROL DECK (in the player) ================= */
   #deck{
@@ -378,6 +383,23 @@ const hx = v => v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#'+v : null;
 if (hx(qp.get('c1'))) document.documentElement.style.setProperty('--c1', hx(qp.get('c1')));
 if (hx(qp.get('c2'))) document.documentElement.style.setProperty('--c2', hx(qp.get('c2')));
 if ((qp.get('style')||'') === 'bare') document.body.classList.add('style-bare');
+if (qp.get('match') === '1') document.body.classList.add('match');
+const FONTS = {
+  classic: { f: "'Bricolage Grotesque',sans-serif", g: null },
+  inter:   { f: "'Inter',sans-serif",               g: null },   // chrome already loads Inter
+  simple:  { f: "-apple-system,'Helvetica Neue',Arial,sans-serif", g: null },
+  grotesk: { f: "'Space Grotesk',sans-serif",       g: 'Space+Grotesk:wght@700' },
+  mono:    { f: "'JetBrains Mono',monospace",       g: 'JetBrains+Mono:wght@700;800' },
+  rounded: { f: "'Nunito',sans-serif",              g: 'Nunito:wght@800;900' },
+};
+const FT = FONTS[(qp.get('font')||'classic').toLowerCase()] || FONTS.classic;
+if (FT.g){
+  const fl=document.createElement('link');
+  fl.rel='stylesheet';
+  fl.href='https://fonts.googleapis.com/css2?family='+FT.g+'&display=swap';
+  document.head.appendChild(fl);
+}
+document.documentElement.style.setProperty('--font', FT.f);
 const qpos = qp.get('pos');
 if (['tr','bl','br','tc','bc'].includes(qpos)) document.body.classList.add('pos-'+qpos);
 if (qp.get('embed') === '1') document.body.classList.add('embed');

@@ -203,6 +203,25 @@
         </select>
       </div>
       <div class="field">
+        <label>Font</label>
+        <select id="fontInput">
+          <option value="classic">Classic (Bricolage)</option>
+          <option value="inter">Clean (Inter)</option>
+          <option value="simple">Simple (system font)</option>
+          <option value="grotesk">Brand (Space Grotesk)</option>
+          <option value="mono">Mono (JetBrains)</option>
+          <option value="rounded">Rounded (Nunito)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Numbers</label>
+        <div class="seg" id="matchSeg">
+          <button data-v="dynamic" class="on">Big count, small goal</button>
+          <button data-v="matched">Same size &amp; weight</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Accent colors</label>
         <div class="colorrow">
           <input type="color" id="c1Input" value="#2BD46A">
@@ -258,7 +277,8 @@ const SCOPES = "channel:read:goals channel:read:subscriptions";
 const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
 
 const $ = id => document.getElementById(id);
-const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step', style:'card' };
+const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step',
+                style:'card', font:'classic', match:false };
 
 /* ---------- client id guard ---------- */
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
@@ -348,6 +368,8 @@ wireSeg('tierSeg', v => {
   refresh();
 });
 wireSeg('styleSeg', v => { state.style = v; refresh(); });
+wireSeg('matchSeg', v => { state.match = (v === 'matched'); refresh(); });
+$('fontInput').addEventListener('change', () => { state.font = $('fontInput').value; refresh(); });
 
 ['stepInput','goalsInput','posInput','c1Input','c2Input']
   .forEach(id => $(id).addEventListener('input', debounce(refresh, 350)));
@@ -372,6 +394,8 @@ function buildParams(extra){
   }
   p.set('pos', $('posInput').value);
   if (state.style !== 'card') p.set('style', state.style);
+  if (state.font !== 'classic') p.set('font', state.font);
+  if (state.match) p.set('match', '1');
   const c1 = $('c1Input').value.replace('#',''), c2 = $('c2Input').value.replace('#','');
   if (c1.toLowerCase() !== DEFAULT_C1) p.set('c1', c1);
   if (c2.toLowerCase() !== DEFAULT_C2) p.set('c2', c2);

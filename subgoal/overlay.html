@@ -15,10 +15,11 @@
     --muted:rgba(240,247,242,.62);
     --glass:rgba(9,15,11,.58);
     --edge:rgba(255,255,255,.14);
+    --font:'Bricolage Grotesque',sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;background:transparent;overflow:hidden;
-    font-family:'Bricolage Grotesque',sans-serif}
+    font-family:var(--font)}
   body.bg-preview{background:
     radial-gradient(1200px 600px at 70% -10%, #122719 0%, #050806 60%),#050806}
 
@@ -75,6 +76,10 @@
 
   .outline #card{outline:2px dashed rgba(255,255,255,.5);outline-offset:6px}
 
+  /* ---------- matched numbers: count and goal identical ---------- */
+  body.match #cur,body.match #tgt,body.match .sep{
+    font-size:34px;font-weight:800;color:var(--ink)}
+
   /* ---------- bare style: no card, just the numbers ---------- */
   .style-bare #card{
     background:transparent;border:none;box-shadow:none;padding:0;
@@ -127,6 +132,8 @@
      step=25          Or auto-tiers every N subs (custom mode, default 25)
      c1=2BD46A&c2=4ADE80   Accent colors (hex, no #)
      style=card|bare  Glass pill (default) or bare text, no background
+     font=classic|inter|simple|grotesk|mono|rounded   Number font
+     match=1          Count and goal at identical size/weight/color
      pos=tl|tr|bl|br|tc|bc Position (default tl)
      adjust=-1        Add/subtract a fixed offset to the sub total (custom)
      poll=60          Safety re-sync interval in seconds
@@ -145,6 +152,8 @@ const P = {
   c1:      sanitizeHex(qs.get('c1')),
   c2:      sanitizeHex(qs.get('c2')),
   style:   (qs.get('style') || 'card').toLowerCase(),
+  font:    (qs.get('font') || 'classic').toLowerCase(),
+  match:   qs.get('match') === '1',
   pos:     qs.get('pos') || 'tl',
   adjust:  parseInt(qs.get('adjust')||'0',10) || 0,
   poll:    Math.max(15, parseInt(qs.get('poll')||'60',10) || 60),
@@ -155,7 +164,26 @@ const P = {
 
 function sanitizeHex(v){ return v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#'+v : null; }
 
+/* ---------- fonts (only the chosen one is loaded) ---------- */
+const FONTS = {
+  classic: { f: "'Bricolage Grotesque',sans-serif", g: null },   // loaded statically
+  inter:   { f: "'Inter',sans-serif",               g: 'Inter:wght@700;800' },
+  simple:  { f: "-apple-system,'Helvetica Neue',Arial,sans-serif", g: null },
+  grotesk: { f: "'Space Grotesk',sans-serif",       g: 'Space+Grotesk:wght@700' },
+  mono:    { f: "'JetBrains Mono',monospace",       g: 'JetBrains+Mono:wght@700;800' },
+  rounded: { f: "'Nunito',sans-serif",              g: 'Nunito:wght@800;900' },
+};
+
 /* ---------- apply visual params ---------- */
+const FT = FONTS[P.font] || FONTS.classic;
+if (FT.g){
+  const l = document.createElement('link');
+  l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=' + FT.g + '&display=swap';
+  document.head.appendChild(l);
+}
+document.documentElement.style.setProperty('--font', FT.f);
+if (P.match) document.body.classList.add('match');
 if (P.c1) document.documentElement.style.setProperty('--c1', P.c1);
 if (P.c2) document.documentElement.style.setProperty('--c2', P.c2);
 if (P.bg) document.body.classList.add('bg-preview');
