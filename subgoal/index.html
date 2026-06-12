@@ -264,9 +264,19 @@ const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
 
 /* ---------- OAuth (implicit grant, fully client-side) ---------- */
+// storage helpers that survive browsers blocking sessionStorage (e.g. file://)
+function sset(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
+function sget(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+function sdel(k){ try{ sessionStorage.removeItem(k); }catch(e){} }
+
 $('connectBtn').addEventListener('click', () => {
-  const st = crypto.randomUUID();
-  sessionStorage.setItem('tw_state', st);
+  if (location.protocol === 'file:'){
+    alert('The Twitch connect flow only works on the live site — go to tezcreations.com/subgoal');
+    return;
+  }
+  const st = (crypto.randomUUID && crypto.randomUUID()) ||
+    Math.random().toString(36).slice(2) + Date.now().toString(36);
+  sset('tw_state', st);
   const u = new URL('https://id.twitch.tv/oauth2/authorize');
   u.searchParams.set('client_id', CLIENT_ID);
   u.searchParams.set('redirect_uri',
@@ -280,14 +290,16 @@ $('connectBtn').addEventListener('click', () => {
 function readHashToken(){
   if (!location.hash.includes('access_token')) return null;
   const h = new URLSearchParams(location.hash.slice(1));
-  const ok = h.get('state') === sessionStorage.getItem('tw_state');
+  const stored = sget('tw_state');
+  // if storage was unavailable we can't verify state — accept rather than dead-end
+  const ok = stored === null || h.get('state') === stored;
   history.replaceState(null, '', location.pathname + location.search);
   if (!ok) return null;
   return h.get('access_token');
 }
 
 async function boot(){
-  const t = readHashToken() || sessionStorage.getItem('tw_token');
+  const t = readHashToken() || sget('tw_token');
   if (!t) return;
   try{
     const v = await fetch('https://id.twitch.tv/oauth2/validate',
@@ -295,7 +307,7 @@ async function boot(){
     if (!v.ok) throw 0;
     const vj = await v.json();
     state.token = t; state.login = vj.login; state.userId = vj.user_id;
-    sessionStorage.setItem('tw_token', t);
+    sset('tw_token', t);
 
     // profile pic for the "connected" row
     const u = await fetch('https://api.twitch.tv/helix/users?id='+vj.user_id,
@@ -311,7 +323,7 @@ async function boot(){
     $('outputCard').classList.remove('hidden');
     refresh();
   }catch(e){
-    sessionStorage.removeItem('tw_token');
+    sdel('tw_token');
   }
 }
 
