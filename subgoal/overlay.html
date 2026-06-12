@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sub Goal Overlay — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --c1:#2BD46A;          /* accent 1 (TEZ green by default) */
+    --c2:#4ADE80;          /* accent 2 */
+    --gold:#FFD66B;
+    --ink:#F0F7F2;
+    --muted:rgba(240,247,242,.62);
+    --glass:rgba(9,15,11,.58);
+    --edge:rgba(255,255,255,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:transparent;overflow:hidden;
+    font-family:'Bricolage Grotesque',sans-serif}
+  body.bg-preview{background:
+    radial-gradient(1200px 600px at 70% -10%, #122719 0%, #050806 60%),#050806}
+
+  /* ---------- positioning ---------- */
+  #stage{position:fixed;inset:0;pointer-events:none}
+  #wrap{position:absolute}
+  .pos-tl #wrap{top:24px;left:24px}
+  .pos-tr #wrap{top:24px;right:24px}
+  .pos-bl #wrap{bottom:24px;left:24px}
+  .pos-br #wrap{bottom:24px;right:24px}
+  .pos-tc #wrap{top:24px;left:50%;transform:translateX(-50%)}
+  .pos-bc #wrap{bottom:24px;left:50%;transform:translateX(-50%)}
+
+  /* ---------- the pill: just xx/xx ---------- */
+  #card{
+    position:relative;display:inline-flex;align-items:baseline;gap:8px;
+    padding:12px 22px;border-radius:99px;overflow:hidden;
+    background:var(--glass);
+    backdrop-filter:blur(14px) saturate(1.25);
+    -webkit-backdrop-filter:blur(14px) saturate(1.25);
+    border:1px solid var(--edge);
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    opacity:0;transform:translateY(8px);
+    transition:opacity .6s ease,transform .6s ease;
+  }
+  #card.show{opacity:1;transform:translateY(0)}
+  .glow{position:absolute;width:65%;height:160%;filter:blur(26px);opacity:.5;pointer-events:none}
+  .glow.g1{left:-25%;top:-40%;background:radial-gradient(closest-side,var(--c1),transparent 70%)}
+  .glow.g2{right:-25%;bottom:-40%;background:radial-gradient(closest-side,var(--c2),transparent 70%)}
+
+  #cur,#tgt,.sep{position:relative;z-index:2;font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 16px rgba(0,0,0,.4)}
+  #cur{font-weight:800;font-size:40px;line-height:1;color:var(--ink)}
+  .sep{font-weight:700;font-size:26px;color:var(--muted)}
+  #tgt{font-weight:700;font-size:26px;color:var(--muted)}
+
+  /* ---------- goal reached flash ---------- */
+  #flash{
+    position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;letter-spacing:.06em;color:var(--gold);
+    background:rgba(7,12,9,.74);backdrop-filter:blur(6px);
+    opacity:0;pointer-events:none;transition:opacity .4s ease;
+    text-shadow:0 0 14px rgba(255,214,107,.65);white-space:nowrap;
+  }
+  #card.celebrating #flash{opacity:1}
+  #card.celebrating{animation:pulse .7s ease-in-out infinite alternate}
+  @keyframes pulse{from{box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    to{box-shadow:0 10px 44px rgba(0,0,0,.45),0 0 32px var(--c1)}}
+
+  /* ---------- tiny status line (errors / idle) ---------- */
+  #status{margin-top:8px;font-size:11px;font-weight:700;color:var(--gold);
+    display:none;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  #status.show{display:block}
+
+  .outline #card{outline:2px dashed rgba(255,255,255,.5);outline-offset:6px}
+
+  /* ---------- bare style: no card, just the numbers ---------- */
+  .style-bare #card{
+    background:transparent;border:none;box-shadow:none;padding:0;
+    backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:0;overflow:visible}
+  .style-bare .glow{display:none}
+  .style-bare #cur,.style-bare #tgt,.style-bare .sep{
+    text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 22px rgba(0,0,0,.55);
+    transition:color .35s ease,text-shadow .35s ease}
+  /* goal reached → counter glows gold, text appears just above it */
+  .style-bare #flash{
+    inset:auto;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+    font-size:15px;letter-spacing:.1em;
+    text-shadow:0 0 16px rgba(255,214,107,.85),0 2px 6px rgba(0,0,0,.85)}
+  .style-bare #card.celebrating #cur,
+  .style-bare #card.celebrating #tgt,
+  .style-bare #card.celebrating .sep{
+    color:var(--gold);
+    text-shadow:0 0 14px rgba(255,214,107,.95),0 0 36px rgba(255,214,107,.55),
+                0 2px 6px rgba(0,0,0,.85)}
+  .style-bare #card.celebrating{animation:barepulse .7s ease-in-out infinite alternate}
+  @keyframes barepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+
+  @media (prefers-reduced-motion:reduce){
+    #card.celebrating{animation:none}
+  }
+</style>
+</head>
+<body>
+<div id="stage" class="pos-tl">
+  <div id="wrap">
+    <div id="card">
+      <div class="glow g1"></div><div class="glow g2"></div>
+      <span id="cur">0</span><span class="sep">/</span><span id="tgt">0</span>
+      <div id="flash">GOAL REACHED!</div>
+    </div>
+    <div id="status"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TEZ Creations — Twitch Sub Goal Overlay (minimal xx/xx)
+   ------------------------------------------------------------
+   URL params:
+     token=...        Twitch user access token (from /subgoal/ setup page)
+     mode=sync        Mirror the goal set in the Twitch dashboard (default)
+     mode=custom      Track total sub count against your own tiers
+     goals=50,100,150 Custom tier list (custom mode)
+     step=25          Or auto-tiers every N subs (custom mode, default 25)
+     c1=2BD46A&c2=4ADE80   Accent colors (hex, no #)
+     style=card|bare  Glass pill (default) or bare text, no background
+     pos=tl|tr|bl|br|tc|bc Position (default tl)
+     adjust=-1        Add/subtract a fixed offset to the sub total (custom)
+     poll=60          Safety re-sync interval in seconds
+     demo=1           Simulated subs, no token needed
+     bg=1             Dark preview background (for testing outside OBS)
+     outline=1        Dashed placement outline
+   ============================================================ */
+
+const qs = new URLSearchParams(location.search);
+const P = {
+  token:   qs.get('token') || '',
+  mode:    (qs.get('mode') || 'sync').toLowerCase(),
+  goals:   (qs.get('goals') || '').split(',').map(n=>parseInt(n.trim(),10))
+             .filter(n=>Number.isFinite(n)&&n>0).sort((a,b)=>a-b),
+  step:    Math.max(1, parseInt(qs.get('step')||'25',10) || 25),
+  c1:      sanitizeHex(qs.get('c1')),
+  c2:      sanitizeHex(qs.get('c2')),
+  style:   (qs.get('style') || 'card').toLowerCase(),
+  pos:     qs.get('pos') || 'tl',
+  adjust:  parseInt(qs.get('adjust')||'0',10) || 0,
+  poll:    Math.max(15, parseInt(qs.get('poll')||'60',10) || 60),
+  demo:    qs.get('demo') === '1',
+  bg:      qs.get('bg') === '1',
+  outline: qs.get('outline') === '1',
+};
+
+function sanitizeHex(v){ return v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#'+v : null; }
+
+/* ---------- apply visual params ---------- */
+if (P.c1) document.documentElement.style.setProperty('--c1', P.c1);
+if (P.c2) document.documentElement.style.setProperty('--c2', P.c2);
+if (P.bg) document.body.classList.add('bg-preview');
+if (P.outline) document.body.classList.add('outline');
+if (P.style === 'bare') document.body.classList.add('style-bare');
+document.getElementById('stage').className =
+  'pos-' + (['tl','tr','bl','br','tc','bc'].includes(P.pos) ? P.pos : 'tl');
+
+const el = {
+  card: document.getElementById('card'),
+  cur:  document.getElementById('cur'),
+  tgt:  document.getElementById('tgt'),
+  status: document.getElementById('status'),
+};
+
+/* ============================================================
+   STATE + RENDERING
+   ============================================================ */
+const S = {
+  count: 0,          // current value (sub total, or goal current_amount)
+  target: 0,         // current tier / goal target
+  shown: 0,          // animated display value
+  celebrating: false,
+  broadcasterId: null,
+  clientId: null,
+  achieved: new Set(),
+};
+
+function render(){
+  animateCount(S.count);
+  el.tgt.textContent = S.target > 0 ? S.target : '—';
+}
+
+let countAnim = null;
+function animateCount(to){
+  if (countAnim) cancelAnimationFrame(countAnim);
+  const from = S.shown, dur = 650, t0 = performance.now();
+  if (from === to){ el.cur.textContent = to; return; }
+  (function tick(t){
+    const k = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-k,3);
+    S.shown = Math.round(from + (to-from)*e);
+    el.cur.textContent = S.shown;
+    if (k < 1) countAnim = requestAnimationFrame(tick);
+  })(t0);
+}
+
+function setStatus(msg){
+  el.status.textContent = msg || '';
+  el.status.classList.toggle('show', !!msg);
+}
+
+/* ============================================================
+   CUSTOM-MODE TIER LOGIC (auto-advance)
+   ============================================================ */
+function nextTarget(count){
+  if (P.goals.length){
+    for (const g of P.goals) if (count < g) return g;
+    return null;                       // every listed goal complete
+  }
+  return Math.floor(count/P.step)*P.step + P.step;
+}
+
+function applyCustomCount(count, allowCelebrate){
+  S.count = count;
+  if (S.target > 0 && count >= S.target){
+    const hit = S.target;
+    if (allowCelebrate && !S.achieved.has(hit)){
+      S.achieved.add(hit);
+      render();
+      celebrate(()=>{
+        advanceTier(count);
+        render();
+      });
+      return;
+    }
+    advanceTier(count);
+  }
+  render();
+}
+
+function advanceTier(count){
+  const nt = nextTarget(count);
+  // all listed goals smashed — pin to the last one
+  S.target = (nt === null) ? P.goals[P.goals.length-1] : nt;
+}
+
+/* ============================================================
+   CELEBRATION — card: gold flash overlay · bare: counter glows gold
+   ============================================================ */
+function celebrate(done){
+  if (S.celebrating) return;
+  S.celebrating = true;
+  el.card.classList.add('celebrating');
+  setTimeout(()=>{
+    el.card.classList.remove('celebrating');
+    S.celebrating = false;
+    if (done) done();
+  }, 6000);
+}
+
+/* ============================================================
+   TWITCH API
+   ============================================================ */
+async function validateToken(){
+  const r = await fetch('https://id.twitch.tv/oauth2/validate',
+    { headers:{ Authorization:'OAuth ' + P.token } });
+  if (!r.ok) throw new Error('auth');
+  const j = await r.json();
+  S.broadcasterId = j.user_id;
+  S.clientId = j.client_id;
+}
+
+async function helix(path){
+  const r = await fetch('https://api.twitch.tv/helix/' + path, {
+    headers:{ Authorization:'Bearer '+P.token, 'Client-Id': S.clientId }
+  });
+  if (r.status === 401) throw new Error('auth');
+  if (r.status === 400 || r.status === 403) throw new Error('forbidden');
+  if (!r.ok) throw new Error('http '+r.status);
+  return r.json();
+}
+async function helixPost(path, body){
+  const r = await fetch('https://api.twitch.tv/helix/' + path, {
+    method:'POST',
+    headers:{ Authorization:'Bearer '+P.token, 'Client-Id': S.clientId,
+              'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (r.status === 401) throw new Error('auth');
+  return r;
+}
+
+/* ----- sync mode: mirror the Twitch dashboard goal ----- */
+async function fetchGoal(){
+  const j = await helix('goals?broadcaster_id=' + S.broadcasterId);
+  const g = (j.data||[]).find(g => (g.type||'').includes('subscription'));
+  if (!g){
+    S.count = 0; S.target = 0;
+    setStatus('Start a sub goal in your Twitch dashboard');
+    render();
+    return;
+  }
+  setStatus('');
+  S.target = g.target_amount;
+  const prev = S.count;
+  S.count = g.current_amount;
+  if (S.count >= S.target && prev < S.target && S.target > 0 && !S.achieved.has(g.id)){
+    S.achieved.add(g.id);
+    render(); celebrate();
+    return;
+  }
+  render();
+}
+
+/* ----- custom mode: total subscriber count vs our tiers ----- */
+async function fetchTotal(allowCelebrate=true){
+  const j = await helix('subscriptions?broadcaster_id=' + S.broadcasterId + '&first=1');
+  const total = Math.max(0, (j.total||0) + P.adjust);
+  applyCustomCount(total, allowCelebrate);
+}
+
+/* ============================================================
+   EVENTSUB WEBSOCKET (instant updates)
+   ============================================================ */
+let ws = null, wsKeepaliveMs = 0, lastMsgAt = 0, refreshTimer = null;
+
+function eventTypes(){
+  return P.mode === 'sync'
+    ? ['channel.goal.begin','channel.goal.progress','channel.goal.end']
+    : ['channel.subscribe','channel.subscription.end','channel.subscription.gift'];
+}
+
+function connectWS(url){
+  try{ if (ws){ ws.onclose = null; ws.close(); } }catch(e){}
+  lastMsgAt = Date.now();   // give the new socket a fresh keepalive window
+  ws = new WebSocket(url || 'wss://eventsub.wss.twitch.tv/ws');
+  ws.onmessage = async ev => {
+    lastMsgAt = Date.now();
+    let msg; try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    const t = msg.metadata && msg.metadata.message_type;
+
+    if (t === 'session_welcome'){
+      wsKeepaliveMs = ((msg.payload.session.keepalive_timeout_seconds||10)+12)*1000;
+      // only subscribe on a fresh session (reconnect sessions keep old subs)
+      if (!url){
+        for (const type of eventTypes()){
+          const r = await helixPost('eventsub/subscriptions', {
+            type, version:'1',
+            condition:{ broadcaster_user_id: S.broadcasterId },
+            transport:{ method:'websocket', session_id: msg.payload.session.id }
+          });
+          if (!r.ok) console.warn('EventSub subscribe failed:', type, r.status);
+        }
+      }
+    }
+    else if (t === 'notification'){
+      const type = msg.payload.subscription.type;
+      const e = msg.payload.event;
+      if (P.mode === 'sync'){
+        if (type === 'channel.goal.progress' || type === 'channel.goal.begin'){
+          setStatus('');
+          S.target = e.target_amount;
+          S.count = e.current_amount;
+          if (S.count >= S.target && !S.achieved.has(e.id)){
+            S.achieved.add(e.id); render(); celebrate();
+          } else render();
+        } else if (type === 'channel.goal.end'){
+          if (e.is_achieved && !S.achieved.has(e.id)){
+            S.achieved.add(e.id);
+            S.count = e.current_amount; S.target = e.target_amount; render();
+            celebrate(()=>setStatus('Start a new goal in your Twitch dashboard'));
+          } else {
+            setStatus('Start a new goal in your Twitch dashboard');
+          }
+        }
+      } else {
+        // any sub activity → re-sync the authoritative total (debounced)
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(()=>fetchTotal(true).catch(handleErr), 1200);
+      }
+    }
+    else if (t === 'session_reconnect'){
+      connectWS(msg.payload.session.reconnect_url);
+    }
+  };
+  ws.onclose = () => setTimeout(()=>connectWS(), 4000);
+}
+
+// keepalive watchdog — if Twitch goes silent, rebuild the socket
+setInterval(()=>{
+  if (ws && wsKeepaliveMs && Date.now()-lastMsgAt > wsKeepaliveMs) connectWS();
+}, 5000);
+
+/* ============================================================
+   ERRORS
+   ============================================================ */
+function handleErr(e){
+  if (e && e.message === 'auth'){
+    setStatus('Token expired — reconnect at tezcreations.com/subgoal');
+  } else if (e && e.message === 'forbidden'){
+    setStatus('Sub data unavailable — Twitch Affiliate or Partner required');
+  } else {
+    console.warn(e);
+  }
+}
+
+/* ============================================================
+   DEMO MODE — no token required
+   ============================================================ */
+function startDemo(){
+  el.card.classList.add('show');
+  if (P.mode === 'sync'){
+    S.target = 50; S.count = 31; render();
+  } else {
+    advanceTier(37); applyCustomCount(37, false);
+  }
+  setInterval(()=>{
+    if (S.celebrating) return;
+    const delta = Math.random() < .15 ? -1 : (1 + Math.floor(Math.random()*3));
+    const next = Math.max(0, S.count + delta);
+    if (P.mode === 'sync'){
+      S.count = Math.min(next, S.target);
+      render();
+      if (S.count >= S.target){
+        celebrate(()=>{ S.count = Math.floor(S.target*.55); render(); });
+      }
+    } else {
+      applyCustomCount(next, true);
+    }
+  }, 2400);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(async function init(){
+  if (P.demo){ startDemo(); return; }
+  if (!P.token){
+    el.card.classList.add('show');
+    setStatus('Missing token — get your URL at tezcreations.com/subgoal');
+    return;
+  }
+  try{
+    await validateToken();
+    if (P.mode === 'sync'){ await fetchGoal(); }
+    else {
+      // establish the starting tier without celebrating past goals
+      const j = await helix('subscriptions?broadcaster_id='+S.broadcasterId+'&first=1');
+      const total = Math.max(0,(j.total||0)+P.adjust);
+      advanceTier(total);
+      applyCustomCount(total, false);
+    }
+    el.card.classList.add('show');
+    connectWS();
+    // safety net re-sync (also catches anything EventSub missed)
+    setInterval(()=>{
+      (P.mode === 'sync' ? fetchGoal() : fetchTotal(true)).catch(handleErr);
+    }, P.poll*1000);
+  }catch(e){
+    el.card.classList.add('show');
+    handleErr(e);
+  }
+})();
+</script>
+</body>
+</html>

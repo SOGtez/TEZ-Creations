@@ -10,13 +10,23 @@
 */
 const DROPS = [
   {
+    id: "002",
+    title: "Sub Goal Tracker",
+    description:
+      "An auto-updating Twitch sub goal overlay for OBS. Connect your Twitch, set your tiers, copy a link — it counts subs live, celebrates on goal, and rolls to the next one.",
+    date: "2026-06-12",
+    type: "tool",
+    image: "",
+    action: { kind: "use", url: "subgoal/index.html" }
+  },
+  {
     id: "001",
     title: "Sports Tracker",
     description:
       "Pop a live score tracker on your stream. Pick a game, copy a link, paste it into OBS — scores, clock, and win celebrations update live while the game plays.",
     date: "2026-06-10",
     type: "tool",
-    image: "",
+    image: "drops/001/cover.png",
     action: { kind: "use", url: "drops/001/index.html" }
   }
 ];

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sub Goal Simulation — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Albert+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --c1:#2BD46A; --c2:#4ADE80; --gold:#FFD66B;
+    --ink:#F0F7F2; --muted:rgba(240,247,242,.62);
+    --glass:rgba(9,15,11,.58); --edge:rgba(255,255,255,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Albert Sans',sans-serif}
+
+  /* ---------- fake stream backdrop ---------- */
+  body{
+    background:
+      radial-gradient(900px 500px at 20% 80%, rgba(43,212,106,.14), transparent 60%),
+      radial-gradient(1100px 600px at 85% 10%, rgba(74,222,128,.10), transparent 55%),
+      linear-gradient(160deg,#0e1d13 0%, #050806 70%);
+  }
+  .scene{position:fixed;inset:0}
+  .livechip{
+    position:absolute;top:24px;right:24px;display:flex;align-items:center;gap:8px;
+    background:rgba(0,0,0,.45);border:1px solid var(--edge);border-radius:99px;
+    padding:7px 14px;font-weight:700;font-size:12px;letter-spacing:.12em;color:var(--ink)}
+  .livechip i{width:8px;height:8px;border-radius:50%;background:#FF4B4B;
+    animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.35}}
+  .watermark{
+    position:absolute;bottom:24px;right:24px;color:rgba(255,255,255,.18);
+    font-weight:700;font-size:12px;letter-spacing:.3em;text-transform:uppercase}
+  body.embed .livechip,body.embed .watermark{display:none}
+
+  /* ---------- overlay (identical to overlay.html) ---------- */
+  #wrap{position:absolute;top:24px;left:24px}
+  body.pos-tr #wrap{top:24px;right:24px;left:auto}
+  body.pos-bl #wrap{top:auto;bottom:84px;left:24px}
+  body.pos-br #wrap{top:auto;bottom:84px;right:24px;left:auto}
+  body.pos-tc #wrap{top:24px;left:50%;transform:translateX(-50%)}
+  body.pos-bc #wrap{top:auto;bottom:84px;left:50%;transform:translateX(-50%)}
+  #card{
+    position:relative;display:inline-flex;align-items:baseline;gap:8px;
+    padding:12px 22px;border-radius:99px;overflow:hidden;
+    background:var(--glass);
+    backdrop-filter:blur(14px) saturate(1.25);
+    -webkit-backdrop-filter:blur(14px) saturate(1.25);
+    border:1px solid var(--edge);
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    font-family:'Bricolage Grotesque',sans-serif;
+  }
+  .glow{position:absolute;width:65%;height:160%;filter:blur(26px);opacity:.5;pointer-events:none}
+  .glow.g1{left:-25%;top:-40%;background:radial-gradient(closest-side,var(--c1),transparent 70%)}
+  .glow.g2{right:-25%;bottom:-40%;background:radial-gradient(closest-side,var(--c2),transparent 70%)}
+  #cur,#tgt,.sep{position:relative;z-index:2;font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 16px rgba(0,0,0,.4)}
+  #cur{font-weight:800;font-size:40px;line-height:1;color:var(--ink)}
+  .sep{font-weight:700;font-size:26px;color:var(--muted)}
+  #tgt{font-weight:700;font-size:26px;color:var(--muted)}
+  #flash{
+    position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;letter-spacing:.06em;color:var(--gold);
+    background:rgba(7,12,9,.74);backdrop-filter:blur(6px);
+    opacity:0;pointer-events:none;transition:opacity .4s ease;
+    text-shadow:0 0 14px rgba(255,214,107,.65);white-space:nowrap}
+  #card.celebrating #flash{opacity:1}
+  #card.celebrating{animation:pulse .7s ease-in-out infinite alternate}
+  @keyframes pulse{from{box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    to{box-shadow:0 10px 44px rgba(0,0,0,.45),0 0 32px var(--c1)}}
+
+  /* bare style */
+  body.style-bare #card{background:transparent;border:none;box-shadow:none;padding:0;
+    backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:0;overflow:visible}
+  body.style-bare .glow{display:none}
+  body.style-bare #cur,body.style-bare #tgt,body.style-bare .sep{
+    text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 22px rgba(0,0,0,.55);
+    transition:color .35s ease,text-shadow .35s ease}
+  /* goal reached → counter glows gold, text appears just above it */
+  body.style-bare #flash{
+    inset:auto;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+    font-size:15px;letter-spacing:.1em;
+    text-shadow:0 0 16px rgba(255,214,107,.85),0 2px 6px rgba(0,0,0,.85)}
+  body.style-bare #card.celebrating #cur,
+  body.style-bare #card.celebrating #tgt,
+  body.style-bare #card.celebrating .sep{
+    color:var(--gold);
+    text-shadow:0 0 14px rgba(255,214,107,.95),0 0 36px rgba(255,214,107,.55),
+                0 2px 6px rgba(0,0,0,.85)}
+  body.style-bare #card.celebrating{animation:barepulse .7s ease-in-out infinite alternate}
+  @keyframes barepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+
+  /* ---------- sub event toasts ---------- */
+  #toasts{position:absolute;top:96px;left:24px;display:flex;flex-direction:column;gap:8px}
+  .toast{
+    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    background:rgba(0,0,0,.5);border:1px solid var(--edge);border-radius:10px;
+    padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink);
+    animation:toastin .35s cubic-bezier(.22,1,.36,1);
+  }
+  .toast.out{opacity:0;transform:translateX(-12px);transition:all .4s ease}
+  .toast b{color:var(--c2)}
+  .toast.unsub b{color:var(--muted)}
+  .toast .tag{font-size:10px;font-weight:700;letter-spacing:.1em;padding:3px 7px;
+    border-radius:6px;background:linear-gradient(120deg,var(--c1),var(--c2));color:#04160b}
+  .toast.unsub .tag{background:rgba(255,255,255,.12);color:var(--muted)}
+  @keyframes toastin{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+
+  /* ---------- control deck ---------- */
+  #deck{
+    position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+    background:rgba(0,0,0,.55);border:1px solid var(--edge);border-radius:16px;
+    padding:12px 14px;backdrop-filter:blur(10px);
+  }
+  #deck button{
+    border:none;cursor:pointer;border-radius:10px;padding:10px 15px;
+    font:600 13.5px 'Albert Sans',sans-serif;color:#fff;
+    background:rgba(255,255,255,.10);border:1px solid var(--edge);
+    transition:transform .12s ease, background .12s ease;
+  }
+  #deck button:hover{transform:translateY(-1px);background:rgba(255,255,255,.16)}
+  #deck button.primary{background:linear-gradient(120deg,var(--c1),var(--c2));border:none;color:#04160b}
+  #deck button.on{outline:2px solid var(--gold);outline-offset:1px}
+  #deck .sep2{width:1px;height:26px;background:var(--edge)}
+  #deck .lbl{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--muted);
+    text-transform:uppercase;margin-right:2px}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="livechip"><i></i> LIVE · SIMULATION</div>
+  <div class="watermark">tezcreations.com</div>
+
+  <div id="wrap">
+    <div id="card">
+      <div class="glow g1"></div><div class="glow g2"></div>
+      <span id="cur">0</span><span class="sep">/</span><span id="tgt">0</span>
+      <div id="flash">GOAL REACHED!</div>
+    </div>
+  </div>
+  <div id="toasts"></div>
+
+  <div id="deck">
+    <span class="lbl">Subs</span>
+    <button class="primary" id="bSub">+1 Sub</button>
+    <button class="primary" id="bGift">🎁 Gift ×5</button>
+    <button id="bUnsub">−1 Sub</button>
+    <div class="sep2"></div>
+    <span class="lbl">Auto</span>
+    <button id="bAuto">Auto: ON</button>
+    <div class="sep2"></div>
+    <span class="lbl">Style</span>
+    <button id="bCard" class="on">Card</button>
+    <button id="bBare">Bare</button>
+    <div class="sep2"></div>
+    <button id="bReset">Reset</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Sub Goal Tracker — interactive simulation
+   Same counting, auto-advance, and celebration logic as the
+   real overlay; the buttons stand in for Twitch EventSub.
+   Tiers: every 25 subs (25, 50, 75, ...)
+
+   URL params (used when embedded as the setup-page preview):
+     c1/c2 = accent hex (no #) · style=bare · pos=tl..bc · embed=1
+   ============================================================ */
+const STEP = 25;
+
+/* ---------- read config params (for the setup-page preview) ---------- */
+const qp = new URLSearchParams(location.search);
+const hx = v => v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#'+v : null;
+if (hx(qp.get('c1'))) document.documentElement.style.setProperty('--c1', hx(qp.get('c1')));
+if (hx(qp.get('c2'))) document.documentElement.style.setProperty('--c2', hx(qp.get('c2')));
+if ((qp.get('style')||'') === 'bare') document.body.classList.add('style-bare');
+const qpos = qp.get('pos');
+if (['tr','bl','br','tc','bc'].includes(qpos)) document.body.classList.add('pos-'+qpos);
+if (qp.get('embed') === '1') document.body.classList.add('embed');
+
+const el = {
+  card: document.getElementById('card'),
+  cur:  document.getElementById('cur'),
+  tgt:  document.getElementById('tgt'),
+  toasts: document.getElementById('toasts'),
+};
+const S = { count:18, target:25, shown:18, celebrating:false, auto:true };
+
+/* ---------- rendering ---------- */
+function render(){
+  animateCount(S.count);
+  el.tgt.textContent = S.target;
+}
+let countAnim=null;
+function animateCount(to){
+  if (countAnim) cancelAnimationFrame(countAnim);
+  const from=S.shown, dur=650, t0=performance.now();
+  if (from===to){ el.cur.textContent=to; return; }
+  (function tick(t){
+    const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
+    S.shown=Math.round(from+(to-from)*e);
+    el.cur.textContent=S.shown;
+    if(k<1) countAnim=requestAnimationFrame(tick);
+  })(t0);
+}
+
+/* ---------- tier logic (auto-advance) ---------- */
+function nextTarget(c){ return Math.floor(c/STEP)*STEP + STEP; }
+function applyCount(c){
+  S.count = Math.max(0,c);
+  if (S.count >= S.target){
+    render();
+    celebrate(()=>{ S.target = nextTarget(S.count); render(); });
+    return;
+  }
+  // if subs dropped below the previous tier, fall back gracefully
+  if (S.count < S.target - STEP) S.target = nextTarget(S.count);
+  render();
+}
+
+/* ---------- fake chatters ---------- */
+const NAMES=['pixelDruid','NovaKnight','sleepy_taco','GGmara','tezfan_01','ChromaWolf',
+  'baked_bytes','Luna4Lyfe','speedy_oz','MossyOak','kbd_warrior','xXSliceXx',
+  'maple_morgan','DriftKid','PogChampella','quietquinn'];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function toast(html, cls){
+  const d=document.createElement('div');
+  d.className='toast'+(cls?' '+cls:''); d.innerHTML=html;
+  el.toasts.prepend(d);
+  while (el.toasts.children.length>4) el.toasts.lastChild.remove();
+  setTimeout(()=>{d.classList.add('out'); setTimeout(()=>d.remove(),450)},3800);
+}
+
+/* ---------- events ---------- */
+function sub(){ toast('<span class="tag">SUB</span> <b>'+pick(NAMES)+'</b> just subscribed!');
+  applyCount(S.count+1); }
+function gift(n){ toast('<span class="tag">GIFT</span> <b>'+pick(NAMES)+'</b> gifted <b>'+n+'</b> subs!');
+  applyCount(S.count+n); }
+function unsub(){ toast('<span class="tag">END</span> <b>'+pick(NAMES)+'</b>\'s sub expired','unsub');
+  applyCount(S.count-1); }
+
+/* ---------- celebration ---------- */
+function celebrate(done){
+  if(S.celebrating)return;
+  S.celebrating=true;
+  el.card.classList.add('celebrating');
+  setTimeout(()=>{
+    el.card.classList.remove('celebrating');
+    S.celebrating=false;
+    if(done)done();
+  },6000);
+}
+
+/* ---------- controls ---------- */
+const $=id=>document.getElementById(id);
+$('bSub').onclick   =()=>!S.celebrating&&sub();
+$('bGift').onclick  =()=>!S.celebrating&&gift(5);
+$('bUnsub').onclick =()=>!S.celebrating&&unsub();
+$('bReset').onclick =()=>{S.count=18;S.target=25;render()};
+$('bAuto').onclick  =()=>{S.auto=!S.auto;$('bAuto').textContent='Auto: '+(S.auto?'ON':'OFF');
+  $('bAuto').classList.toggle('on',S.auto)};
+$('bCard').onclick  =()=>{document.body.classList.remove('style-bare');
+  $('bCard').classList.add('on');$('bBare').classList.remove('on')};
+$('bBare').onclick  =()=>{document.body.classList.add('style-bare');
+  $('bBare').classList.add('on');$('bCard').classList.remove('on')};
+$('bAuto').classList.add('on');
+// reflect a style passed via URL in the deck buttons
+if (document.body.classList.contains('style-bare')){
+  $('bBare').classList.add('on'); $('bCard').classList.remove('on');
+}
+
+/* ---------- auto mode: ambient sub activity ---------- */
+setInterval(()=>{
+  if(!S.auto||S.celebrating)return;
+  const r=Math.random();
+  if(r<.12) unsub();
+  else if(r<.22) gift(Math.random()<.5?5:3);
+  else if(r<.72) sub();
+},2600);
+
+render();
+</script>
+</body>
+</html>

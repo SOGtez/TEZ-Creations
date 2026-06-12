@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Free auto-updating Twitch sub goal overlay for OBS. Live sub counting, automatic goal tiers, and a clean look — by TEZ Creations.">
+<title>Sub Goal Tracker — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050806;
+    --panel:rgba(255,255,255,.045);
+    --edge:rgba(255,255,255,.10);
+    --ink:#eaf2ec;
+    --muted:#8fa394;
+    --c1:#2BD46A;
+    --c2:#4ADE80;
+    --c1-deep:#16a34a;
+    --gold:#FFD66B;
+    --r:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:
+      radial-gradient(1100px 540px at 75% -12%, #11241a 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #0d1f14 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    min-height:100vh;line-height:1.55;
+  }
+  .shell{max-width:880px;margin:0 auto;padding:48px 22px 90px}
+
+  .brand{font-weight:700;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:18px}
+  .brand a{color:inherit;text-decoration:none}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.01em}
+  h1 .grad{background:linear-gradient(100deg,var(--c1),var(--c2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:16px;max-width:560px;margin-top:12px}
+
+  .card{
+    background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
+    padding:26px;margin-top:26px;backdrop-filter:blur(8px);
+  }
+  .stepline{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .stepnum{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+    width:30px;height:30px;border-radius:10px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b;
+  }
+  .steptitle{font-weight:700;font-size:18px}
+  .hint{color:var(--muted);font-size:14px;margin-top:4px}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;border:none;cursor:pointer;
+    font:600 15px 'Plus Jakarta Sans',sans-serif;color:#04160b;
+    background:linear-gradient(180deg,var(--c2) 0%,var(--c1-deep) 100%);
+    padding:13px 22px;border-radius:12px;
+    box-shadow:0 0 22px rgba(43,212,106,.22), inset 0 1px rgba(255,255,255,.45);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(43,212,106,.4)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .btn.twitch{background:#9146FF;color:#fff;box-shadow:none}
+  .btn.twitch:hover{box-shadow:0 8px 26px rgba(145,70,255,.45)}
+  .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);
+    color:var(--ink);box-shadow:none}
+  .btn svg{width:18px;height:18px;fill:#fff}
+
+  .connected{display:flex;align-items:center;gap:12px}
+  .avatar{width:42px;height:42px;border-radius:12px;border:1px solid var(--edge)}
+  .who b{font-size:16px}
+  .who div{color:var(--muted);font-size:13px}
+
+  /* form */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .field label{display:block;font-weight:600;font-size:13px;margin-bottom:7px;
+    color:var(--ink)}
+  input[type=text],input[type=number],select{
+    width:100%;padding:11px 13px;border-radius:10px;color:var(--ink);
+    background:rgba(0,0,0,.32);border:1px solid var(--edge);
+    font:500 14px 'Plus Jakarta Sans',sans-serif;
+  }
+  input:focus,select:focus{outline:1px solid var(--c1)}
+  select option{background:#0a0f0b}
+  .seg{display:flex;border:1px solid var(--edge);border-radius:11px;overflow:hidden}
+  .seg button{
+    flex:1;padding:11px 8px;background:transparent;border:none;cursor:pointer;
+    font:600 13.5px 'Plus Jakarta Sans',sans-serif;color:var(--muted)}
+  .seg button.on{background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b}
+  .colorrow{display:flex;gap:10px;align-items:center}
+  input[type=color]{width:46px;height:38px;border:1px solid var(--edge);
+    border-radius:10px;background:transparent;padding:3px;cursor:pointer}
+
+  /* preview — the interactive simulation */
+  .previewbox{
+    margin-top:18px;border-radius:14px;border:1px solid var(--edge);overflow:hidden;
+    aspect-ratio:16/9;background:#000}
+  .previewbox iframe{width:100%;height:100%;border:0;display:block}
+  .prevhint{margin-top:8px;font-size:12.5px;color:var(--muted)}
+
+  /* output */
+  .urlbox{
+    display:flex;gap:10px;align-items:stretch;margin-top:6px}
+  .urlbox code{
+    flex:1;display:block;padding:13px 14px;border-radius:10px;overflow-x:auto;
+    background:rgba(0,0,0,.4);border:1px solid var(--edge);
+    font:500 12.5px 'JetBrains Mono',monospace;color:var(--c2);white-space:nowrap}
+  .note{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13px;
+    color:var(--muted);background:rgba(255,214,107,.06);
+    border:1px solid rgba(255,214,107,.22)}
+  .note b{color:var(--gold)}
+  ol.obs{margin:10px 0 0 18px;color:var(--muted);font-size:14px}
+  ol.obs li{margin-bottom:4px}
+  .hidden{display:none!important}
+
+  #cidwarn{margin-top:22px;padding:14px 16px;border-radius:12px;font-size:14px;
+    background:rgba(242,60,80,.10);border:1px solid rgba(242,60,80,.4)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="brand"><a href="../home.html">TEZ Creations</a> · Stream Tools</div>
+  <h1>Sub Goal <span class="grad">Tracker</span></h1>
+  <p class="sub">A live, auto-updating sub goal overlay for OBS. Subs in, subs out —
+    the bar always knows. Hit the goal and it celebrates, then rolls to the next one.</p>
+
+  <div id="cidwarn" class="hidden">
+    ⚠️ <b>One step left (site owner):</b> this page needs a Twitch Client ID before
+    the connect button works.<br>
+    1. Register an app at <b>dev.twitch.tv/console/apps</b> (free)<br>
+    2. OAuth Redirect URL: <code style="font-family:'JetBrains Mono',monospace">https://tezcreations.com/subgoal/</code>
+       — Category: Broadcaster Suite — Client Type: <b>Public</b><br>
+    3. Paste the Client ID into <code style="font-family:'JetBrains Mono',monospace">CLIENT_ID</code>
+       at the top of the script in this file and redeploy.<br>
+    Visitors never see this message once it's set.
+  </div>
+
+  <!-- STEP 1 — connect -->
+  <div class="card">
+    <div class="stepline"><div class="stepnum">1</div>
+      <div><div class="steptitle">Connect your Twitch</div>
+      <div class="hint">Read-only access: your sub count and goals. Nothing is posted, nothing is changed.
+        Requires Twitch Affiliate or Partner (subs don't exist below that).</div></div>
+    </div>
+    <button class="btn twitch" id="connectBtn">
+      <svg viewBox="0 0 24 24"><path d="M4.3 1 1.7 5.7V20h5.1v3h2.9l2.9-3h4.3l5.4-5.4V1H4.3zm16 12.7-3.1 3.1h-5.1l-2.9 2.9v-2.9H5V3h15.3v10.7zM17 6.9v5.7h-2V6.9h2zm-5.4 0v5.7h-2V6.9h2z"/></svg>
+      Connect with Twitch
+    </button>
+    <div class="connected hidden" id="connectedRow">
+      <img class="avatar" id="avatar" alt="">
+      <div class="who"><b id="whoName"></b><div>Connected · read-only</div></div>
+    </div>
+  </div>
+
+  <!-- STEP 2 — configure -->
+  <div class="card hidden" id="configCard">
+    <div class="stepline"><div class="stepnum">2</div>
+      <div><div class="steptitle">Make it yours</div>
+      <div class="hint">The preview below is interactive — fire fake subs and gifts and watch the goal react.</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="field" style="grid-column:1/-1">
+        <label>Goal source</label>
+        <div class="seg" id="modeSeg">
+          <button data-v="sync" class="on">Twitch dashboard goal</button>
+          <button data-v="custom">Custom auto-advancing tiers</button>
+        </div>
+      </div>
+
+      <div class="field customonly hidden" style="grid-column:1/-1">
+        <label>Tiers</label>
+        <div class="seg" id="tierSeg" style="margin-bottom:10px">
+          <button data-v="step" class="on">Every N subs</button>
+          <button data-v="list">My own list</button>
+        </div>
+        <input type="number" id="stepInput" value="25" min="1" placeholder="25">
+        <input type="text" id="goalsInput" class="hidden" placeholder="50, 100, 150, 250">
+      </div>
+
+      <div class="field">
+        <label>Style</label>
+        <div class="seg" id="styleSeg">
+          <button data-v="card" class="on">Glass card</button>
+          <button data-v="bare">Bare text</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Position on screen</label>
+        <select id="posInput">
+          <option value="tl">Top left</option>
+          <option value="tr">Top right</option>
+          <option value="bl">Bottom left</option>
+          <option value="br">Bottom right</option>
+          <option value="tc">Top center</option>
+          <option value="bc">Bottom center</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Accent colors</label>
+        <div class="colorrow">
+          <input type="color" id="c1Input" value="#2BD46A">
+          <input type="color" id="c2Input" value="#4ADE80">
+          <button class="btn ghost" id="resetColors" style="padding:9px 14px;font-size:13px">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="previewbox"><iframe id="preview" title="Interactive overlay preview"></iframe></div>
+    <p class="prevhint">This is the real overlay running on simulated subs — use the buttons in the preview to test it.</p>
+  </div>
+
+  <!-- STEP 3 — copy -->
+  <div class="card hidden" id="outputCard">
+    <div class="stepline"><div class="stepnum">3</div>
+      <div><div class="steptitle">Drop it into OBS</div>
+      <div class="hint">Add a Browser source with this URL.</div></div>
+    </div>
+    <div class="urlbox">
+      <code id="urlOut"></code>
+      <button class="btn" id="copyBtn" style="flex:0 0 auto">Copy URL</button>
+    </div>
+    <ol class="obs">
+      <li>OBS → Sources → <b>+</b> → <b>Browser</b></li>
+      <li>Paste the URL · Width <b>1920</b> · Height <b>1080</b> (the card positions itself)</li>
+      <li>Check "Shutdown source when not visible" is <b>off</b> so the live connection stays open</li>
+    </ol>
+    <div class="note"><b>Keep this URL private.</b> It contains your access token (read-only,
+      but it reveals your sub count). Don't show it on stream. Tokens expire after a while —
+      if the overlay says "reconnect," come back here and generate a fresh URL.</div>
+  </div>
+
+  <div style="margin-top:34px;text-align:center;color:var(--muted);font-size:13px">
+    Not connected yet? <a href="simulation.html" style="color:var(--c2)">Try the interactive demo</a>
+    &nbsp;·&nbsp; A <a href="../home.html" style="color:var(--c2)">TEZ Creations</a> tool
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TEZ Creations — Sub Goal Tracker setup
+   ------------------------------------------------------------
+   ONE-TIME SETUP (site owner):
+   1. Register an app at https://dev.twitch.tv/console/apps
+      - OAuth Redirect URLs: https://tezcreations.com/subgoal/
+        (add http://localhost:3000/subgoal/ too for local testing)
+      - Category: Broadcaster Suite. Client type: Public.
+   2. Paste the Client ID below.
+   ============================================================ */
+const CLIENT_ID = "hkyfmvy9yfvfk7b3sq2dwcz5ggfa9m";
+const SCOPES = "channel:read:goals channel:read:subscriptions";
+const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
+
+const $ = id => document.getElementById(id);
+const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step', style:'card' };
+
+/* ---------- client id guard ---------- */
+if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
+
+/* ---------- OAuth (implicit grant, fully client-side) ---------- */
+$('connectBtn').addEventListener('click', () => {
+  const st = crypto.randomUUID();
+  sessionStorage.setItem('tw_state', st);
+  const u = new URL('https://id.twitch.tv/oauth2/authorize');
+  u.searchParams.set('client_id', CLIENT_ID);
+  u.searchParams.set('redirect_uri',
+    location.origin + location.pathname.replace(/index\.html$/,''));
+  u.searchParams.set('response_type', 'token');
+  u.searchParams.set('scope', SCOPES);
+  u.searchParams.set('state', st);
+  location.href = u.toString();
+});
+
+function readHashToken(){
+  if (!location.hash.includes('access_token')) return null;
+  const h = new URLSearchParams(location.hash.slice(1));
+  const ok = h.get('state') === sessionStorage.getItem('tw_state');
+  history.replaceState(null, '', location.pathname + location.search);
+  if (!ok) return null;
+  return h.get('access_token');
+}
+
+async function boot(){
+  const t = readHashToken() || sessionStorage.getItem('tw_token');
+  if (!t) return;
+  try{
+    const v = await fetch('https://id.twitch.tv/oauth2/validate',
+      { headers:{ Authorization:'OAuth '+t } });
+    if (!v.ok) throw 0;
+    const vj = await v.json();
+    state.token = t; state.login = vj.login; state.userId = vj.user_id;
+    sessionStorage.setItem('tw_token', t);
+
+    // profile pic for the "connected" row
+    const u = await fetch('https://api.twitch.tv/helix/users?id='+vj.user_id,
+      { headers:{ Authorization:'Bearer '+t, 'Client-Id': vj.client_id } });
+    const uj = await u.json();
+    const me = (uj.data||[])[0] || {};
+    $('avatar').src = me.profile_image_url || '';
+    $('whoName').textContent = me.display_name || vj.login;
+
+    $('connectBtn').classList.add('hidden');
+    $('connectedRow').classList.remove('hidden');
+    $('configCard').classList.remove('hidden');
+    $('outputCard').classList.remove('hidden');
+    refresh();
+  }catch(e){
+    sessionStorage.removeItem('tw_token');
+  }
+}
+
+/* ---------- segmented controls ---------- */
+function wireSeg(id, onPick){
+  $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    $(id).querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    onPick(b.dataset.v);
+  }));
+}
+wireSeg('modeSeg', v => {
+  state.mode = v;
+  document.querySelectorAll('.customonly')
+    .forEach(el=>el.classList.toggle('hidden', v!=='custom'));
+  refresh();
+});
+wireSeg('tierSeg', v => {
+  state.tierMode = v;
+  $('stepInput').classList.toggle('hidden', v!=='step');
+  $('goalsInput').classList.toggle('hidden', v!=='list');
+  refresh();
+});
+wireSeg('styleSeg', v => { state.style = v; refresh(); });
+
+['stepInput','goalsInput','posInput','c1Input','c2Input']
+  .forEach(id => $(id).addEventListener('input', debounce(refresh, 350)));
+$('resetColors').addEventListener('click', () => {
+  $('c1Input').value = '#2BD46A'; $('c2Input').value = '#4ADE80'; refresh();
+});
+
+function debounce(fn, ms){ let t; return (...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}; }
+
+/* ---------- build params, preview, and final URL ---------- */
+function buildParams(extra){
+  const p = new URLSearchParams();
+  p.set('mode', state.mode);
+  if (state.mode === 'custom'){
+    if (state.tierMode === 'list'){
+      const list = $('goalsInput').value.split(',')
+        .map(s=>parseInt(s.trim(),10)).filter(n=>n>0);
+      if (list.length) p.set('goals', list.join(','));
+    } else {
+      p.set('step', Math.max(1, parseInt($('stepInput').value,10)||25));
+    }
+  }
+  p.set('pos', $('posInput').value);
+  if (state.style !== 'card') p.set('style', state.style);
+  const c1 = $('c1Input').value.replace('#',''), c2 = $('c2Input').value.replace('#','');
+  if (c1.toLowerCase() !== DEFAULT_C1) p.set('c1', c1);
+  if (c2.toLowerCase() !== DEFAULT_C2) p.set('c2', c2);
+  for (const [k,v] of Object.entries(extra||{})) p.set(k, v);
+  return p;
+}
+
+function refresh(){
+  // live preview: the interactive simulation, styled with the user's choices
+  const prev = buildParams({ embed:'1' });
+  $('preview').src = 'simulation.html?' + prev.toString();
+
+  // shareable OBS URL
+  if (state.token){
+    const out = buildParams({ token: state.token });
+    const base = location.pathname.replace(/index\.html$/,'').replace(/\/$/,'');
+    $('urlOut').textContent =
+      location.origin + base + '/overlay.html?' + out.toString();
+  }
+}
+
+$('copyBtn').addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText($('urlOut').textContent);
+    $('copyBtn').textContent = 'Copied ✓';
+    setTimeout(()=>$('copyBtn').textContent='Copy URL', 1600);
+  }catch(e){}
+});
+
+boot();
+</script>
+</body>
+</html>
