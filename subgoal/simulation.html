@@ -5,38 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sub Goal Simulation — TEZ Creations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Albert+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
+    /* overlay accents (configurable via URL) */
     --c1:#2BD46A; --c2:#4ADE80; --gold:#FFD66B;
     --ink:#F0F7F2; --muted:rgba(240,247,242,.62);
     --glass:rgba(9,15,11,.58); --edge:rgba(255,255,255,.14);
+    /* twitch chrome */
+    --tw-bg:#0e0e10; --tw-panel:#18181b; --tw-panel2:#1f1f23;
+    --tw-edge:#303034; --tw-text:#efeff1; --tw-dim:#adadb8;
+    --tw-purple:#9147ff; --tw-purple-dark:#772ce8;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:100%;height:100%;overflow:hidden;font-family:'Albert Sans',sans-serif}
-
-  /* ---------- fake stream backdrop ---------- */
+  html,body{width:100%;height:100%;overflow:hidden}
   body{
-    background:
+    background:var(--tw-bg);color:var(--tw-text);
+    font-family:'Inter',system-ui,sans-serif;font-size:13px;
+  }
+
+  /* ================= LAYOUT ================= */
+  .app{display:grid;height:100vh;
+    grid-template-rows:50px 1fr;
+    grid-template-columns:240px 1fr 340px;
+    grid-template-areas:"nav nav nav" "side main chat"}
+  @media(max-width:1100px){.app{grid-template-columns:1fr 340px;
+    grid-template-areas:"nav nav" "main chat"} .side{display:none}}
+  @media(max-width:820px){.app{grid-template-columns:1fr;
+    grid-template-areas:"nav" "main"} .chat{display:none}}
+
+  /* ================= TOP NAV ================= */
+  .nav{grid-area:nav;display:flex;align-items:center;gap:18px;
+    background:var(--tw-panel);border-bottom:1px solid rgba(0,0,0,.4);
+    padding:0 16px;box-shadow:0 1px 2px rgba(0,0,0,.4);z-index:5}
+  .nav .exit-demo{
+    display:inline-flex;align-items:center;flex:none;
+    font:700 12.5px 'Inter',sans-serif;color:#04160b;text-decoration:none;
+    background:linear-gradient(120deg,var(--c1),var(--c2));
+    border-radius:8px;padding:7px 12px;
+    box-shadow:0 0 16px rgba(43,212,106,.25);
+    transition:transform .12s ease, box-shadow .12s ease}
+  .nav .exit-demo:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(43,212,106,.4)}
+  .nav .glitch{width:26px;height:26px;fill:var(--tw-purple);flex:none}
+  .nav .navlink{font-weight:700;font-size:14px;color:var(--tw-text);cursor:default}
+  .nav .navlink.dim{color:var(--tw-dim);font-weight:600}
+  .nav .search{flex:1;max-width:380px;margin:0 auto;display:flex}
+  .nav .search input{flex:1;background:#000;border:1px solid var(--tw-edge);
+    border-radius:6px 0 0 6px;color:var(--tw-text);padding:7px 10px;
+    font:500 13px 'Inter',sans-serif;outline:none}
+  .nav .search button{background:var(--tw-panel2);border:1px solid var(--tw-edge);
+    border-left:none;border-radius:0 6px 6px 0;color:var(--tw-dim);
+    padding:0 11px;cursor:default}
+  .nav .pillbtn{background:var(--tw-purple);color:#fff;border:none;border-radius:6px;
+    font:600 13px 'Inter',sans-serif;padding:7px 12px;cursor:default}
+  .nav .avatar-sm{width:28px;height:28px;border-radius:50%;flex:none;
+    background:linear-gradient(135deg,var(--c1),var(--c2))}
+
+  /* ================= SIDEBAR ================= */
+  .side{grid-area:side;background:var(--tw-panel);overflow-y:auto;padding:10px 0}
+  .side h3{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--tw-dim);
+    text-transform:uppercase;padding:8px 14px 6px}
+  .chan{display:flex;align-items:center;gap:10px;padding:6px 14px;cursor:default}
+  .chan:hover{background:var(--tw-panel2)}
+  .chan .cav{width:30px;height:30px;border-radius:50%;flex:none}
+  .chan .cmeta{flex:1;min-width:0}
+  .chan .cname{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chan .ccat{color:var(--tw-dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chan .cview{display:flex;align-items:center;gap:5px;color:var(--tw-dim);font-size:12px;flex:none}
+  .chan .cview i{width:8px;height:8px;border-radius:50%;background:#eb0400}
+
+  /* ================= MAIN ================= */
+  .main{grid-area:main;overflow-y:auto;background:var(--tw-bg)}
+
+  /* ---- player: the fake stream (overlay demo lives here) ---- */
+  #player{position:relative;aspect-ratio:16/9;max-height:72vh;margin:0 auto;
+    width:100%;overflow:hidden;background:
       radial-gradient(900px 500px at 20% 80%, rgba(43,212,106,.14), transparent 60%),
       radial-gradient(1100px 600px at 85% 10%, rgba(74,222,128,.10), transparent 55%),
-      linear-gradient(160deg,#0e1d13 0%, #050806 70%);
-  }
-  .scene{position:fixed;inset:0}
-  .livechip{
-    position:absolute;top:24px;right:24px;display:flex;align-items:center;gap:8px;
-    background:rgba(0,0,0,.45);border:1px solid var(--edge);border-radius:99px;
-    padding:7px 14px;font-weight:700;font-size:12px;letter-spacing:.12em;color:var(--ink)}
-  .livechip i{width:8px;height:8px;border-radius:50%;background:#FF4B4B;
-    animation:blink 1.4s ease-in-out infinite}
-  @keyframes blink{50%{opacity:.35}}
-  .watermark{
-    position:absolute;bottom:24px;right:24px;color:rgba(255,255,255,.18);
-    font-weight:700;font-size:12px;letter-spacing:.3em;text-transform:uppercase}
-  body.embed .livechip,body.embed .watermark{display:none}
+      linear-gradient(160deg,#0e1d13 0%, #050806 70%)}
+  body.embed #player{aspect-ratio:auto;position:fixed;inset:0;max-height:none}
 
-  /* ---------- overlay (identical to overlay.html) ---------- */
-  #wrap{position:absolute;top:24px;left:24px}
+  .stream-wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;color:rgba(255,255,255,.06);font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:800;font-size:clamp(28px,5vw,64px);letter-spacing:.18em;text-transform:uppercase}
+  .live-tag{position:absolute;top:14px;left:14px;background:#eb0400;color:#fff;
+    font-weight:700;font-size:12px;letter-spacing:.04em;border-radius:4px;padding:3px 8px;z-index:4}
+
+  /* real stream embed (loaded via the nav search bar) */
+  .stream-bg{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
+  body.has-stream .stream-wm{display:none}
+  .unstream{position:absolute;top:14px;left:66px;z-index:4;display:none;
+    align-items:center;gap:5px;background:rgba(0,0,0,.6);border:1px solid var(--tw-edge);
+    border-radius:4px;color:var(--tw-dim);font:600 11.5px 'Inter',sans-serif;
+    padding:3px 9px;cursor:pointer;backdrop-filter:blur(6px)}
+  .unstream:hover{color:var(--tw-text)}
+  body.has-stream .unstream{display:inline-flex}
+
+  /* ================= OVERLAY (identical to overlay.html) ================= */
+  #wrap{position:absolute;top:24px;left:24px;z-index:3}
   body.pos-tr #wrap{top:24px;right:24px;left:auto}
   body.pos-bl #wrap{top:auto;bottom:84px;left:24px}
   body.pos-br #wrap{top:auto;bottom:84px;right:24px;left:auto}
@@ -71,14 +137,12 @@
   @keyframes pulse{from{box-shadow:0 10px 30px rgba(0,0,0,.45)}
     to{box-shadow:0 10px 44px rgba(0,0,0,.45),0 0 32px var(--c1)}}
 
-  /* bare style */
   body.style-bare #card{background:transparent;border:none;box-shadow:none;padding:0;
     backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:0;overflow:visible}
   body.style-bare .glow{display:none}
   body.style-bare #cur,body.style-bare #tgt,body.style-bare .sep{
     text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 22px rgba(0,0,0,.55);
     transition:color .35s ease,text-shadow .35s ease}
-  /* goal reached → counter glows gold, text appears just above it */
   body.style-bare #flash{
     inset:auto;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
     background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
@@ -93,87 +157,186 @@
   body.style-bare #card.celebrating{animation:barepulse .7s ease-in-out infinite alternate}
   @keyframes barepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
 
-  /* ---------- sub event toasts ---------- */
-  #toasts{position:absolute;top:96px;left:24px;display:flex;flex-direction:column;gap:8px}
-  .toast{
-    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
-    background:rgba(0,0,0,.5);border:1px solid var(--edge);border-radius:10px;
-    padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink);
-    animation:toastin .35s cubic-bezier(.22,1,.36,1);
-  }
-  .toast.out{opacity:0;transform:translateX(-12px);transition:all .4s ease}
-  .toast b{color:var(--c2)}
-  .toast.unsub b{color:var(--muted)}
-  .toast .tag{font-size:10px;font-weight:700;letter-spacing:.1em;padding:3px 7px;
-    border-radius:6px;background:linear-gradient(120deg,var(--c1),var(--c2));color:#04160b}
-  .toast.unsub .tag{background:rgba(255,255,255,.12);color:var(--muted)}
-  @keyframes toastin{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
-
-  /* ---------- control deck ---------- */
+  /* ================= CONTROL DECK (in the player) ================= */
   #deck{
-    position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
-    background:rgba(0,0,0,.55);border:1px solid var(--edge);border-radius:16px;
-    padding:12px 14px;backdrop-filter:blur(10px);
+    position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:4;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+    background:rgba(0,0,0,.62);border:1px solid var(--edge);border-radius:14px;
+    padding:9px 11px;backdrop-filter:blur(10px);
   }
   #deck button{
-    border:none;cursor:pointer;border-radius:10px;padding:10px 15px;
-    font:600 13.5px 'Albert Sans',sans-serif;color:#fff;
+    border:none;cursor:pointer;border-radius:9px;padding:8px 13px;
+    font:600 12.5px 'Inter',sans-serif;color:#fff;
     background:rgba(255,255,255,.10);border:1px solid var(--edge);
     transition:transform .12s ease, background .12s ease;
   }
   #deck button:hover{transform:translateY(-1px);background:rgba(255,255,255,.16)}
   #deck button.primary{background:linear-gradient(120deg,var(--c1),var(--c2));border:none;color:#04160b}
   #deck button.on{outline:2px solid var(--gold);outline-offset:1px}
-  #deck .sep2{width:1px;height:26px;background:var(--edge)}
-  #deck .lbl{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--muted);
-    text-transform:uppercase;margin-right:2px}
+  #deck .sep2{width:1px;height:22px;background:var(--edge)}
+  #deck .lbl{font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(255,255,255,.55);
+    text-transform:uppercase;margin-right:1px}
+
+  /* ================= CHANNEL INFO ================= */
+  .info{display:flex;gap:14px;padding:16px;align-items:flex-start}
+  body.embed .info{display:none}
+  .info .bigav{width:60px;height:60px;border-radius:50%;flex:none;position:relative;
+    background:linear-gradient(135deg,var(--c1),var(--c2));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;color:#04160b}
+  .bigav .livedot{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+    background:#eb0400;color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;
+    border-radius:4px;padding:1px 6px;border:2px solid var(--tw-bg)}
+  .info .imeta{flex:1;min-width:0}
+  .imeta .iname{font-weight:800;font-size:17px;display:flex;align-items:center;gap:6px}
+  .imeta .iname svg{width:14px;height:14px;fill:var(--tw-purple)}
+  .imeta .ititle{font-size:13.5px;font-weight:500;margin-top:2px}
+  .imeta .icat{color:var(--tw-purple);font-size:13px;font-weight:600;margin-top:2px}
+  .imeta .icat span{color:var(--tw-dim);font-weight:500}
+  .info .iactions{display:flex;align-items:center;gap:8px;flex:none}
+  .iactions .viewers{display:flex;align-items:center;gap:5px;color:#eb6a6a;
+    font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+  .iactions .viewers svg{width:13px;height:13px;fill:#eb6a6a}
+  .iactions button{border:none;cursor:default;border-radius:6px;padding:8px 14px;
+    font:600 13px 'Inter',sans-serif;color:#fff;background:var(--tw-purple)}
+  .iactions button.sub{background:var(--tw-panel2);border:1px solid var(--tw-edge)}
+
+  .demonote{margin:0 16px 24px;padding:12px 14px;border-radius:10px;font-size:13px;
+    color:var(--tw-dim);background:var(--tw-panel);border:1px solid var(--tw-edge)}
+  .demonote b{color:var(--tw-text)}
+  .demonote a{color:var(--c2)}
+  body.embed .demonote{display:none}
+
+  /* ================= CHAT ================= */
+  .chat{grid-area:chat;display:flex;flex-direction:column;background:var(--tw-panel);
+    border-left:1px solid rgba(0,0,0,.4)}
+  .chat-head{flex:none;text-align:center;font-size:11px;font-weight:700;letter-spacing:.08em;
+    color:var(--tw-dim);text-transform:uppercase;padding:13px;border-bottom:1px solid var(--tw-edge)}
+  #chatlog{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+  #chatlog::-webkit-scrollbar{width:6px}
+  #chatlog::-webkit-scrollbar-thumb{background:var(--tw-edge);border-radius:3px}
+  .cmsg{font-size:13px;line-height:1.45;word-wrap:break-word}
+  .cmsg .cu{font-weight:700}
+  .cmsg .ct{color:var(--tw-text)}
+  .cmsg.subev{background:rgba(43,212,106,.10);border-left:3px solid var(--c1);
+    border-radius:4px;padding:7px 9px;color:var(--tw-text)}
+  .cmsg.subev b{color:var(--c2)}
+  .cmsg.subev.giftev{background:rgba(145,71,255,.12);border-left-color:var(--tw-purple)}
+  .cmsg.subev.giftev b{color:#c39cff}
+  .cmsg.subev.endev{background:rgba(255,255,255,.05);border-left-color:var(--tw-edge);
+    color:var(--tw-dim)}
+  .cmsg.subev.endev b{color:var(--tw-dim)}
+  .chat-input{flex:none;padding:10px 12px 14px}
+  .chat-input .fakebox{display:flex;align-items:center;background:var(--tw-panel2);
+    border:1px solid var(--tw-edge);border-radius:6px;padding:9px 11px;color:var(--tw-dim)}
+  .chat-input .row2{display:flex;justify-content:flex-end;margin-top:8px}
+  .chat-input .row2 button{background:var(--tw-purple);border:none;border-radius:6px;
+    color:#fff;font:600 13px 'Inter',sans-serif;padding:7px 12px;cursor:default}
+
+  @media (prefers-reduced-motion:reduce){#card.celebrating{animation:none}}
 </style>
 </head>
 <body>
-<div class="scene">
-  <div class="livechip"><i></i> LIVE · SIMULATION</div>
-  <div class="watermark">tezcreations.com</div>
+<div class="app">
 
-  <div id="wrap">
-    <div id="card">
-      <div class="glow g1"></div><div class="glow g2"></div>
-      <span id="cur">0</span><span class="sep">/</span><span id="tgt">0</span>
-      <div id="flash">GOAL REACHED!</div>
+  <!-- ===== top nav ===== -->
+  <nav class="nav">
+    <a class="exit-demo" href="index.html">&larr; Exit demo</a>
+    <svg class="glitch" viewBox="0 0 24 24"><path d="M4.3 1 1.7 5.7V20h5.1v3h2.9l2.9-3h4.3l5.4-5.4V1H4.3zm16 12.7-3.1 3.1h-5.1l-2.9 2.9v-2.9H5V3h15.3v10.7zM17 6.9v5.7h-2V6.9h2zm-5.4 0v5.7h-2V6.9h2z"/></svg>
+    <span class="navlink">Following</span>
+    <span class="navlink dim">Browse</span>
+    <div class="search"><input id="streamSearch" placeholder="Paste your Twitch / YouTube / Kick link to see YOUR stream here"><button id="streamGo">🔍</button></div>
+    <button class="pillbtn">Log In</button>
+    <div class="avatar-sm"></div>
+  </nav>
+
+  <!-- ===== sidebar ===== -->
+  <aside class="side">
+    <h3>Recommended Channels</h3>
+    <div id="channels"></div>
+  </aside>
+
+  <!-- ===== main ===== -->
+  <main class="main">
+    <div id="player">
+      <div class="stream-wm">TEZ&nbsp;Live</div>
+      <div class="live-tag">LIVE</div>
+      <button class="unstream" id="unstream">✕ remove stream</button>
+
+      <!-- the sub goal overlay demo -->
+      <div id="wrap">
+        <div id="card">
+          <div class="glow g1"></div><div class="glow g2"></div>
+          <span id="cur">0</span><span class="sep">/</span><span id="tgt">0</span>
+          <div id="flash">GOAL REACHED!</div>
+        </div>
+      </div>
+
+      <!-- demo controls -->
+      <div id="deck">
+        <span class="lbl">Subs</span>
+        <button class="primary" id="bSub">+1 Sub</button>
+        <button class="primary" id="bGift">🎁 Gift ×5</button>
+        <button id="bUnsub">−1 Sub</button>
+        <div class="sep2"></div>
+        <button id="bAuto">Auto: ON</button>
+        <div class="sep2"></div>
+        <button id="bCard" class="on">Card</button>
+        <button id="bBare">Bare</button>
+        <div class="sep2"></div>
+        <button id="bReset">Reset</button>
+      </div>
     </div>
-  </div>
-  <div id="toasts"></div>
 
-  <div id="deck">
-    <span class="lbl">Subs</span>
-    <button class="primary" id="bSub">+1 Sub</button>
-    <button class="primary" id="bGift">🎁 Gift ×5</button>
-    <button id="bUnsub">−1 Sub</button>
-    <div class="sep2"></div>
-    <span class="lbl">Auto</span>
-    <button id="bAuto">Auto: ON</button>
-    <div class="sep2"></div>
-    <span class="lbl">Style</span>
-    <button id="bCard" class="on">Card</button>
-    <button id="bBare">Bare</button>
-    <div class="sep2"></div>
-    <button id="bReset">Reset</button>
-  </div>
+    <div class="info">
+      <div class="bigav">T<span class="livedot">LIVE</span></div>
+      <div class="imeta">
+        <div class="iname"><span id="chName">TEZCreations</span>
+          <svg viewBox="0 0 24 24"><path d="M12 2 9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9L12 2z"/></svg>
+        </div>
+        <div class="ititle">Building cool stuff live — Sub Goal Tracker demo 🟢</div>
+        <div class="icat">Software and Game Development <span>· English</span></div>
+      </div>
+      <div class="iactions">
+        <span class="viewers"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg><span id="viewerCount">1,284</span></span>
+        <button>♥ Follow</button>
+        <button class="sub">★ Subscribe</button>
+      </div>
+    </div>
+
+    <div class="demonote">
+      <b>This is a simulation.</b> The counter in the player is the real Sub Goal Tracker
+      overlay running on fake subs — use the buttons in the player to test it, or let auto
+      mode run. Get your own at <a href="index.html">tezcreations.com/subgoal</a>.
+    </div>
+  </main>
+
+  <!-- ===== chat ===== -->
+  <aside class="chat">
+    <div class="chat-head">Stream Chat</div>
+    <div id="chatlog"></div>
+    <div class="chat-input">
+      <div class="fakebox">Send a message</div>
+      <div class="row2"><button>Chat</button></div>
+    </div>
+  </aside>
+
 </div>
 
 <script>
 /* ============================================================
-   Sub Goal Tracker — interactive simulation
+   Sub Goal Tracker — Twitch-lookalike simulation
    Same counting, auto-advance, and celebration logic as the
-   real overlay; the buttons stand in for Twitch EventSub.
-   Tiers: every 25 subs (25, 50, 75, ...)
+   real overlay; the deck buttons stand in for Twitch EventSub.
+   Sub events also land in the fake chat.
 
    URL params (used when embedded as the setup-page preview):
      c1/c2 = accent hex (no #) · style=bare · pos=tl..bc · embed=1
+   (embed=1 shows only the player, no Twitch chrome)
    ============================================================ */
 const STEP = 25;
 
-/* ---------- read config params (for the setup-page preview) ---------- */
+/* ---------- read config params ---------- */
 const qp = new URLSearchParams(location.search);
 const hx = v => v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#'+v : null;
 if (hx(qp.get('c1'))) document.documentElement.style.setProperty('--c1', hx(qp.get('c1')));
@@ -187,7 +350,7 @@ const el = {
   card: document.getElementById('card'),
   cur:  document.getElementById('cur'),
   tgt:  document.getElementById('tgt'),
-  toasts: document.getElementById('toasts'),
+  chat: document.getElementById('chatlog'),
 };
 const S = { count:18, target:25, shown:18, celebrating:false, auto:true };
 
@@ -218,45 +381,78 @@ function applyCount(c){
     celebrate(()=>{ S.target = nextTarget(S.count); render(); });
     return;
   }
-  // if subs dropped below the previous tier, fall back gracefully
   if (S.count < S.target - STEP) S.target = nextTarget(S.count);
   render();
 }
 
-/* ---------- fake chatters ---------- */
+/* ---------- fake community ---------- */
 const NAMES=['pixelDruid','NovaKnight','sleepy_taco','GGmara','tezfan_01','ChromaWolf',
   'baked_bytes','Luna4Lyfe','speedy_oz','MossyOak','kbd_warrior','xXSliceXx',
   'maple_morgan','DriftKid','PogChampella','quietquinn'];
+const NAME_COLORS=['#FF6B6B','#4ECDC4','#FFD93D','#6BCB77','#9B5DE5','#F15BB5',
+  '#00BBF9','#FEA82F','#7ce38b','#c39cff','#ff9ecb','#5bd1ff'];
+const CHAT_LINES=['LETS GOOO','this overlay is clean','W stream','KEKW','Pog','goal almost there!',
+  'who made that counter??','tez cooking today','GG','sheeesh','almost at the goal chat',
+  'LUL','clip it','that counter is smooth','green gang 🟢','first time here, this is cool',
+  'PogChamp','hype in the chat','we got this chat','subathon when?'];
+const HYPE_LINES=['GOAL HIT POGGERS','LETS GOOOOO 🎉','GGGGGG','HYPE TRAIN','W W W W',
+  'CLIP IT NOW','🎉🎉🎉','THE GOAL!!!'];
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-function toast(html, cls){
+const colorOf={};
+function nameColor(n){ if(!colorOf[n]) colorOf[n]=pick(NAME_COLORS); return colorOf[n]; }
+
+/* ---------- chat ---------- */
+function chatMsg(html, cls){
   const d=document.createElement('div');
-  d.className='toast'+(cls?' '+cls:''); d.innerHTML=html;
-  el.toasts.prepend(d);
-  while (el.toasts.children.length>4) el.toasts.lastChild.remove();
-  setTimeout(()=>{d.classList.add('out'); setTimeout(()=>d.remove(),450)},3800);
+  d.className='cmsg'+(cls?' '+cls:''); d.innerHTML=html;
+  el.chat.appendChild(d);
+  while (el.chat.children.length>60) el.chat.firstChild.remove();
+  el.chat.scrollTop = el.chat.scrollHeight;
+}
+function talk(){
+  const n=pick(NAMES);
+  chatMsg('<span class="cu" style="color:'+nameColor(n)+'">'+n+'</span><span class="ct">: '+pick(CHAT_LINES)+'</span>');
 }
 
-/* ---------- events ---------- */
-function sub(){ toast('<span class="tag">SUB</span> <b>'+pick(NAMES)+'</b> just subscribed!');
-  applyCount(S.count+1); }
-function gift(n){ toast('<span class="tag">GIFT</span> <b>'+pick(NAMES)+'</b> gifted <b>'+n+'</b> subs!');
-  applyCount(S.count+n); }
-function unsub(){ toast('<span class="tag">END</span> <b>'+pick(NAMES)+'</b>\'s sub expired','unsub');
-  applyCount(S.count-1); }
+/* ---------- sub events (deck buttons stand in for EventSub) ---------- */
+function sub(){
+  const n=pick(NAMES);
+  chatMsg('<b>'+n+'</b> just subscribed! Welcome to the green gang 🟢','subev');
+  applyCount(S.count+1);
+}
+function gift(k){
+  const n=pick(NAMES);
+  chatMsg('<b>'+n+'</b> is gifting <b>'+k+'</b> subs to the community! 🎁','subev giftev');
+  applyCount(S.count+k);
+}
+function unsub(){
+  const n=pick(NAMES);
+  chatMsg('<b>'+n+'</b>\'s sub expired','subev endev');
+  applyCount(S.count-1);
+}
 
 /* ---------- celebration ---------- */
 function celebrate(done){
   if(S.celebrating)return;
   S.celebrating=true;
   el.card.classList.add('celebrating');
+  // chat goes wild
+  let burst=0;
+  const hype=setInterval(()=>{
+    talkHype(); if(++burst>7) clearInterval(hype);
+  },420);
   setTimeout(()=>{
     el.card.classList.remove('celebrating');
     S.celebrating=false;
     if(done)done();
   },6000);
 }
+function talkHype(){
+  const n=pick(NAMES);
+  chatMsg('<span class="cu" style="color:'+nameColor(n)+'">'+n+'</span><span class="ct">: '+pick(HYPE_LINES)+'</span>');
+}
 
-/* ---------- controls ---------- */
+/* ---------- deck controls ---------- */
 const $=id=>document.getElementById(id);
 $('bSub').onclick   =()=>!S.celebrating&&sub();
 $('bGift').onclick  =()=>!S.celebrating&&gift(5);
@@ -269,20 +465,107 @@ $('bCard').onclick  =()=>{document.body.classList.remove('style-bare');
 $('bBare').onclick  =()=>{document.body.classList.add('style-bare');
   $('bBare').classList.add('on');$('bCard').classList.remove('on')};
 $('bAuto').classList.add('on');
-// reflect a style passed via URL in the deck buttons
 if (document.body.classList.contains('style-bare')){
   $('bBare').classList.add('on'); $('bCard').classList.remove('on');
 }
 
-/* ---------- auto mode: ambient sub activity ---------- */
-setInterval(()=>{
+/* ---------- ambient activity ---------- */
+setInterval(()=>{                       // sub activity
   if(!S.auto||S.celebrating)return;
   const r=Math.random();
-  if(r<.12) unsub();
-  else if(r<.22) gift(Math.random()<.5?5:3);
-  else if(r<.72) sub();
-},2600);
+  if(r<.10) unsub();
+  else if(r<.18) gift(Math.random()<.5?5:3);
+  else if(r<.55) sub();
+},3400);
+setInterval(()=>{ if(!document.body.classList.contains('embed')) talk(); },1900);
 
+/* ---------- sidebar channels ---------- */
+const CHANNELS=[
+  ['MossyOak','Just Chatting','4.1K','#6BCB77'],
+  ['NovaKnight','VALORANT','2.8K','#9B5DE5'],
+  ['sleepy_taco','Cooking','912','#FEA82F'],
+  ['ChromaWolf','Art','1.5K','#00BBF9'],
+  ['GGmara','Fortnite','7.3K','#F15BB5'],
+  ['kbd_warrior','Software Dev','356','#4ECDC4'],
+  ['DriftKid','Racing Sims','689','#FF6B6B'],
+];
+document.getElementById('channels').innerHTML = CHANNELS.map(c=>`
+  <div class="chan">
+    <div class="cav" style="background:linear-gradient(135deg,${c[3]},#333)"></div>
+    <div class="cmeta"><div class="cname">${c[0]}</div><div class="ccat">${c[1]}</div></div>
+    <div class="cview"><i></i>${c[2]}</div>
+  </div>`).join('');
+
+/* ---------- viewer count jitter ---------- */
+let viewers=1284;
+setInterval(()=>{
+  viewers=Math.max(900, viewers+Math.floor(Math.random()*41)-18);
+  const vEl=document.getElementById('viewerCount');
+  if(vEl) vEl.textContent=viewers.toLocaleString();
+},3000);
+
+/* ---------- YOUR stream in the player (via the nav search bar) ---------- */
+let streamFrame=null;
+function parseStream(raw){
+  let u; try{ u=new URL(raw.includes('://')?raw:'https://'+raw); }catch(e){ return null; }
+  const host=u.hostname.replace(/^www\./,'');
+  const parts=u.pathname.split('/').filter(Boolean);
+  if(host.endsWith('twitch.tv')&&parts[0])
+    return {src:`https://player.twitch.tv/?channel=${parts[0]}&parent=${location.hostname}&muted=true&autoplay=true`, name:parts[0]};
+  if(host.endsWith('kick.com')&&parts[0])
+    return {src:`https://player.kick.com/${parts[0]}?muted=true&autoplay=true`, name:parts[0]};
+  if(host==='youtu.be'&&parts[0])
+    return {src:`https://www.youtube.com/embed/${parts[0]}?autoplay=1&mute=1`, name:null};
+  if(host.endsWith('youtube.com')){
+    const vid=u.searchParams.get('v')||(parts[0]==='live'&&parts[1])||null;
+    if(vid) return {src:`https://www.youtube.com/embed/${vid}?autoplay=1&mute=1`, name:null};
+  }
+  return null;
+}
+const searchEl=$('streamSearch');
+function loadStream(){
+  const raw=searchEl.value.trim();
+  if(!raw) return;
+  const s=parseStream(raw);
+  if(!s){
+    searchEl.value='';
+    searchEl.placeholder="Couldn't read that — try a Twitch, Kick, or YouTube link";
+    return;
+  }
+  if(s.src.includes('player.twitch.tv')&&(location.protocol==='file:'||!location.hostname)){
+    searchEl.value='';
+    searchEl.placeholder='Twitch embeds only work on the live site — try YouTube here';
+    return;
+  }
+  if(streamFrame) streamFrame.remove();
+  streamFrame=document.createElement('iframe');
+  streamFrame.className='stream-bg';
+  streamFrame.allow='autoplay; encrypted-media; fullscreen';
+  streamFrame.src=s.src;
+  const player=document.getElementById('player');
+  player.insertBefore(streamFrame, player.querySelector('#wrap'));
+  document.body.classList.add('has-stream');
+  if(s.name){
+    document.getElementById('chName').textContent=s.name;
+    const av=document.querySelector('.bigav');
+    if(av) av.firstChild.textContent=s.name[0].toUpperCase();
+  }
+  chatMsg('<b>'+(s.name||'your stream')+'</b> is live in the player — that\'s how the overlay looks on YOUR stream 🟢','subev');
+}
+$('streamGo').onclick=loadStream;
+searchEl.addEventListener('keydown',e=>{ if(e.key==='Enter') loadStream(); });
+$('unstream').onclick=()=>{
+  if(streamFrame){streamFrame.remove();streamFrame=null;}
+  document.body.classList.remove('has-stream');
+  document.getElementById('chName').textContent='TEZCreations';
+  const av=document.querySelector('.bigav');
+  if(av) av.firstChild.textContent='T';
+  searchEl.value='';
+  searchEl.placeholder='Paste your Twitch / YouTube / Kick link to see YOUR stream here';
+};
+
+/* ---------- seed the chat so it doesn't start empty ---------- */
+for(let i=0;i<8;i++) talk();
 render();
 </script>
 </body>
