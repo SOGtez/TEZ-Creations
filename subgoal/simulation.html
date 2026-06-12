@@ -25,14 +25,23 @@
   }
 
   /* ================= LAYOUT ================= */
-  .app{display:grid;height:100vh;
+  .app{display:grid;height:100vh;height:100dvh;
     grid-template-rows:50px 1fr;
     grid-template-columns:240px 1fr 340px;
     grid-template-areas:"nav nav nav" "side main chat"}
   @media(max-width:1100px){.app{grid-template-columns:1fr 340px;
     grid-template-areas:"nav nav" "main chat"} .side{display:none}}
-  @media(max-width:820px){.app{grid-template-columns:1fr;
-    grid-template-areas:"nav" "main"} .chat{display:none}}
+  /* mobile: like Twitch's app — player top, info, chat below */
+  @media(max-width:820px){
+    .app{grid-template-columns:1fr;grid-template-rows:50px auto 1fr;
+      grid-template-areas:"nav" "main" "chat"}
+    .side{display:none}
+    .main{overflow:visible}
+    .chat{display:flex;border-left:none;border-top:1px solid rgba(0,0,0,.4);min-height:0}
+    .nav{gap:10px;padding:0 10px}
+    .nav .navlink,.nav .avatar-sm,.nav .pillbtn{display:none}
+    .demonote{margin:0 12px 12px;font-size:12px;padding:10px 12px}
+  }
 
   /* ================= TOP NAV ================= */
   .nav{grid-area:nav;display:flex;align-items:center;gap:18px;
@@ -232,6 +241,33 @@
   .chat-input .row2{display:flex;justify-content:flex-end;margin-top:8px}
   .chat-input .row2 button{background:var(--tw-purple);border:none;border-radius:6px;
     color:#fff;font:600 13px 'Inter',sans-serif;padding:7px 12px;cursor:default}
+
+  /* small phones: compact overlay, deck, and channel info */
+  @media(max-width:600px){
+    #cur{font-size:28px}
+    .sep,#tgt{font-size:19px}
+    #card{padding:9px 15px;gap:6px}
+    #wrap{top:14px;left:14px}
+    body.pos-tr #wrap{top:14px;right:14px}
+    body.pos-tc #wrap{top:14px}
+    body.pos-bl #wrap{bottom:64px;left:14px}
+    body.pos-br #wrap{bottom:64px;right:14px}
+    body.pos-bc #wrap{bottom:64px}
+    #deck{bottom:8px;gap:5px;padding:6px 7px;border-radius:11px;max-width:96%}
+    #deck button{padding:6px 9px;font-size:11px;border-radius:7px}
+    #deck .lbl{display:none}
+    #deck .sep2{height:18px}
+    .live-tag{top:10px;left:10px;font-size:11px}
+    .unstream{top:10px;left:58px;font-size:10.5px}
+    .info{padding:12px;gap:10px}
+    .bigav{width:46px;height:46px;font-size:18px}
+    .imeta .iname{font-size:15px}
+    .imeta .ititle{font-size:12.5px}
+    .iactions{flex-direction:column;align-items:flex-end;gap:6px}
+    .iactions .viewers{margin-right:0}
+    .iactions button.sub{display:none}
+    .chat-input{padding:8px 10px 10px}
+  }
 
   @media (prefers-reduced-motion:reduce){#card.celebrating{animation:none}}
 </style>
@@ -523,6 +559,10 @@ function parseStream(raw){
   return null;
 }
 const searchEl=$('streamSearch');
+const PLACEHOLDER = matchMedia('(max-width:700px)').matches
+  ? 'Paste your stream link…'
+  : 'Paste your Twitch / YouTube / Kick link to see YOUR stream here';
+searchEl.placeholder = PLACEHOLDER;
 function loadStream(){
   const raw=searchEl.value.trim();
   if(!raw) return;
@@ -561,7 +601,7 @@ $('unstream').onclick=()=>{
   const av=document.querySelector('.bigav');
   if(av) av.firstChild.textContent='T';
   searchEl.value='';
-  searchEl.placeholder='Paste your Twitch / YouTube / Kick link to see YOUR stream here';
+  searchEl.placeholder=PLACEHOLDER;
 };
 
 /* ---------- seed the chat so it doesn't start empty ---------- */
