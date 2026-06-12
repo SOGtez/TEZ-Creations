@@ -97,12 +97,17 @@
   input[type=color]{width:46px;height:38px;border:1px solid var(--edge);
     border-radius:10px;background:transparent;padding:3px;cursor:pointer}
 
-  /* preview — the interactive simulation */
+  /* preview — TEZ live stream player with the overlay on it */
+  .streamrow{display:flex;gap:10px;margin-top:18px}
+  .streamrow input{flex:1;min-width:0}
+  .streamrow .btn{padding:11px 18px;font-size:14px;flex:none}
+  .streamerr{margin-top:8px;font-size:12.5px;color:#f78a8a}
   .previewbox{
-    margin-top:18px;border-radius:14px;border:1px solid var(--edge);overflow:hidden;
+    margin-top:12px;border-radius:14px;border:1px solid var(--edge);overflow:hidden;
     aspect-ratio:16/9;background:#000}
   .previewbox iframe{width:100%;height:100%;border:0;display:block}
-  .prevhint{margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .subrow{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .subrow .btn{padding:10px 20px;font-size:14px}
 
   /* output */
   .urlbox{
@@ -231,8 +236,17 @@
       </div>
     </div>
 
-    <div class="previewbox"><iframe id="preview" title="Interactive overlay preview"></iframe></div>
-    <p class="prevhint">This is the real overlay running on simulated subs — use the buttons in the preview to test it.</p>
+    <div class="streamrow">
+      <input type="text" id="streamInput" placeholder="Paste your Twitch / YouTube / Kick link to preview it on YOUR stream">
+      <button class="btn ghost" id="streamLoadBtn">Load</button>
+      <button class="btn ghost hidden" id="streamRemoveBtn">Remove</button>
+    </div>
+    <p class="streamerr hidden" id="streamErr"></p>
+    <div class="previewbox"><iframe id="preview" title="Live overlay preview"></iframe></div>
+    <div class="subrow">
+      <button class="btn ghost" id="subPlus">+1 Sub</button>
+      <button class="btn ghost" id="subMinus">&minus;1 Sub</button>
+    </div>
   </div>
 
   <!-- STEP 3 — copy -->
@@ -278,7 +292,7 @@ const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
 
 const $ = id => document.getElementById(id);
 const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step',
-                style:'card', font:'classic', match:false };
+                style:'card', font:'classic', match:false, streamUrl:'' };
 
 /* ---------- client id guard ---------- */
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
@@ -404,8 +418,10 @@ function buildParams(extra){
 }
 
 function refresh(){
-  // live preview: the interactive simulation, styled with the user's choices
+  // live preview: the TEZ stream player (or the user's own stream), with the
+  // overlay styled by their choices — stream survives reloads via the param
   const prev = buildParams({ embed:'1' });
+  if (state.streamUrl) prev.set('stream', state.streamUrl);
   $('preview').src = 'simulation.html?' + prev.toString();
 
   // shareable OBS URL
@@ -416,6 +432,48 @@ function refresh(){
       location.origin + base + '/overlay.html?' + out.toString();
   }
 }
+
+/* ---------- your stream in the preview ---------- */
+function validStream(raw){
+  let u; try{ u = new URL(raw.includes('://') ? raw : 'https://' + raw); }catch(e){ return false; }
+  const host = u.hostname.replace(/^www\./,'');
+  return host.endsWith('twitch.tv') || host.endsWith('kick.com') ||
+         host.endsWith('youtube.com') || host === 'youtu.be';
+}
+function showStreamErr(msg){
+  const e = $('streamErr');
+  e.textContent = msg; e.classList.toggle('hidden', !msg);
+}
+$('streamLoadBtn').addEventListener('click', () => {
+  const raw = $('streamInput').value.trim();
+  if (!raw) return;
+  if (!validStream(raw)){
+    showStreamErr("Couldn't read that link — paste a Twitch channel, Kick channel, or YouTube video link.");
+    return;
+  }
+  showStreamErr('');
+  state.streamUrl = raw;
+  $('streamRemoveBtn').classList.remove('hidden');
+  refresh();
+});
+$('streamInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter'){ e.preventDefault(); $('streamLoadBtn').click(); }
+});
+$('streamRemoveBtn').addEventListener('click', () => {
+  state.streamUrl = '';
+  $('streamInput').value = '';
+  $('streamRemoveBtn').classList.add('hidden');
+  showStreamErr('');
+  refresh();
+});
+
+/* ---------- test subs: drive the preview from out here ---------- */
+function simSend(action){
+  const f = $('preview');
+  f.contentWindow && f.contentWindow.postMessage({ type:'tez-sim', action }, '*');
+}
+$('subPlus').addEventListener('click', () => simSend('sub'));
+$('subMinus').addEventListener('click', () => simSend('unsub'));
 
 $('copyBtn').addEventListener('click', async () => {
   try{

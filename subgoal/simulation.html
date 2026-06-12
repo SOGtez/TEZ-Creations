@@ -111,6 +111,13 @@
   .unstream:hover{color:var(--tw-text)}
   body.has-stream .unstream{display:inline-flex}
 
+  /* embed mode (setup-page preview): clean player only — no deck, no chips,
+     and overlay offsets match the real overlay exactly (24px margins) */
+  body.embed #deck,body.embed .unstream,body.embed .live-tag{display:none}
+  body.embed.pos-bl #wrap{bottom:24px}
+  body.embed.pos-br #wrap{bottom:24px}
+  body.embed.pos-bc #wrap{bottom:24px}
+
   /* ================= OVERLAY (identical to overlay.html) ================= */
   #wrap{position:absolute;top:24px;left:24px;z-index:3}
   body.pos-tr #wrap{top:24px;right:24px;left:auto}
@@ -410,7 +417,9 @@ const el = {
   tgt:  document.getElementById('tgt'),
   chat: document.getElementById('chatlog'),
 };
-const S = { count:18, target:25, shown:18, celebrating:false, auto:true };
+// embed (setup-page preview): calm player, counter only moves on button presses
+const S = { count:18, target:25, shown:18, celebrating:false,
+            auto:!document.body.classList.contains('embed') };
 
 /* ---------- rendering ---------- */
 function render(){
@@ -585,20 +594,11 @@ const PLACEHOLDER = matchMedia('(max-width:700px)').matches
   ? 'Paste your stream link…'
   : 'Paste your Twitch / YouTube / Kick link to see YOUR stream here';
 searchEl.placeholder = PLACEHOLDER;
-function loadStream(){
-  const raw=searchEl.value.trim();
-  if(!raw) return;
+function applyStream(raw){
   const s=parseStream(raw);
-  if(!s){
-    searchEl.value='';
-    searchEl.placeholder="Couldn't read that — try a Twitch, Kick, or YouTube link";
-    return;
-  }
-  if(s.src.includes('player.twitch.tv')&&(location.protocol==='file:'||!location.hostname)){
-    searchEl.value='';
-    searchEl.placeholder='Twitch embeds only work on the live site — try YouTube here';
-    return;
-  }
+  if(!s) return 'bad';
+  if(s.src.includes('player.twitch.tv')&&(location.protocol==='file:'||!location.hostname))
+    return 'twitch-local';
   if(streamFrame) streamFrame.remove();
   streamFrame=document.createElement('iframe');
   streamFrame.className='stream-bg';
@@ -613,6 +613,19 @@ function loadStream(){
     if(av) av.firstChild.textContent=s.name[0].toUpperCase();
   }
   chatMsg('<b>'+(s.name||'your stream')+'</b> is live in the player — that\'s how the overlay looks on YOUR stream 🟢','subev');
+  return null;
+}
+function loadStream(){
+  const raw=searchEl.value.trim();
+  if(!raw) return;
+  const err=applyStream(raw);
+  if(err==='bad'){
+    searchEl.value='';
+    searchEl.placeholder="Couldn't read that — try a Twitch, Kick, or YouTube link";
+  }else if(err==='twitch-local'){
+    searchEl.value='';
+    searchEl.placeholder='Twitch embeds only work on the live site — try YouTube here';
+  }
 }
 $('streamGo').onclick=loadStream;
 searchEl.addEventListener('keydown',e=>{ if(e.key==='Enter') loadStream(); });
@@ -625,6 +638,18 @@ $('unstream').onclick=()=>{
   searchEl.value='';
   searchEl.placeholder=PLACEHOLDER;
 };
+
+/* embed mode: stream comes in via ?stream= (survives preview reloads),
+   sub events come in via postMessage from the setup page */
+const qStream=qp.get('stream');
+if(qStream) applyStream(qStream);
+addEventListener('message',e=>{
+  const d=e.data;
+  if(!d||d.type!=='tez-sim') return;
+  if(S.celebrating) return;
+  if(d.action==='sub') sub();
+  else if(d.action==='unsub') unsub();
+});
 
 /* ---------- seed the chat so it doesn't start empty ---------- */
 for(let i=0;i<8;i++) talk();
