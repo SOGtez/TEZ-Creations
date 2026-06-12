@@ -170,6 +170,41 @@
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
+    /* ---- Tracker design picker (under the preview) ---- */
+    .design-row { margin-top: 16px; }
+    .design-opts { display: flex; gap: 8px; }
+    .design-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .design-btn:hover { border-color: rgba(255, 255, 255, 0.25); }
+    .design-btn.on {
+      border-color: var(--accent);
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+    .design-btn .d-name {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .design-btn.on .d-name { color: var(--accent-bright); }
+    .design-btn .d-sub {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
     /* ---- Controls ---- */
     .panel {
       display: flex;
@@ -362,6 +397,20 @@
           <div class="stage draggable" id="stage"><iframe id="preview" title="Tracker preview"></iframe></div>
           <p class="stage-note">Live preview — exactly what OBS will show. <strong style="color: var(--text)">Click &amp; drag the tracker</strong> to place it anywhere, or use the preset spots.</p>
         </div>
+
+        <div class="ctl design-row" id="designRow" style="display: none;">
+          <label>Tracker design</label>
+          <div class="design-opts" id="designOpts">
+            <button class="design-btn" data-d="worldcup">
+              <span class="d-name">Match Card</span>
+              <span class="d-sub">World Cup edition — group, stadium, goal &amp; card animations</span>
+            </button>
+            <button class="design-btn" data-d="classic">
+              <span class="d-name">Score Bug</span>
+              <span class="d-sub">Compact classic — score, clock, live state</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
@@ -462,7 +511,31 @@
     const stage = document.getElementById("stage");
     const linkEl = document.getElementById("link");
     // mode "preset" uses pos; mode "custom" uses free x/y (percent of screen)
-    const state = { mode: "preset", pos: "bc", x: 50, y: 88, size: 100, poll: "15", setup: false, res: "1080" };
+    // design: "worldcup" = match card (WC matches only), "classic" = score bug
+    const state = {
+      mode: "preset", pos: "bc", x: 50, y: 88, size: 100, poll: "15",
+      setup: false, res: "1080",
+      design: LEAGUE === "worldcup" ? "worldcup" : "classic"
+    };
+
+    function overlayFile() {
+      return state.design === "worldcup" ? "worldcup.html" : "overlay.html";
+    }
+
+    /* Design picker — only shown for World Cup matches */
+    if (LEAGUE === "worldcup") {
+      const row = document.getElementById("designRow");
+      row.style.display = "block";
+      row.querySelector(`[data-d="${state.design}"]`).classList.add("on");
+      document.getElementById("designOpts").addEventListener("click", (e) => {
+        const btn = e.target.closest(".design-btn");
+        if (!btn || btn.dataset.d === state.design) return;
+        state.design = btn.dataset.d;
+        document.querySelectorAll(".design-btn").forEach((b) => b.classList.toggle("on", b === btn));
+        reloadPreview();
+        updateLink();
+      });
+    }
 
     /* Scale the 1920×1080 preview down to fit the stage */
     function fitPreview() {
@@ -491,7 +564,7 @@
       const onWeb = location.protocol === "http:" || location.protocol === "https:";
       if (onWeb) {
         const base = location.origin + location.pathname.replace(/builder\.html$/, "");
-        linkEl.value = base + "overlay.html?" + overlayParams(true);
+        linkEl.value = base + overlayFile() + "?" + overlayParams(true);
       } else {
         linkEl.value = "(push the site live to get your real OBS link)";
       }
@@ -503,7 +576,7 @@
     }
 
     function reloadPreview() {
-      preview.src = "overlay.html?" + overlayParams();
+      preview.src = overlayFile() + "?" + overlayParams();
     }
 
     document.getElementById("posGrid").addEventListener("click", (e) => {
