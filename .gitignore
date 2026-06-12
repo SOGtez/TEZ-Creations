@@ -1,0 +1,6 @@
+# Local session/context files — never deploy these
+SESSION-NOTES.md
+CLAUDE.md
+
+# OS noise
+.DS_Store
