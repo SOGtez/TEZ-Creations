@@ -16,7 +16,7 @@ const DROPS = [
       "An auto-updating Twitch sub goal overlay for OBS. Connect your Twitch, set your tiers, copy a link — it counts subs live, celebrates on goal, and rolls to the next one.",
     date: "2026-06-12",
     type: "tool",
-    image: "",
+    image: "subgoal/cover.png",
     action: { kind: "use", url: "subgoal/index.html" }
   },
   {
