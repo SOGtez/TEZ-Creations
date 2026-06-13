@@ -58,6 +58,28 @@
         tx = (e.clientX / window.innerWidth - 0.5) * 2;
         ty = (e.clientY / window.innerHeight - 0.5) * 2;
       });
+      // Mobile: tilt the phone to warp the grid (same feel as the cursor)
+      (function () {
+        let b0 = null, g0 = null;
+        const clamp = (v) => Math.max(-1, Math.min(1, v));
+        function onTilt(e) {
+          if (e.gamma == null || e.beta == null) return;
+          if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
+          tx = clamp((e.gamma - g0) / 28);
+          ty = clamp((e.beta - b0) / 28);
+        }
+        const D = window.DeviceOrientationEvent;
+        if (D && typeof D.requestPermission === "function") {
+          const ask = () =>
+            D.requestPermission()
+              .then((s) => { if (s === "granted") window.addEventListener("deviceorientation", onTilt); })
+              .catch(() => {});
+          window.addEventListener("touchend", ask, { once: true });
+          window.addEventListener("click", ask, { once: true });
+        } else if (D) {
+          window.addEventListener("deviceorientation", onTilt);
+        }
+      })();
       (function tick() {
         cx += (tx - cx) * 0.06;
         cy += (ty - cy) * 0.06;
