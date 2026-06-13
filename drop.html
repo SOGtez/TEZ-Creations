@@ -85,12 +85,12 @@
       // Mobile: tilt the phone to warp the grid (same feel as the cursor)
       (function () {
         let b0 = null, g0 = null;
-        const clamp = (v) => Math.max(-1, Math.min(1, v));
+        const clamp = (v) => Math.max(-1.6, Math.min(1.6, v)); // mobile leans harder than the cursor
         function onTilt(e) {
           if (e.gamma == null || e.beta == null) return;
           if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
-          tx = clamp((e.gamma - g0) / 28);
-          ty = clamp((e.beta - b0) / 28);
+          tx = clamp((e.gamma - g0) / 18);
+          ty = clamp((e.beta - b0) / 18);
         }
         const D = window.DeviceOrientationEvent;
         if (D && typeof D.requestPermission === "function") {
