@@ -32,6 +32,7 @@ async function getGroupMap(sportPath) {
       for (const e of entries) { const id = e.team && e.team.id; if (id) map[String(id)] = name; }
     }
   } catch (e) { /* fall back to stage label */ }
+  if (Object.keys(gcache).length > 50) for (const k in gcache) delete gcache[k];
   gcache[sportPath] = { t: now, map };
   return map;
 }
@@ -62,6 +63,12 @@ export default async function handler(req, res) {
     res.status(400).json({ error: 'Need a valid ?league= (or ?path=)' });
     return;
   }
+  // sportPath is interpolated into the upstream ESPN URL — constrain it to a
+  // safe "sport/league" slug so it can't reach unintended paths or bloat the cache
+  if (!/^[a-z0-9.\-]+\/[a-z0-9.\-]+$/i.test(sportPath)) {
+    res.status(400).json({ error: 'Invalid league path' });
+    return;
+  }
   try {
     const now = Date.now();
     let board;
@@ -69,6 +76,7 @@ export default async function handler(req, res) {
     else {
       const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sportPath}/scoreboard`);
       board = await r.json();
+      if (Object.keys(cache).length > 50) for (const k in cache) delete cache[k];
       cache[sportPath] = { t: now, data: board };
     }
 
@@ -140,6 +148,7 @@ export default async function handler(req, res) {
       city, venue, stage, group, teams, events
     });
   } catch (e) {
-    res.status(502).json({ error: 'Could not reach ESPN', detail: String(e) });
+    console.error('score api error:', e);          // keep details server-side, don't leak to clients
+    res.status(502).json({ error: 'Could not reach ESPN' });
   }
 }

@@ -154,6 +154,7 @@ applyPlacement();
 
 /* Live updates from the builder preview (no reload needed) */
 addEventListener('message',e=>{
+  if(e.origin!==location.origin)return;        // only accept builder-preview messages from our own origin
   const d=e.data;if(!d||d.type!=='tez-overlay')return;
   if(d.scale!=null)placement.scale=Math.min(2,Math.max(0.4,d.scale));
   if(d.pos!=null){placement.pos=d.pos;placement.x=NaN;placement.y=NaN;}

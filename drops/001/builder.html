@@ -498,6 +498,11 @@
 
     if (!GAME) location.replace("index.html");
 
+    // ESPN API data is third-party / untrusted — escape before it touches innerHTML
+    const esc = (s) =>
+      String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
     const LEAGUE_PATHS = {
       nba:'basketball/nba', wnba:'basketball/wnba',
       ncaam:'basketball/mens-college-basketball', ncaaw:'basketball/womens-college-basketball',
@@ -658,18 +663,19 @@
       }
       const host = u.hostname.replace(/^www\./, "");
       const parts = u.pathname.split("/").filter(Boolean);
+      const id = (s) => (/^[\w-]+$/.test(s || "") ? s : null); // only safe channel / video ids
 
-      if (host.endsWith("twitch.tv") && parts[0]) {
-        return `https://player.twitch.tv/?channel=${parts[0]}&parent=${location.hostname}&muted=true&autoplay=true`;
+      if (host.endsWith("twitch.tv") && id(parts[0])) {
+        return `https://player.twitch.tv/?channel=${id(parts[0])}&parent=${location.hostname}&muted=true&autoplay=true`;
       }
-      if (host.endsWith("kick.com") && parts[0]) {
-        return `https://player.kick.com/${parts[0]}?muted=true&autoplay=true`;
+      if (host.endsWith("kick.com") && id(parts[0])) {
+        return `https://player.kick.com/${id(parts[0])}?muted=true&autoplay=true`;
       }
-      if (host === "youtu.be" && parts[0]) {
-        return `https://www.youtube.com/embed/${parts[0]}?autoplay=1&mute=1&controls=0`;
+      if (host === "youtu.be" && id(parts[0])) {
+        return `https://www.youtube.com/embed/${id(parts[0])}?autoplay=1&mute=1&controls=0`;
       }
       if (host.endsWith("youtube.com")) {
-        const vid = u.searchParams.get("v") || (parts[0] === "live" && parts[1]) || null;
+        const vid = id(u.searchParams.get("v") || (parts[0] === "live" && parts[1]) || null);
         if (vid) return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&controls=0`;
       }
       return null;
@@ -771,7 +777,7 @@
           }
         }
         el.innerHTML = g
-          ? `<strong>${g.teams[0].abbrev} @ ${g.teams[1].abbrev}</strong> &middot; ${g.detail}`
+          ? `<strong>${esc(g.teams[0].abbrev)} @ ${esc(g.teams[1].abbrev)}</strong> &middot; ${esc(g.detail)}`
           : "Game not on the board yet — the tracker will pick it up on game day.";
       } catch (e) {
         el.textContent = "";

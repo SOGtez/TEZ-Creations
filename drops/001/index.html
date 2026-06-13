@@ -277,9 +277,17 @@
       refreshTimer = setInterval(load, 30000);
     }
 
+    // ESPN API data is third-party / untrusted — escape it before it touches innerHTML
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "");
+
     function sideHTML(t) {
-      const logo = t.logo ? `<img src="${t.logo}" alt="" loading="lazy" />` : "";
-      return `<span class="side">${logo}<span><span class="nm">${t.abbrev || t.name}</span> <span class="rc">${t.record}</span></span></span>`;
+      const safe = safeUrl(t.logo);
+      const logo = safe ? `<img src="${safe}" alt="" loading="lazy" />` : "";
+      return `<span class="side">${logo}<span><span class="nm">${esc(t.abbrev || t.name)}</span> <span class="rc">${esc(t.record)}</span></span></span>`;
     }
 
     function render() {
@@ -299,9 +307,9 @@
           const pillCls = g.state === "in" ? "live" : g.state === "post" ? "post" : "pre";
           const pillTxt = g.state === "in" ? "Live" : g.state === "post" ? "Final" : "Upcoming";
           const score =
-            g.state === "pre" ? `<span class="det">${g.detail}</span>` : `<span class="sc">${A.score} – ${B.score}</span><span class="det">${g.detail}</span>`;
+            g.state === "pre" ? `<span class="det">${esc(g.detail)}</span>` : `<span class="sc">${A.score} – ${B.score}</span><span class="det">${esc(g.detail)}</span>`;
           return `
-          <a class="game" href="builder.html?game=${g.id}&league=${current}">
+          <a class="game" href="builder.html?game=${encodeURIComponent(g.id)}&league=${encodeURIComponent(current)}">
             <span class="matchup">${sideHTML(A)}<span class="at">@</span>${sideHTML(B)}</span>
             <span class="game-state"><span class="pill ${pillCls}">${pillTxt}</span>${score}</span>
           </a>`;
