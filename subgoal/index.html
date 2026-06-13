@@ -6,7 +6,7 @@
 <meta name="description" content="Free auto-updating Twitch sub goal overlay for OBS. Live sub counting, automatic goal tiers, and a clean look — by TEZ Creations.">
 <title>Sub Goal Tracker — TEZ Creations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#050806;
@@ -23,31 +23,63 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{
     background:
-      radial-gradient(1100px 540px at 75% -12%, #11241a 0%, transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, #0d1f14 0%, transparent 55%),
+      radial-gradient(1200px 600px at 50% -10%, #0a0f0b, transparent 70%),
       var(--bg);
     color:var(--ink);
     font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     min-height:100vh;line-height:1.55;
+    position:relative;overflow-x:hidden;
   }
-  .shell{max-width:880px;margin:0 auto;padding:48px 22px 90px}
 
-  .backbtn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
-    font:600 13.5px 'Plus Jakarta Sans',sans-serif;color:var(--ink);
-    background:rgba(255,255,255,.06);border:1px solid var(--edge);
-    padding:9px 16px;border-radius:11px;margin-bottom:22px;
-    transition:transform .15s ease, background .15s ease, border-color .15s ease}
-  .backbtn:hover{transform:translateY(-1px);background:rgba(43,212,106,.10);
-    border-color:rgba(43,212,106,.4);color:var(--c2)}
+  /* ---- site signature backdrop (matches home / drop pages) ---- */
+  .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%);
+    mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%)}
+  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+    background-image:
+      linear-gradient(to right, rgba(120,200,150,.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(120,200,150,.06) 1px, transparent 1px);
+    background-size:64px 64px;animation:grid-drift 28s linear infinite;
+    transform:perspective(1200px) scale(1.08);will-change:transform}
+  @keyframes grid-drift{to{background-position:64px 64px}}
+  .glow{position:fixed;top:-12%;left:50%;width:70vw;height:70vw;max-width:760px;max-height:760px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle,rgba(43,212,106,.16) 0%,transparent 60%);
+    filter:blur(40px);pointer-events:none;z-index:0;animation:breathe 8s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}
+    50%{opacity:.85;transform:translateX(-50%) scale(1.08)}}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(120% 100% at 50% 50%,transparent 55%,rgba(0,0,0,.55))}
+  .grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-  .brand{font-weight:700;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
-    color:var(--muted);margin-bottom:18px}
-  .brand a{color:inherit;text-decoration:none}
+  /* ---- site head (TEZ✦ wordmark, matches home/drop) ---- */
+  .site-head{position:relative;z-index:3;display:flex;align-items:center;
+    justify-content:space-between;gap:24px;
+    padding:clamp(22px,5vw,40px) clamp(22px,6vw,64px) 0;max-width:980px;margin:0 auto}
+  .wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
+    letter-spacing:.02em;color:var(--ink);text-decoration:none}
+  .wordmark .star{color:var(--c2)}
+  .back-link{font-size:14px;letter-spacing:.04em;color:var(--muted);
+    text-decoration:none;transition:color .2s ease}
+  .back-link:hover{color:var(--ink)}
+
+  .shell{position:relative;z-index:3;max-width:880px;margin:0 auto;padding:30px 22px 72px}
+
+  .hero-meta{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .num{font-family:'Space Mono',monospace;font-weight:700;font-size:13px;
+    letter-spacing:.08em;color:var(--c2)}
+  .type-tag{font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--edge);border-radius:8px;padding:5px 12px}
   h1{font-family:'Space Grotesk',sans-serif;font-weight:700;
-    font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.01em}
+    font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.01em;
+    text-shadow:0 0 70px rgba(43,212,106,.12)}
   h1 .grad{background:linear-gradient(100deg,var(--c1),var(--c2));
     -webkit-background-clip:text;background-clip:text;color:transparent}
   .sub{color:var(--muted);font-size:16px;max-width:560px;margin-top:12px}
+
+  .site-foot{position:relative;z-index:3;text-align:center;font-size:13px;
+    letter-spacing:.04em;color:rgba(143,163,148,.55);padding:24px 24px 40px}
 
   .card{
     background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
@@ -137,9 +169,20 @@
 </style>
 </head>
 <body>
+<div class="grid-wrap"><div class="grid"></div></div>
+<div class="glow"></div>
+<div class="grain"></div>
+
+<header class="site-head">
+  <a class="wordmark" href="../home.html">TEZ<span class="star">✦</span></a>
+  <a class="back-link" href="../home.html">&larr; All drops</a>
+</header>
+
 <div class="shell">
-  <a href="../home.html" class="backbtn">&larr; Back to TEZ Creations</a>
-  <div class="brand"><a href="../home.html">TEZ Creations</a> · Stream Tools</div>
+  <div class="hero-meta">
+    <span class="num">#002</span>
+    <span class="type-tag">Stream Tool</span>
+  </div>
   <h1>Sub Goal <span class="grad">Tracker</span></h1>
   <p class="sub">A live, auto-updating sub goal overlay for OBS. Subs in, subs out —
     the bar always knows. Hit the goal and it celebrates, then rolls to the next one.</p>
@@ -283,6 +326,8 @@
     &nbsp;·&nbsp; A <a href="../home.html" style="color:var(--c2)">TEZ Creations</a> tool
   </div>
 </div>
+
+<footer class="site-foot">© 2026 TEZ Creations</footer>
 
 <script>
 /* ============================================================
@@ -491,6 +536,24 @@ $('copyBtn').addEventListener('click', async () => {
     setTimeout(()=>$('copyBtn').textContent='Copy URL', 1600);
   }catch(e){}
 });
+
+/* ---------- living grid: warps toward the cursor (matches home page) ---------- */
+(function(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const grid = document.querySelector('.grid');
+  if (!grid || reduce) return;
+  let tx=0, ty=0, cx=0, cy=0;
+  window.addEventListener('mousemove', e => {
+    tx = (e.clientX/window.innerWidth - 0.5) * 2;
+    ty = (e.clientY/window.innerHeight - 0.5) * 2;
+  });
+  (function tick(){
+    cx += (tx-cx)*0.06; cy += (ty-cy)*0.06;
+    grid.style.transform =
+      `perspective(1200px) rotateX(${(-cy*1.6).toFixed(3)}deg) rotateY(${(cx*1.6).toFixed(3)}deg) translate(${(-cx*8).toFixed(2)}px, ${(-cy*8).toFixed(2)}px) scale(1.08)`;
+    requestAnimationFrame(tick);
+  })();
+})();
 
 boot();
 </script>
