@@ -10,6 +10,16 @@
 */
 const DROPS = [
   {
+    id: "003",
+    title: "Live Map",
+    description:
+      "A live GPS map overlay for IRL & travel streams. Powered by your RealtimeIRL feed — your location glides across a clean dark map in OBS, with speed, heading, and where you are. Paste your pull key, copy a link, done.",
+    date: "2026-06-14",
+    type: "tool",
+    image: "",
+    action: { kind: "use", url: "drops/003/index.html" }
+  },
+  {
     id: "002",
     title: "Sub Goal Tracker",
     description:

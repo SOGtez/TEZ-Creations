@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Free live GPS map overlay for IRL & travel streams. Powered by your RealtimeIRL feed — your location glides across a clean dark map in OBS. By TEZ Creations.">
+<title>Live Map — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050806; --panel:rgba(255,255,255,.045); --edge:rgba(255,255,255,.10);
+    --ink:#eaf2ec; --muted:#8fa394;
+    --c1:#2BD46A; --c2:#4ADE80; --c1-deep:#16a34a; --gold:#FFD66B; --r:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #0a0f0b, transparent 70%), var(--bg);
+    color:var(--ink); font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    min-height:100vh; line-height:1.55; position:relative; overflow-x:hidden;
+  }
+  /* signature backdrop */
+  .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%);
+    mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%)}
+  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+    background-image:linear-gradient(to right, rgba(120,200,150,.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(120,200,150,.06) 1px, transparent 1px);
+    background-size:64px 64px;animation:grid-drift 28s linear infinite;
+    transform:perspective(1200px) scale(1.08);will-change:transform}
+  @keyframes grid-drift{to{background-position:64px 64px}}
+  .glow{position:fixed;top:-12%;left:50%;width:70vw;height:70vw;max-width:760px;max-height:760px;
+    transform:translateX(-50%);background:radial-gradient(circle,rgba(43,212,106,.16) 0%,transparent 60%);
+    filter:blur(40px);pointer-events:none;z-index:0;animation:breathe 8s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}50%{opacity:.85;transform:translateX(-50%) scale(1.08)}}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(120% 100% at 50% 50%,transparent 55%,rgba(0,0,0,.55))}
+  .grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .site-head{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+    gap:24px;padding:clamp(22px,5vw,40px) clamp(22px,6vw,64px) 0;max-width:980px;margin:0 auto}
+  .wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
+    letter-spacing:.02em;color:var(--ink);text-decoration:none}
+  .wordmark .star{color:var(--c2)}
+  .back-link{font-size:14px;letter-spacing:.04em;color:var(--muted);text-decoration:none;transition:color .2s ease}
+  .back-link:hover{color:var(--ink)}
+
+  .shell{position:relative;z-index:3;max-width:880px;margin:0 auto;padding:30px 22px 72px}
+  .hero-meta{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .num{font-family:'Space Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--c2)}
+  .type-tag{font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--edge);border-radius:8px;padding:5px 12px}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(34px,6vw,52px);
+    line-height:1.05;letter-spacing:-.01em;text-shadow:0 0 70px rgba(43,212,106,.12)}
+  h1 .grad{background:linear-gradient(100deg,var(--c1),var(--c2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:16px;max-width:580px;margin-top:12px}
+
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
+    padding:26px;margin-top:26px;backdrop-filter:blur(8px)}
+  .stepline{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .stepnum{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+    width:30px;height:30px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b}
+  .steptitle{font-weight:700;font-size:18px}
+  .hint{color:var(--muted);font-size:14px;margin-top:4px}
+
+  .keyrow{display:flex;gap:10px;margin-top:4px}
+  .keyrow input{flex:1;min-width:0}
+  input[type=text],input[type=number],select{
+    width:100%;padding:11px 13px;border-radius:10px;color:var(--ink);
+    background:rgba(0,0,0,.32);border:1px solid var(--edge);font:500 14px 'Plus Jakarta Sans',sans-serif}
+  input:focus,select:focus{outline:1px solid var(--c1)}
+  select option{background:#0a0f0b}
+
+  details.help{margin-top:14px;border:1px solid var(--edge);border-radius:11px;background:rgba(0,0,0,.18);overflow:hidden}
+  details.help summary{cursor:pointer;padding:12px 15px;font-weight:600;font-size:14px;color:var(--c2);list-style:none}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help[open] summary{border-bottom:1px solid var(--edge)}
+  details.help ol{margin:12px 0 14px 32px;color:var(--muted);font-size:14px}
+  details.help li{margin-bottom:6px}
+  details.help a{color:var(--c2)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .field label{display:block;font-weight:600;font-size:13px;margin-bottom:7px;color:var(--ink)}
+  .field .rangeval{color:var(--c2);font-family:'JetBrains Mono',monospace;font-size:12px}
+  input[type=range]{width:100%;accent-color:var(--c1)}
+  .seg{display:flex;border:1px solid var(--edge);border-radius:11px;overflow:hidden;flex-wrap:wrap}
+  .seg button{flex:1;min-width:64px;padding:11px 8px;background:transparent;border:none;cursor:pointer;
+    font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--muted)}
+  .seg button.on{background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b}
+  .toggles{display:flex;flex-wrap:wrap;gap:8px}
+  .toggles button{padding:9px 14px;border-radius:10px;border:1px solid var(--edge);background:rgba(255,255,255,.05);
+    cursor:pointer;font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--muted)}
+  .toggles button.on{background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b;border-color:transparent}
+  .colorrow{display:flex;gap:10px;align-items:center}
+  input[type=color]{width:46px;height:38px;border:1px solid var(--edge);border-radius:10px;background:transparent;padding:3px;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:10px;border:none;cursor:pointer;
+    font:600 15px 'Plus Jakarta Sans',sans-serif;color:#04160b;
+    background:linear-gradient(180deg,var(--c2) 0%,var(--c1-deep) 100%);padding:13px 22px;border-radius:12px;
+    box-shadow:0 0 22px rgba(43,212,106,.22), inset 0 1px rgba(255,255,255,.45);
+    transition:transform .15s ease, box-shadow .15s ease}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(43,212,106,.4)}
+  .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);color:var(--ink);box-shadow:none}
+
+  .previewbox{margin-top:18px;border-radius:14px;border:1px solid var(--edge);overflow:hidden;aspect-ratio:16/9;background:#000}
+  .previewbox iframe{width:100%;height:100%;border:0;display:block}
+  .previewnote{color:var(--muted);font-size:12.5px;margin-top:9px;text-align:center}
+
+  .urlbox{display:flex;gap:10px;align-items:stretch;margin-top:6px}
+  .urlbox code{flex:1;display:block;padding:13px 14px;border-radius:10px;overflow-x:auto;
+    background:rgba(0,0,0,.4);border:1px solid var(--edge);font:500 12.5px 'JetBrains Mono',monospace;color:var(--c2);white-space:nowrap}
+  .note{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13px;color:var(--muted);
+    background:rgba(255,214,107,.06);border:1px solid rgba(255,214,107,.22)}
+  .note b{color:var(--gold)}
+  ol.obs{margin:10px 0 0 18px;color:var(--muted);font-size:14px}
+  ol.obs li{margin-bottom:4px}
+
+  .site-foot{position:relative;z-index:3;text-align:center;font-size:13px;letter-spacing:.04em;
+    color:rgba(143,163,148,.55);padding:24px 24px 40px}
+</style>
+</head>
+<body>
+<div class="grid-wrap"><div class="grid"></div></div>
+<div class="glow"></div>
+<div class="grain"></div>
+
+<header class="site-head">
+  <a class="wordmark" href="../../home.html">TEZ<span class="star">✦</span></a>
+  <a class="back-link" href="../../home.html">&larr; All drops</a>
+</header>
+
+<div class="shell">
+  <div class="hero-meta"><span class="num">#003</span><span class="type-tag">Stream Tool</span></div>
+  <h1>Live <span class="grad">Map</span></h1>
+  <p class="sub">A live GPS map overlay for IRL &amp; travel streams. Your location glides across a
+    clean dark map in OBS — with speed, heading, and where you are. Powered by your RealtimeIRL feed.</p>
+
+  <!-- STEP 1 — pull key -->
+  <div class="card">
+    <div class="stepline"><div class="stepnum">1</div>
+      <div><div class="steptitle">Connect your RealtimeIRL feed</div>
+      <div class="hint">Paste your RealtimeIRL <b>pull key</b>. That's the only thing this overlay needs.</div></div>
+    </div>
+    <div class="keyrow">
+      <input type="text" id="keyInput" placeholder="your RealtimeIRL pull key (e.g. t0fucprufql69bcx)" spellcheck="false" autocomplete="off">
+      <button class="btn ghost" id="demoBtn">Try a demo</button>
+    </div>
+    <details class="help">
+      <summary>How do I get my pull key?</summary>
+      <ol>
+        <li>Install <a href="https://rtirl.com" target="_blank" rel="noopener">RealtimeIRL</a> (free, on iOS &amp; Android) and sign in.</li>
+        <li>Start a session in the app so it begins sharing your GPS.</li>
+        <li>Open your <b>pull key</b> in the app / on rtirl.com and copy it.</li>
+        <li>Paste it above. (Keep this overlay link private — it reveals your live location.)</li>
+      </ol>
+    </details>
+  </div>
+
+  <!-- STEP 2 — customize -->
+  <div class="card">
+    <div class="stepline"><div class="stepnum">2</div>
+      <div><div class="steptitle">Make it yours</div>
+      <div class="hint">The preview is live — it tracks the demo feed (or your own, once a key is set).</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Map style</label>
+        <div class="seg" id="themeSeg">
+          <button data-v="dark" class="on">Dark</button>
+          <button data-v="voyager">Voyager</button>
+          <button data-v="light">Light</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Position on screen</label>
+        <select id="posInput">
+          <option value="br">Bottom right</option>
+          <option value="bl">Bottom left</option>
+          <option value="tr">Top right</option>
+          <option value="tl">Top left</option>
+          <option value="bc">Bottom center</option>
+          <option value="tc">Top center</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Size <span class="rangeval" id="sizeVal">380px</span></label>
+        <input type="range" id="sizeInput" min="260" max="640" step="10" value="380">
+      </div>
+      <div class="field">
+        <label>Zoom <span class="rangeval" id="zoomVal">15</span></label>
+        <input type="range" id="zoomInput" min="10" max="18" step="1" value="15">
+      </div>
+      <div class="field">
+        <label>Units</label>
+        <div class="seg" id="unitSeg">
+          <button data-v="mi" class="on">mph / ft</button>
+          <button data-v="km">km/h / m</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Route trail</label>
+        <div class="seg" id="trailSeg">
+          <button data-v="on" class="on">Show trail</button>
+          <button data-v="off">Hide</button>
+        </div>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Readouts to show</label>
+        <div class="toggles" id="showToggles">
+          <button data-v="area" class="on">📍 Area</button>
+          <button data-v="speed" class="on">⚡ Speed</button>
+          <button data-v="heading">🧭 Heading</button>
+          <button data-v="elev">⛰️ Elevation</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Privacy mode</label>
+        <div class="seg" id="fuzzSeg">
+          <button data-v="off" class="on">Precise</button>
+          <button data-v="on">Coarse (hide exact)</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Accent colors</label>
+        <div class="colorrow">
+          <input type="color" id="c1Input" value="#2BD46A">
+          <input type="color" id="c2Input" value="#4ADE80">
+          <button class="btn ghost" id="resetColors" style="padding:9px 14px;font-size:13px">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="previewbox"><iframe id="preview" title="Live map preview"></iframe></div>
+    <p class="previewnote">Preview shows the card on a stream-sized canvas. In OBS it sits in the corner you picked.</p>
+  </div>
+
+  <!-- STEP 3 — copy -->
+  <div class="card">
+    <div class="stepline"><div class="stepnum">3</div>
+      <div><div class="steptitle">Drop it into OBS</div>
+      <div class="hint">Add a Browser source with this URL.</div></div>
+    </div>
+    <div class="urlbox">
+      <code id="urlOut">Add your pull key above to generate your OBS link…</code>
+      <button class="btn" id="copyBtn" style="flex:0 0 auto">Copy URL</button>
+    </div>
+    <ol class="obs">
+      <li>OBS → Sources → <b>+</b> → <b>Browser</b></li>
+      <li>Paste the URL · Width <b>1920</b> · Height <b>1080</b> (the card positions itself)</li>
+      <li>Keep "Shutdown source when not visible" <b>off</b> so it keeps tracking</li>
+    </ol>
+    <div class="note"><b>Keep this URL private.</b> It contains your pull key, which reveals your
+      live location. Don't show it on stream, and use a <b>stream delay</b> so your exact real-time
+      position isn't broadcast instantly. Turn on <b>Privacy mode</b> above to coarsen the map.</div>
+  </div>
+
+  <div style="margin-top:34px;text-align:center;color:var(--muted);font-size:13px">
+    <a href="overlay.html?demo=1&bg=1" target="_blank" rel="noopener" style="color:var(--c2)">Open the live demo overlay</a>
+    &nbsp;·&nbsp; A <a href="../../home.html" style="color:var(--c2)">TEZ Creations</a> tool
+  </div>
+</div>
+
+<footer class="site-foot">© 2026 TEZ Creations</footer>
+
+<script>
+const SAMPLE_KEY = 't0fucprufql69bcx';
+const DEFAULT_C1 = '2bd46a', DEFAULT_C2 = '4ade80';
+const $ = id => document.getElementById(id);
+const state = {
+  key:'', theme:'dark', pos:'br', size:380, zoom:15, units:'mi',
+  trail:true, show:new Set(['area','speed']), fuzz:false, demo:false,
+};
+
+/* ---------- segmented + toggle wiring ---------- */
+function wireSeg(id, fn){
+  $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    $(id).querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); fn(b.dataset.v); refresh();
+  }));
+}
+wireSeg('themeSeg', v => state.theme = v);
+wireSeg('unitSeg',  v => state.units = v);
+wireSeg('trailSeg', v => state.trail = (v === 'on'));
+wireSeg('fuzzSeg',  v => state.fuzz = (v === 'on'));
+$('showToggles').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  b.classList.toggle('on');
+  b.classList.contains('on') ? state.show.add(b.dataset.v) : state.show.delete(b.dataset.v);
+  refresh();
+}));
+$('posInput').addEventListener('change', () => { state.pos = $('posInput').value; refresh(); });
+$('sizeInput').addEventListener('input', () => { state.size = +$('sizeInput').value; $('sizeVal').textContent = state.size + 'px'; refresh(); });
+$('zoomInput').addEventListener('input', () => { state.zoom = +$('zoomInput').value; $('zoomVal').textContent = state.zoom; refresh(); });
+['c1Input','c2Input'].forEach(id => $(id).addEventListener('input', () => refresh()));
+$('resetColors').addEventListener('click', () => { $('c1Input').value = '#2BD46A'; $('c2Input').value = '#4ADE80'; refresh(); });
+
+$('keyInput').addEventListener('input', () => { state.key = $('keyInput').value.trim(); state.demo = false; refresh(); });
+$('demoBtn').addEventListener('click', () => { state.demo = true; $('keyInput').value = ''; state.key = ''; refresh(); });
+
+/* ---------- build params ---------- */
+function buildParams(forPreview){
+  const p = new URLSearchParams();
+  // preview always has a feed: real key if given, else the demo
+  if (state.demo || (forPreview && !state.key)) p.set('demo', '1');
+  else if (state.key) p.set('key', state.key);
+  if (state.theme !== 'dark') p.set('theme', state.theme);
+  if (state.pos !== 'br') p.set('pos', state.pos);
+  if (state.size !== 380) p.set('size', state.size);
+  if (state.zoom !== 15) p.set('zoom', state.zoom);
+  if (state.units !== 'mi') p.set('units', state.units);
+  if (!state.trail) p.set('trail', '0');
+  const show = [...state.show];
+  if (show.sort().join(',') !== 'area,speed') p.set('show', show.join(',') || 'area');
+  if (state.fuzz) p.set('fuzz', '1');
+  const c1 = $('c1Input').value.replace('#',''), c2 = $('c2Input').value.replace('#','');
+  if (c1.toLowerCase() !== DEFAULT_C1) p.set('c1', c1);
+  if (c2.toLowerCase() !== DEFAULT_C2) p.set('c2', c2);
+  return p;
+}
+
+function refresh(){
+  // live preview (always fed by demo if no key yet)
+  const pv = buildParams(true); pv.set('bg', '1');
+  $('preview').src = 'overlay.html?' + pv.toString();
+  // shareable OBS url — only once they have a real key (or demo)
+  if (state.key || state.demo){
+    const out = buildParams(false);
+    const base = location.href.replace(/index\.html.*$/, '').replace(/\/$/, '');
+    $('urlOut').textContent = base + '/overlay.html?' + out.toString();
+  } else {
+    $('urlOut').textContent = 'Add your pull key above to generate your OBS link…';
+  }
+}
+
+$('copyBtn').addEventListener('click', async () => {
+  const t = $('urlOut').textContent;
+  if (!/overlay\.html/.test(t)) return;
+  try{ await navigator.clipboard.writeText(t);
+    $('copyBtn').textContent = 'Copied ✓'; setTimeout(() => $('copyBtn').textContent = 'Copy URL', 1600);
+  }catch(e){}
+});
+
+/* ---------- living grid: warps toward cursor / device tilt ---------- */
+(function(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const grid = document.querySelector('.grid');
+  if (!grid || reduce) return;
+  let tx=0, ty=0, cx=0, cy=0;
+  window.addEventListener('mousemove', e => {
+    tx = (e.clientX/window.innerWidth - 0.5) * 2;
+    ty = (e.clientY/window.innerHeight - 0.5) * 2;
+  });
+  (function(){
+    let b0=null, g0=null; const clamp=v=>Math.max(-1.6,Math.min(1.6,v));
+    function onTilt(e){ if(e.gamma==null||e.beta==null) return;
+      if(g0===null){g0=e.gamma;b0=e.beta;} tx=clamp((e.gamma-g0)/18); ty=clamp((e.beta-b0)/18); }
+    const D=window.DeviceOrientationEvent;
+    if(D && typeof D.requestPermission==='function'){
+      const ask=()=>D.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onTilt)}).catch(()=>{});
+      window.addEventListener('touchend',ask,{once:true}); window.addEventListener('click',ask,{once:true});
+    } else if(D){ window.addEventListener('deviceorientation',onTilt); }
+  })();
+  (function tick(){
+    cx += (tx-cx)*0.06; cy += (ty-cy)*0.06;
+    grid.style.transform = `perspective(1200px) rotateX(${(-cy*1.6).toFixed(3)}deg) rotateY(${(cx*1.6).toFixed(3)}deg) translate(${(-cx*8).toFixed(2)}px, ${(-cy*8).toFixed(2)}px) scale(1.08)`;
+    requestAnimationFrame(tick);
+  })();
+})();
+
+refresh();
+</script>
+</body>
+</html>

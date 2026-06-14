@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Map Overlay — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --c1:#2BD46A; --c2:#4ADE80;
+    --ink:#F0F7F2; --muted:rgba(240,247,242,.66);
+    --edge:rgba(255,255,255,.14);
+    --size:380px; --zoomdummy:0;
+    --font:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:transparent;overflow:hidden;font-family:var(--font)}
+  body.bg-preview{background:radial-gradient(1200px 600px at 70% -10%, #122719 0%, #050806 60%),#050806}
+
+  /* the map card, dropped into a corner of the OBS canvas */
+  #frame{
+    position:fixed; width:var(--size); aspect-ratio:3/2;
+    border-radius:18px; overflow:hidden; background:#0b1410;
+    border:1px solid var(--edge); box-shadow:0 18px 50px rgba(0,0,0,.5);
+    opacity:0; transition:opacity .5s ease;
+  }
+  #frame.show{opacity:1}
+  body.full #frame{width:auto; height:auto; aspect-ratio:auto; inset:0;
+    border:none; border-radius:0; box-shadow:none}
+
+  .pos-tl #frame{top:24px; left:24px}
+  .pos-tr #frame{top:24px; right:24px}
+  .pos-bl #frame{bottom:24px; left:24px}
+  .pos-br #frame{bottom:24px; right:24px}
+  .pos-tc #frame{top:24px; left:50%; margin-left:calc(var(--size) / -2)}
+  .pos-bc #frame{bottom:24px; left:50%; margin-left:calc(var(--size) / -2)}
+
+  #map{position:absolute; inset:0; background:#0b1410}
+  .leaflet-container{background:#0b1410; font-family:var(--font)}
+  .leaflet-control-attribution{font-size:9px; background:rgba(0,0,0,.45);
+    color:rgba(255,255,255,.4); padding:1px 5px}
+  .leaflet-control-attribution a{color:rgba(255,255,255,.55)}
+
+  /* live position pin */
+  .pin{position:relative; width:18px; height:18px}
+  .pin .ring{position:absolute; inset:-7px; border-radius:50%; border:2px solid var(--c1);
+    opacity:.6; animation:ping 2.2s ease-out infinite}
+  .pin .dot{position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--c2), var(--c1));
+    box-shadow:0 0 0 3px rgba(43,212,106,.30), 0 0 16px var(--c1)}
+  .pin .arrow{position:absolute; left:50%; top:50%; width:0; height:0;
+    border-left:6px solid transparent; border-right:6px solid transparent;
+    border-bottom:13px solid var(--c2);
+    transform:translate(-50%,-160%) rotate(var(--hd,0deg)); transform-origin:50% 160%;
+    filter:drop-shadow(0 0 4px var(--c1)); opacity:var(--arrow,0)}
+  @keyframes ping{0%{transform:scale(.55);opacity:.7}100%{transform:scale(1.7);opacity:0}}
+
+  /* heads-up readout strip */
+  #hud{position:absolute; left:0; right:0; bottom:0; padding:28px 14px 12px;
+    background:linear-gradient(to top, rgba(5,8,6,.94) 6%, rgba(5,8,6,.5) 58%, transparent);
+    display:flex; align-items:flex-end; justify-content:space-between; gap:10px; pointer-events:none}
+  #area{display:flex; align-items:center; gap:7px; min-width:0;
+    font-weight:700; font-size:15px; color:var(--ink); text-shadow:0 2px 8px rgba(0,0,0,.6)}
+  #area .liveDot{width:8px; height:8px; border-radius:50%; background:var(--c1); flex:none;
+    box-shadow:0 0 10px var(--c1); animation:blink 2s ease-in-out infinite}
+  #area .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .stats{display:flex; gap:8px; flex:none}
+  .stat{background:rgba(255,255,255,.08); border:1px solid var(--edge); border-radius:10px;
+    padding:5px 9px; text-align:center; backdrop-filter:blur(6px)}
+  .stat b{display:block; font-size:14px; font-weight:800; line-height:1.1; color:var(--ink);
+    font-variant-numeric:tabular-nums}
+  .stat span{font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  body.hud-off #hud{display:none}
+
+  /* waiting / no-key state */
+  #status{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:20px; background:rgba(5,8,6,.62); backdrop-filter:blur(3px)}
+  #status.hide{display:none}
+  #status .s-emoji{font-size:26px; display:block; margin-bottom:9px}
+  #status .s-txt{font-size:13px; font-weight:600; color:var(--muted); line-height:1.5}
+
+  @media (prefers-reduced-motion:reduce){.pin .ring{animation:none}}
+</style>
+</head>
+<body class="pos-br">
+  <div id="frame">
+    <div id="map"></div>
+    <div id="hud">
+      <div id="area"><span class="liveDot"></span><span class="txt">Locating…</span></div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div id="status">
+      <div><span class="s-emoji">🛰️</span><span class="s-txt" id="statusTxt">Waiting for GPS…<br>Start your RealtimeIRL session.</span></div>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   TEZ Creations — Live Map overlay (RealtimeIRL feed)
+   ------------------------------------------------------------
+   Reads a streamer's live GPS from rtirl.com (their pull key)
+   and glides it across a clean dark map for OBS.
+
+   URL params:
+     key=<rtirl pull key>   the streamer's RealtimeIRL pull key
+     demo=1                 use rtirl's public sample feed (no key)
+     theme=dark|light|voyager   map style (default dark)
+     pos=tl|tr|bl|br|tc|bc  card corner (default br)
+     size=380               card width in px (220–900)
+     zoom=15                map zoom (3–19)
+     follow=0               stop recentering on the pin
+     trail=0                hide the breadcrumb route line
+     units=mi|km            mph/ft vs km/h/m (default mi)
+     show=speed,area,heading,elev   which readouts (default speed,area)
+     c1=2BD46A&c2=4ADE80    accent colors (hex, no #)
+     fuzz=1                 privacy: coarsen position + label, no trail
+     full=1                 fill the whole canvas instead of a card
+     bg=1                   dark preview background (testing outside OBS)
+   ============================================================ */
+const SAMPLE_KEY = 't0fucprufql69bcx';
+const qs = new URLSearchParams(location.search);
+const hex = v => (v && /^[0-9a-fA-F]{3,8}$/.test(v) ? '#' + v : null);
+const intIn = (v, d, lo, hi) => { const n = parseInt(v, 10); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; };
+
+const P = {
+  key:    qs.get('demo') === '1' ? SAMPLE_KEY : (qs.get('key') || '').trim(),
+  theme:  (qs.get('theme') || 'dark').toLowerCase(),
+  pos:    qs.get('pos') || 'br',
+  size:   intIn(qs.get('size'), 380, 220, 900),
+  zoom:   intIn(qs.get('zoom'), 15, 3, 19),
+  follow: qs.get('follow') !== '0',
+  trail:  qs.get('trail') !== '0',
+  units:  (qs.get('units') || 'mi').toLowerCase() === 'km' ? 'km' : 'mi',
+  show:   new Set((qs.get('show') || 'speed,area').toLowerCase().split(',').map(s => s.trim())),
+  c1:     hex(qs.get('c1')),
+  c2:     hex(qs.get('c2')),
+  fuzz:   qs.get('fuzz') === '1',
+  full:   qs.get('full') === '1',
+  bg:     qs.get('bg') === '1',
+};
+
+/* ---------- apply look ---------- */
+document.body.className = 'pos-' + (['tl','tr','bl','br','tc','bc'].includes(P.pos) ? P.pos : 'br');
+if (P.full) document.body.classList.add('full');
+if (P.bg) document.body.classList.add('bg-preview');
+if (P.c1) document.documentElement.style.setProperty('--c1', P.c1);
+if (P.c2) document.documentElement.style.setProperty('--c2', P.c2);
+document.documentElement.style.setProperty('--size', P.size + 'px');
+const hudItems = ['area','speed','heading','elev'].filter(x => P.show.has(x));
+if (!hudItems.length) document.body.classList.add('hud-off');
+const ZOOM = P.fuzz ? Math.min(P.zoom, 13) : P.zoom;
+
+/* ---------- map ---------- */
+const TILES = {
+  dark:    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  light:   'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+};
+const START = [40.7648, -73.96654];
+const map = L.map('map', {
+  zoomControl: false, attributionControl: true,
+  dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+  boxZoom: false, keyboard: false, touchZoom: false, inertia: false,
+}).setView(START, ZOOM);
+L.tileLayer(TILES[P.theme] || TILES.dark, {
+  subdomains: 'abcd', maxZoom: 20, detectRetina: true,
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+}).addTo(map);
+
+const pinHTML = '<div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div>';
+const marker = L.marker(START, {
+  icon: L.divIcon({ className: '', html: pinHTML, iconSize: [18,18], iconAnchor: [9,9] }),
+  interactive: false, keyboard: false,
+}).addTo(map);
+
+let trail = null, trailPts = [];
+if (P.trail && !P.fuzz) {
+  trail = L.polyline([], { color: P.c1 || '#2BD46A', weight: 3, opacity: .65, lineCap: 'round' }).addTo(map);
+}
+
+/* ---------- elements ---------- */
+const el = {
+  area:   document.querySelector('#area .txt'),
+  stats:  document.getElementById('stats'),
+  status: document.getElementById('status'),
+  sEmoji: document.querySelector('#status .s-emoji'),
+  sTxt:   document.getElementById('statusTxt'),
+  frame:  document.getElementById('frame'),
+};
+el.frame.classList.add('show');           // show the card right away (status sits on top until data lands)
+function showStatus(emoji, html) { el.status.classList.remove('hide'); el.sEmoji.textContent = emoji; el.sTxt.innerHTML = html; }
+function hideStatus() { el.status.classList.add('hide'); }
+
+/* ---------- helpers ---------- */
+const fuzzC = v => (P.fuzz ? Math.round(v * 100) / 100 : v);   // ~1km grid when private
+const compass = d => ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d / 22.5) % 16];
+function haversine(a, b, c, d) {
+  const R = 6371000, r = x => x * Math.PI / 180;
+  const dLat = r(c - a), dLon = r(d - b);
+  const s = Math.sin(dLat/2)**2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+/* ---------- live state ---------- */
+let cur = null, tgt = null, lastUpdatedAt = 0, lastChangeAt = 0;
+
+function updateStats() {
+  if (!tgt) return;
+  const items = [];
+  if (P.show.has('speed')) {
+    const v = P.units === 'km' ? Math.round((tgt.speed||0) * 3.6) : Math.round((tgt.speed||0) * 2.23694);
+    items.push(`<div class="stat"><b>${v}</b><span>${P.units === 'km' ? 'km/h' : 'mph'}</span></div>`);
+  }
+  if (P.show.has('heading') && tgt.heading != null) {
+    items.push(`<div class="stat"><b>${compass(tgt.heading)}</b><span>heading</span></div>`);
+  }
+  if (P.show.has('elev') && tgt.elev != null) {
+    const e = P.units === 'km' ? Math.round(tgt.elev) : Math.round(tgt.elev * 3.28084);
+    items.push(`<div class="stat"><b>${e}</b><span>${P.units === 'km' ? 'm' : 'ft'}</span></div>`);
+  }
+  el.stats.innerHTML = items.join('');
+  // point the pin arrow along the heading
+  const root = marker.getElement();
+  if (root) {
+    root.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
+    root.style.setProperty('--arrow', (tgt.heading != null && (tgt.speed||0) > 0.4) ? '1' : '0');
+  }
+}
+
+/* ---------- reverse geocode for the area label (free, no key) ---------- */
+let geoAt = 0, geoLL = null;
+async function maybeGeocode(lat, lon) {
+  if (!P.show.has('area')) return;
+  const now = Date.now();
+  if (now - geoAt < 8000) return;
+  if (geoLL && haversine(geoLL[0], geoLL[1], lat, lon) < 300 && now - geoAt < 60000) return;
+  geoAt = now; geoLL = [lat, lon];
+  try {
+    const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+    const j = await r.json();
+    const city = j.city || j.locality || '';
+    const region = j.principalSubdivision || '';
+    el.area.textContent = P.fuzz
+      ? (region || j.countryName || city || '—')
+      : ([city, region].filter(Boolean).join(', ') || j.countryName || '—');
+  } catch (e) { /* keep last label */ }
+}
+
+/* ---------- poll rtirl ---------- */
+async function poll() {
+  if (!P.key) { showStatus('🔑', 'No pull key yet.<br>Set one up at tezcreations.com'); return; }
+  try {
+    const r = await fetch('https://rtirl.com/api/pull?key=' + encodeURIComponent(P.key), { cache: 'no-store' });
+    const d = await r.json();
+    if (!d || !d.location) {                       // invalid key or session offline
+      if (!cur) showStatus('🛰️', 'Waiting for GPS…<br>Start your RealtimeIRL session.');
+      return;
+    }
+    hideStatus();
+    const lat = fuzzC(d.location.latitude), lon = fuzzC(d.location.longitude);
+    const elev = d.altitude ? (d.altitude.EGM96 != null ? d.altitude.EGM96 : d.altitude.WGS84) : null;
+    tgt = { lat, lon, speed: d.speed || 0, heading: (d.heading != null ? d.heading : null), elev };
+    if (d.updatedAt && d.updatedAt !== lastUpdatedAt) { lastUpdatedAt = d.updatedAt; lastChangeAt = performance.now(); }
+    if (!cur) { cur = { lat, lon }; map.setView([lat, lon], ZOOM, { animate: false }); }
+    if (trail) {
+      const last = trailPts[trailPts.length - 1];
+      if (!last || haversine(last[0], last[1], lat, lon) > 4) {
+        trailPts.push([lat, lon]); if (trailPts.length > 400) trailPts.shift();
+        trail.setLatLngs(trailPts);
+      }
+    }
+    updateStats();
+    maybeGeocode(lat, lon);
+  } catch (e) { /* network hiccup — keep showing last known */ }
+}
+
+/* ---------- smooth glide between updates ---------- */
+function lerp(a, b, t) { return a + (b - a) * t; }
+(function raf() {
+  if (cur && tgt) {
+    cur.lat = lerp(cur.lat, tgt.lat, 0.10);
+    cur.lon = lerp(cur.lon, tgt.lon, 0.10);
+    marker.setLatLng([cur.lat, cur.lon]);
+    if (P.follow) map.setView([cur.lat, cur.lon], ZOOM, { animate: false });
+  }
+  requestAnimationFrame(raf);
+})();
+
+/* keep Leaflet's sizing correct, and run the poll loop */
+setTimeout(() => map.invalidateSize(), 200);
+addEventListener('resize', () => map.invalidateSize());
+poll();
+setInterval(poll, 3000);
+</script>
+</body>
+</html>
