@@ -105,8 +105,11 @@
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(43,212,106,.4)}
   .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);color:var(--ink);box-shadow:none}
 
-  .previewbox{margin-top:18px;border-radius:14px;border:1px solid var(--edge);overflow:hidden;aspect-ratio:16/9;background:#000}
-  .previewbox iframe{width:100%;height:100%;border:0;display:block}
+  /* true-scale 1920x1080 canvas, scaled to fit (so the card sits exactly like OBS) */
+  .previewbox{position:relative;margin-top:18px;border-radius:14px;border:1px solid var(--edge);
+    overflow:hidden;aspect-ratio:16/9;background:#000}
+  .previewbox iframe{position:absolute;top:0;left:0;width:1920px;height:1080px;border:0;
+    transform-origin:top left;display:block}
   .previewnote{color:var(--muted);font-size:12.5px;margin-top:9px;text-align:center}
 
   .urlbox{display:flex;gap:10px;align-items:stretch;margin-top:6px}
@@ -321,10 +324,20 @@ function buildParams(forPreview){
   return p;
 }
 
+// scale the 1920x1080 preview iframe down to fit its box (true-to-OBS proportions)
+const previewBox = document.querySelector('.previewbox');
+function fitPreview(){
+  const w = previewBox.clientWidth;
+  if (w) $('preview').style.transform = 'scale(' + (w / 1920) + ')';
+}
+window.addEventListener('resize', fitPreview);
+window.addEventListener('load', fitPreview);
+
 function refresh(){
   // live preview (always fed by demo if no key yet)
   const pv = buildParams(true); pv.set('bg', '1');
   $('preview').src = 'overlay.html?' + pv.toString();
+  fitPreview();
   // shareable OBS url — only once they have a real key (or demo)
   if (state.key || state.demo){
     const out = buildParams(false);
