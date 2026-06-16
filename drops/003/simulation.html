@@ -50,8 +50,9 @@
   .pos-tc #frame{top:24px;left:50%;margin-left:calc(var(--size) / -2)}
   .pos-bc #frame{bottom:24px;left:50%;margin-left:calc(var(--size) / -2)}
 
-  #map{position:absolute;inset:-90px;background:#0b1410;z-index:1}   /* overscan: tile-load edges fall outside the visible card; z-index contains Leaflet's panes below the HUD */
+  #map{position:absolute;inset:-90px;background:#0b1410;z-index:1;will-change:transform}   /* overscan: tile-load edges fall outside the visible card; z-index contains Leaflet's panes below the HUD */
   .leaflet-container{background:#0b1410;font-family:var(--font)}
+  #dotwrap{position:absolute;left:50%;top:50%;z-index:2;transform:translate(-50%,-50%);pointer-events:none}
 
   .pin{position:relative;width:18px;height:18px}
   .pin .ring{position:absolute;inset:-7px;border-radius:50%;border:2px solid var(--c1);opacity:.6;animation:ping 2.2s ease-out infinite}
@@ -133,6 +134,7 @@
 
     <div id="frame">
       <div id="map"></div>
+      <div id="dotwrap"><div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div></div>
       <div id="hud">
         <div id="area"><span class="liveDot"></span><span class="txt">Locating…</span></div>
         <div class="stats" id="stats"></div>
@@ -441,11 +443,28 @@ function syncLabels(){
 }
 buildTiles();
 
-const pinHTML = '<div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div>';
-const marker = L.marker(ROUTE[0], {
-  icon: L.divIcon({ className:'', html:pinHTML, iconSize:[18,18], iconAnchor:[9,9] }),
-  interactive:false, keyboard:false,
-}).addTo(map);
+const mapEl = document.getElementById('map');
+const dotEl = document.getElementById('dotwrap');
+
+// Smooth follow: pan the map with a sub-pixel CSS transform. Leaflet's setView
+// rounds the map position to whole pixels, which lurches at low zoom (the dot
+// moves <1px/frame); a CSS transform moves sub-pixel. Re-anchor with setView
+// only when the offset nears the overscan edge, so tiles stay covered.
+function placeDot(){
+  const ll = [cur.lat, cur.lng], size = map.getSize();
+  if (cfg.follow){
+    const p = map.latLngToContainerPoint(ll);
+    let dx = size.x / 2 - p.x, dy = size.y / 2 - p.y;
+    if (Math.abs(dx) > 48 || Math.abs(dy) > 48){ map.setView(ll, effZoom(), { animate:false }); dx = 0; dy = 0; }
+    mapEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    dotEl.style.left = '50%'; dotEl.style.top = '50%';
+  } else {
+    mapEl.style.transform = '';
+    const p = map.latLngToContainerPoint(ll);   // #map is inset -90px from #frame
+    dotEl.style.left = (p.x - 90) + 'px'; dotEl.style.top = (p.y - 90) + 'px';
+  }
+}
+function reanchor(){ if (cur) map.setView([cur.lat, cur.lng], effZoom(), { animate:false }); mapEl.style.transform = ''; }
 
 let trail = null, trailPts = [];
 function buildTrail(){
@@ -496,11 +515,8 @@ function render(){
     items.push(`<div class="stat"><b>${e}</b><span>${cfg.units==='km'?'m':'ft'}</span></div>`);
   }
   el.stats.innerHTML = items.join('');
-  const root = marker.getElement();
-  if (root){
-    root.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
-    root.style.setProperty('--arrow', (tgt.heading != null && tgt.speed > 0.4) ? '1' : '0');
-  }
+  dotEl.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
+  dotEl.style.setProperty('--arrow', (tgt.heading != null && tgt.speed > 0.4) ? '1' : '0');
 }
 
 let geoAt = 0, geoLL = null;
@@ -541,11 +557,10 @@ function step(now){
     if (now - geoTick > 1000){ geoTick = now; maybeGeocode(lat, lng); render(); }
   }
   if (tgt){
-    if (!cur) cur = { lat:tgt.lat, lng:tgt.lng };
+    if (!cur){ cur = { lat:tgt.lat, lng:tgt.lng }; map.setView([cur.lat, cur.lng], effZoom(), { animate:false }); }
     cur.lat = lerp(cur.lat, tgt.lat, 0.16);
     cur.lng = lerp(cur.lng, tgt.lng, 0.16);
-    marker.setLatLng([cur.lat, cur.lng]);
-    if (cfg.follow) map.setView([cur.lat, cur.lng], effZoom(), { animate:false });
+    placeDot();
   }
   requestAnimationFrame(step);
 }
@@ -569,15 +584,15 @@ function setBodyClasses(){
 wireSeg('themeSeg', v => { cfg.theme = v; buildTiles(); });
 wireSeg('labelSeg', v => { cfg.labels = (v === 'on'); syncLabels(); });
 wireSeg('trailSeg', v => { cfg.trail = (v === 'on'); buildTrail(); });
-wireSeg('followSeg', v => { cfg.follow = (v === 'on'); });
-wireSeg('fuzzSeg', v => { cfg.fuzz = (v === 'on'); buildTrail(); map.setZoom(effZoom()); });
+wireSeg('followSeg', v => { cfg.follow = (v === 'on'); reanchor(); });
+wireSeg('fuzzSeg', v => { cfg.fuzz = (v === 'on'); buildTrail(); reanchor(); });
 wireSeg('unitSeg', v => { cfg.units = v; render(); });
 wireSeg('fullSeg', v => { cfg.full = (v === 'on'); setBodyClasses(); });
 wireSeg('modeSeg', v => { mode = v === 'walk' ? 1.4 : v === 'drive' ? 14 : 6; render(); });
 wireSeg('rateSeg', v => { rate = +v; });
 
 $('posSel').addEventListener('change', () => { cfg.pos = $('posSel').value; setBodyClasses(); });
-$('zoomRange').addEventListener('input', () => { cfg.zoom = +$('zoomRange').value; $('zoomVal').textContent = cfg.zoom; map.setZoom(effZoom()); });
+$('zoomRange').addEventListener('input', () => { cfg.zoom = +$('zoomRange').value; $('zoomVal').textContent = cfg.zoom; reanchor(); });
 $('sizeRange').addEventListener('input', () => { cfg.size = +$('sizeRange').value; $('sizeVal').textContent = cfg.size + 'px';
   document.documentElement.style.setProperty('--size', cfg.size + 'px'); setTimeout(() => map.invalidateSize(), 60); });
 

@@ -37,7 +37,8 @@
   .pos-tc #frame{top:24px; left:50%; margin-left:calc(var(--size) / -2)}
   .pos-bc #frame{bottom:24px; left:50%; margin-left:calc(var(--size) / -2)}
 
-  #map{position:absolute; inset:-90px; background:#0b1410; z-index:1}   /* overscan: tile-load edges fall outside the visible card; z-index contains Leaflet's panes below the HUD */
+  #map{position:absolute; inset:-90px; background:#0b1410; z-index:1; will-change:transform}   /* overscan: tile-load edges fall outside the visible card; z-index contains Leaflet's panes below the HUD */
+  #dotwrap{position:absolute; left:50%; top:50%; z-index:2; transform:translate(-50%,-50%); pointer-events:none}
   .leaflet-container{background:#0b1410; font-family:var(--font)}
   .leaflet-control-attribution{font-size:9px; background:rgba(0,0,0,.45);
     color:rgba(255,255,255,.4); padding:1px 5px}
@@ -88,6 +89,7 @@
 <body class="pos-br">
   <div id="frame">
     <div id="map"></div>
+    <div id="dotwrap"><div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div></div>
     <div id="hud">
       <div id="area"><span class="liveDot"></span><span class="txt">Locating…</span></div>
       <div class="stats" id="stats"></div>
@@ -177,11 +179,27 @@ const map = L.map('map', {
 L.tileLayer(CARTO(theme.base), tileOpts).addTo(map);
 if (P.labels) L.tileLayer(CARTO(theme.labels), tileOpts).addTo(map);   // street/place names (toggleable)
 
-const pinHTML = '<div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div>';
-const marker = L.marker(START, {
-  icon: L.divIcon({ className: '', html: pinHTML, iconSize: [18,18], iconAnchor: [9,9] }),
-  interactive: false, keyboard: false,
-}).addTo(map);
+const mapEl = document.getElementById('map');
+const dotEl = document.getElementById('dotwrap');
+
+// Smooth follow: pan the map with a sub-pixel CSS transform. Leaflet's setView
+// rounds the map position to whole pixels, which lurches at low zoom; a CSS
+// transform moves sub-pixel. Re-anchor with setView only when the offset nears
+// the overscan edge, so tiles stay covered.
+function placeDot(){
+  const ll = [cur.lat, cur.lon], size = map.getSize();
+  if (P.follow){
+    const p = map.latLngToContainerPoint(ll);
+    let dx = size.x / 2 - p.x, dy = size.y / 2 - p.y;
+    if (Math.abs(dx) > 48 || Math.abs(dy) > 48){ map.setView(ll, ZOOM, { animate:false }); dx = 0; dy = 0; }
+    mapEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    dotEl.style.left = '50%'; dotEl.style.top = '50%';
+  } else {
+    mapEl.style.transform = '';
+    const p = map.latLngToContainerPoint(ll);   // #map is inset -90px from #frame
+    dotEl.style.left = (p.x - 90) + 'px'; dotEl.style.top = (p.y - 90) + 'px';
+  }
+}
 
 let trail = null, trailPts = [];
 if (P.trail && !P.fuzz) {
@@ -230,11 +248,8 @@ function updateStats() {
   }
   el.stats.innerHTML = items.join('');
   // point the pin arrow along the heading
-  const root = marker.getElement();
-  if (root) {
-    root.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
-    root.style.setProperty('--arrow', (tgt.heading != null && (tgt.speed||0) > 0.4) ? '1' : '0');
-  }
+  dotEl.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
+  dotEl.style.setProperty('--arrow', (tgt.heading != null && (tgt.speed||0) > 0.4) ? '1' : '0');
 }
 
 /* ---------- reverse geocode for the area label (free, no key) ---------- */
@@ -290,8 +305,7 @@ function lerp(a, b, t) { return a + (b - a) * t; }
   if (cur && tgt) {
     cur.lat = lerp(cur.lat, tgt.lat, 0.10);
     cur.lon = lerp(cur.lon, tgt.lon, 0.10);
-    marker.setLatLng([cur.lat, cur.lon]);
-    if (P.follow) map.setView([cur.lat, cur.lon], ZOOM, { animate: false });
+    placeDot();
   }
   requestAnimationFrame(raf);
 })();
