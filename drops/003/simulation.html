@@ -635,8 +635,12 @@ $('resetBtn').addEventListener('click', () => {
 });
 
 document.documentElement.style.setProperty('--size', cfg.size + 'px');
-setTimeout(() => map.invalidateSize(), 200);
-addEventListener('resize', () => map.invalidateSize());
+setTimeout(() => map.invalidateSize(false), 200);
+addEventListener('resize', () => map.invalidateSize(false));
+// keep Leaflet's cached size in sync with the real element size (mobile layout
+// settles late / changes on rotate); otherwise the panned map mis-centers and the
+// fixed dot drifts off the trail.
+if (window.ResizeObserver) new ResizeObserver(() => { map.invalidateSize(false); reanchor(); }).observe(mapEl);
 </script>
 </body>
 </html>

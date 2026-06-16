@@ -316,8 +316,11 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 })();
 
 /* keep Leaflet's sizing correct, and run the poll loop */
-setTimeout(() => map.invalidateSize(), 200);
-addEventListener('resize', () => map.invalidateSize());
+setTimeout(() => map.invalidateSize(false), 200);
+addEventListener('resize', () => map.invalidateSize(false));
+// keep Leaflet's cached size in sync with the real element (mobile/late layout) so
+// the panned map stays centered under the fixed dot
+if (window.ResizeObserver) new ResizeObserver(() => map.invalidateSize(false)).observe(mapEl);
 poll();
 setInterval(poll, 3000);
 </script>
