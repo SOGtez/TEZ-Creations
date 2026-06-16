@@ -35,7 +35,7 @@
   .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
     -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%);
     mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%)}
-  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+  .bg-grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
     background-image:
       linear-gradient(to right, rgba(120,200,150,.06) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(120,200,150,.06) 1px, transparent 1px);
@@ -169,7 +169,7 @@
 </style>
 </head>
 <body>
-<div class="grid-wrap"><div class="grid"></div></div>
+<div class="grid-wrap"><div class="bg-grid"></div></div>
 <div class="glow"></div>
 <div class="grain"></div>
 
@@ -540,7 +540,7 @@ $('copyBtn').addEventListener('click', async () => {
 /* ---------- living grid: warps toward the cursor (matches home page) ---------- */
 (function(){
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const grid = document.querySelector('.grid');
+  const grid = document.querySelector('.bg-grid');
   if (!grid || reduce) return;
   let tx=0, ty=0, cx=0, cy=0;
   window.addEventListener('mousemove', e => {
