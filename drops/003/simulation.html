@@ -119,6 +119,13 @@
     body{flex-direction:column}
     #scene{flex:none;height:46vh}
     #panel{width:100%;height:54vh;border-left:none;border-top:1px solid var(--edge)}
+    /* keep the preview card inside the narrow scene instead of overflowing/clipping */
+    #frame{width:min(var(--size), calc(100vw - 28px))}
+    .pos-tl #frame,.pos-bl #frame{left:14px}
+    .pos-tr #frame,.pos-br #frame{right:14px}
+    .pos-tc #frame,.pos-bc #frame{margin-left:calc(min(var(--size), calc(100vw - 28px)) / -2)}
+    .pos-tl #frame,.pos-tr #frame,.pos-tc #frame{top:14px}
+    .pos-bl #frame,.pos-br #frame,.pos-bc #frame{bottom:14px}
   }
   @media (prefers-reduced-motion:reduce){.pin .ring{animation:none}}
 </style>
@@ -451,17 +458,22 @@ const dotEl = document.getElementById('dotwrap');
 // moves <1px/frame); a CSS transform moves sub-pixel. Re-anchor with setView
 // only when the offset nears the overscan edge, so tiles stay covered.
 function placeDot(){
-  const ll = [cur.lat, cur.lng], size = map.getSize();
+  const z = effZoom(), size = map.getSize();
+  // project() gives UNROUNDED float pixels. (latLngToContainerPoint rounds to whole
+  // pixels — that rounding was the real cause of the choppy snapping at low zoom.)
+  let p = map.project([cur.lat, cur.lng], z).subtract(map.getPixelOrigin());
   if (cfg.follow){
-    const p = map.latLngToContainerPoint(ll);
     let dx = size.x / 2 - p.x, dy = size.y / 2 - p.y;
-    if (Math.abs(dx) > 48 || Math.abs(dy) > 48){ map.setView(ll, effZoom(), { animate:false }); dx = 0; dy = 0; }
+    if (Math.abs(dx) > 64 || Math.abs(dy) > 64){          // re-anchor before nearing the overscan edge
+      map.setView([cur.lat, cur.lng], z, { animate:false });
+      p = map.project([cur.lat, cur.lng], z).subtract(map.getPixelOrigin());
+      dx = size.x / 2 - p.x; dy = size.y / 2 - p.y;
+    }
     mapEl.style.transform = `translate(${dx}px, ${dy}px)`;
     dotEl.style.left = '50%'; dotEl.style.top = '50%';
   } else {
     mapEl.style.transform = '';
-    const p = map.latLngToContainerPoint(ll);   // #map is inset -90px from #frame
-    dotEl.style.left = (p.x - 90) + 'px'; dotEl.style.top = (p.y - 90) + 'px';
+    dotEl.style.left = (p.x - 90) + 'px'; dotEl.style.top = (p.y - 90) + 'px';   // #map is inset -90px from #frame
   }
 }
 function reanchor(){ if (cur) map.setView([cur.lat, cur.lng], effZoom(), { animate:false }); mapEl.style.transform = ''; }
