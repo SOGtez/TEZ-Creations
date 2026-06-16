@@ -37,7 +37,7 @@
   .pos-tc #frame{top:24px; left:50%; margin-left:calc(var(--size) / -2)}
   .pos-bc #frame{bottom:24px; left:50%; margin-left:calc(var(--size) / -2)}
 
-  #map{position:absolute; inset:0; background:#0b1410}
+  #map{position:absolute; inset:-90px; background:#0b1410}   /* overscan: tile-load edges fall outside the visible card */
   .leaflet-container{background:#0b1410; font-family:var(--font)}
   .leaflet-control-attribution{font-size:9px; background:rgba(0,0,0,.45);
     color:rgba(255,255,255,.4); padding:1px 5px}
@@ -58,9 +58,9 @@
   @keyframes ping{0%{transform:scale(.55);opacity:.7}100%{transform:scale(1.7);opacity:0}}
 
   /* heads-up readout strip */
-  #hud{position:absolute; left:0; right:0; bottom:0; padding:28px 14px 12px;
-    background:linear-gradient(to top, rgba(5,8,6,.94) 6%, rgba(5,8,6,.5) 58%, transparent);
-    display:flex; align-items:flex-end; justify-content:space-between; gap:10px; pointer-events:none}
+  #hud{position:absolute; left:0; right:0; top:0; padding:12px 14px 28px;
+    background:linear-gradient(to bottom, rgba(5,8,6,.94) 6%, rgba(5,8,6,.5) 58%, transparent);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px; pointer-events:none}
   #area{display:flex; align-items:center; gap:7px; min-width:0;
     font-weight:700; font-size:15px; color:var(--ink); text-shadow:0 2px 8px rgba(0,0,0,.6)}
   #area .liveDot{width:8px; height:8px; border-radius:50%; background:var(--c1); flex:none;
@@ -165,7 +165,7 @@ const TILES = {
   voyager: { base: 'rastertiles/voyager_nolabels', labels: 'rastertiles/voyager_only_labels' },
 };
 const theme = TILES[P.theme] || TILES.dark;
-const tileOpts = { subdomains: 'abcd', maxZoom: 20, detectRetina: true,
+const tileOpts = { subdomains: 'abcd', maxZoom: 20, detectRetina: true, keepBuffer: 4,
   attribution: '&copy; OpenStreetMap &copy; CARTO' };
 const START = [40.7648, -73.96654];
 const map = L.map('map', {
