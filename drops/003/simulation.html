@@ -385,10 +385,11 @@ async function maybeGeocode(lat, lon){
 }
 
 /* ---------- the simulation loop ---------- */
-let dist = 0, cur = null, tgt = null, lastT = performance.now(), trailAt = 0, geoTick = 0;
+let dist = 0, cur = null, tgt = null, lastT = 0, trailAt = 0, geoTick = 0;
 function fuzzC(v){ return cfg.fuzz ? Math.round(v*100)/100 : v; }
 function lerp(a,b,t){ return a+(b-a)*t; }
-(function step(now){
+function step(now){
+  if (!lastT) lastT = now;                    // first real frame: prime the clock (avoids a NaN dt)
   const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
   if (playing){
     dist += mode * dt * rate;
@@ -413,7 +414,8 @@ function lerp(a,b,t){ return a+(b-a)*t; }
     if (cfg.follow) map.setView([cur.lat, cur.lng], effZoom(), { animate:false });
   }
   requestAnimationFrame(step);
-})();
+}
+requestAnimationFrame(step);                  // kick off with a real timestamp (not an undefined priming call)
 render();
 
 /* ============================================================
