@@ -70,7 +70,7 @@
   #area{display:flex;align-items:center;gap:7px;min-width:0;font-weight:700;font-size:15px;color:var(--ink);text-shadow:0 2px 8px rgba(0,0,0,.6)}
   #area .liveDot{width:8px;height:8px;border-radius:50%;background:var(--c1);flex:none;box-shadow:0 0 10px var(--c1);animation:blink 2s ease-in-out infinite}
   #area .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .stats{display:flex;gap:8px;flex:none}
+  .stats{display:flex;gap:8px;flex:none;margin-left:auto}
   .stat{background:rgba(255,255,255,.08);border:1px solid var(--edge);border-radius:10px;padding:5px 9px;text-align:center;backdrop-filter:blur(6px)}
   .stat b{display:block;font-size:14px;font-weight:800;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
   .stat span{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -483,6 +483,7 @@ function posAt(dist){
 /* ---------- readouts ---------- */
 const el = { area:document.querySelector('#area .txt'), stats:$('stats') };
 function render(){
+  document.getElementById('area').style.display = cfg.show.has('area') ? '' : 'none';
   if (!tgt) return;
   const items = [];
   if (cfg.show.has('speed')){

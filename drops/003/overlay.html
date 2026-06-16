@@ -67,7 +67,7 @@
     box-shadow:0 0 10px var(--c1); animation:blink 2s ease-in-out infinite}
   #area .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-  .stats{display:flex; gap:8px; flex:none}
+  .stats{display:flex; gap:8px; flex:none; margin-left:auto}
   .stat{background:rgba(255,255,255,.08); border:1px solid var(--edge); border-radius:10px;
     padding:5px 9px; text-align:center; backdrop-filter:blur(6px)}
   .stat b{display:block; font-size:14px; font-weight:800; line-height:1.1; color:var(--ink);
@@ -154,6 +154,7 @@ if (P.c2) document.documentElement.style.setProperty('--c2', P.c2);
 document.documentElement.style.setProperty('--size', P.size + 'px');
 const hudItems = ['area','speed','heading','elev'].filter(x => P.show.has(x));
 if (!hudItems.length) document.body.classList.add('hud-off');
+if (!P.show.has('area')) document.getElementById('area').style.display = 'none';
 const ZOOM = P.fuzz ? Math.min(P.zoom, 13) : P.zoom;
 
 /* ---------- map ---------- */
