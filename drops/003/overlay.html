@@ -114,6 +114,7 @@
      zoom=15                map zoom (3–19)
      follow=0               stop recentering on the pin
      trail=0                hide the breadcrumb route line
+     labels=0               hide street / place names
      units=mi|km            mph/ft vs km/h/m (default mi)
      show=speed,area,heading,elev   which readouts (default speed,area)
      c1=2BD46A&c2=4ADE80    accent colors (hex, no #)
@@ -134,6 +135,7 @@ const P = {
   zoom:   intIn(qs.get('zoom'), 15, 3, 19),
   follow: qs.get('follow') !== '0',
   trail:  qs.get('trail') !== '0',
+  labels: qs.get('labels') !== '0',
   units:  (qs.get('units') || 'mi').toLowerCase() === 'km' ? 'km' : 'mi',
   show:   new Set((qs.get('show') || 'speed,area').toLowerCase().split(',').map(s => s.trim())),
   c1:     hex(qs.get('c1')),
@@ -155,21 +157,24 @@ if (!hudItems.length) document.body.classList.add('hud-off');
 const ZOOM = P.fuzz ? Math.min(P.zoom, 13) : P.zoom;
 
 /* ---------- map ---------- */
+// label-free base tiles + a separate labels layer, so street/place names can be toggled
+const CARTO = p => `https://{s}.basemaps.cartocdn.com/${p}/{z}/{x}/{y}{r}.png`;
 const TILES = {
-  dark:    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light:   'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  dark:    { base: 'dark_nolabels',                labels: 'dark_only_labels' },
+  light:   { base: 'light_nolabels',               labels: 'light_only_labels' },
+  voyager: { base: 'rastertiles/voyager_nolabels', labels: 'rastertiles/voyager_only_labels' },
 };
+const theme = TILES[P.theme] || TILES.dark;
+const tileOpts = { subdomains: 'abcd', maxZoom: 20, detectRetina: true,
+  attribution: '&copy; OpenStreetMap &copy; CARTO' };
 const START = [40.7648, -73.96654];
 const map = L.map('map', {
   zoomControl: false, attributionControl: false,   // clean overlay; credit shown on the setup page instead
   dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
   boxZoom: false, keyboard: false, touchZoom: false, inertia: false,
 }).setView(START, ZOOM);
-L.tileLayer(TILES[P.theme] || TILES.dark, {
-  subdomains: 'abcd', maxZoom: 20, detectRetina: true,
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
-}).addTo(map);
+L.tileLayer(CARTO(theme.base), tileOpts).addTo(map);
+if (P.labels) L.tileLayer(CARTO(theme.labels), tileOpts).addTo(map);   // street/place names (toggleable)
 
 const pinHTML = '<div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div>';
 const marker = L.marker(START, {

@@ -211,6 +211,13 @@
           <button data-v="off">Hide</button>
         </div>
       </div>
+      <div class="field">
+        <label>Street names</label>
+        <div class="seg" id="labelSeg">
+          <button data-v="on" class="on">Show</button>
+          <button data-v="off">Hide</button>
+        </div>
+      </div>
       <div class="field" style="grid-column:1/-1">
         <label>Readouts to show</label>
         <div class="toggles" id="showToggles">
@@ -275,7 +282,7 @@ const DEFAULT_C1 = '2bd46a', DEFAULT_C2 = '4ade80';
 const $ = id => document.getElementById(id);
 const state = {
   key:'', theme:'dark', pos:'br', size:380, zoom:15, units:'mi',
-  trail:true, show:new Set(['area','speed']), fuzz:false, demo:false,
+  trail:true, labels:true, show:new Set(['area','speed']), fuzz:false, demo:false,
 };
 
 /* ---------- segmented + toggle wiring ---------- */
@@ -288,6 +295,7 @@ function wireSeg(id, fn){
 wireSeg('themeSeg', v => state.theme = v);
 wireSeg('unitSeg',  v => state.units = v);
 wireSeg('trailSeg', v => state.trail = (v === 'on'));
+wireSeg('labelSeg', v => state.labels = (v === 'on'));
 wireSeg('fuzzSeg',  v => state.fuzz = (v === 'on'));
 $('showToggles').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
   b.classList.toggle('on');
@@ -315,6 +323,7 @@ function buildParams(forPreview){
   if (state.zoom !== 15) p.set('zoom', state.zoom);
   if (state.units !== 'mi') p.set('units', state.units);
   if (!state.trail) p.set('trail', '0');
+  if (!state.labels) p.set('labels', '0');
   const show = [...state.show];
   if (show.sort().join(',') !== 'area,speed') p.set('show', show.join(',') || 'area');
   if (state.fuzz) p.set('fuzz', '1');
