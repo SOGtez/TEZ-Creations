@@ -50,7 +50,7 @@
   .pos-tc #frame{top:24px;left:50%;margin-left:calc(var(--size) / -2)}
   .pos-bc #frame{bottom:24px;left:50%;margin-left:calc(var(--size) / -2)}
 
-  #map{position:absolute;inset:-90px;background:#0b1410}   /* overscan: tile-load edges fall outside the visible card */
+  #map{position:absolute;inset:-90px;background:#0b1410;z-index:1}   /* overscan: tile-load edges fall outside the visible card; z-index contains Leaflet's panes below the HUD */
   .leaflet-container{background:#0b1410;font-family:var(--font)}
 
   .pin{position:relative;width:18px;height:18px}
@@ -64,7 +64,7 @@
     filter:drop-shadow(0 0 4px var(--c1));opacity:var(--arrow,0)}
   @keyframes ping{0%{transform:scale(.55);opacity:.7}100%{transform:scale(1.7);opacity:0}}
 
-  #hud{position:absolute;left:0;right:0;top:0;padding:12px 14px 28px;
+  #hud{position:absolute;left:0;right:0;top:0;padding:12px 14px 28px;z-index:2;
     background:linear-gradient(to bottom, rgba(5,8,6,.94) 6%, rgba(5,8,6,.5) 58%, transparent);
     display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}
   #area{display:flex;align-items:center;gap:7px;min-width:0;font-weight:700;font-size:15px;color:var(--ink);text-shadow:0 2px 8px rgba(0,0,0,.6)}
