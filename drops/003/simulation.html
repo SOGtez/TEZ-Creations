@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Map Simulation — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --c1:#2BD46A; --c2:#4ADE80; --c1-deep:#16a34a;
+    --ink:#F0F7F2; --muted:rgba(240,247,242,.66); --edge:rgba(255,255,255,.14);
+    --size:420px; --font:'Inter',system-ui,sans-serif;
+    --panel:#0c130e; --panel2:rgba(255,255,255,.05);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);background:#050806;color:var(--ink)}
+  body{display:flex}
+
+  /* ===== faux IRL camera feed (the "stream") ===== */
+  #scene{position:relative;flex:1;overflow:hidden;
+    background:
+      radial-gradient(1100px 600px at 25% 80%, rgba(43,212,106,.10), transparent 60%),
+      radial-gradient(1200px 700px at 80% 10%, rgba(74,222,128,.08), transparent 55%),
+      linear-gradient(160deg,#0e1d13 0%, #050806 75%)}
+  .scene-grain{position:absolute;inset:0;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .scene-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
+    color:rgba(255,255,255,.10);font-weight:800;font-size:clamp(22px,3.4vw,40px);letter-spacing:.16em;
+    text-transform:uppercase;pointer-events:none;user-select:none}
+  .scene-hint small{display:block;font-size:13px;letter-spacing:.06em;font-weight:600;margin-top:8px;color:rgba(255,255,255,.16)}
+  .live-badge{position:absolute;top:18px;left:18px;display:flex;align-items:center;gap:7px;
+    background:rgba(0,0,0,.5);border:1px solid var(--edge);border-radius:8px;padding:5px 11px;
+    font-weight:700;font-size:12px;letter-spacing:.05em;backdrop-filter:blur(6px);z-index:6}
+  .live-badge i{width:8px;height:8px;border-radius:50%;background:#eb0400;box-shadow:0 0 10px #eb0400;animation:blink 1.6s ease-in-out infinite}
+  .scene-title{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:6;
+    background:rgba(0,0,0,.45);border:1px solid var(--edge);border-radius:8px;padding:6px 14px;
+    font-weight:600;font-size:13px;color:var(--muted);backdrop-filter:blur(6px);white-space:nowrap}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* ===== the overlay card (identical to overlay.html) ===== */
+  #frame{position:absolute;width:var(--size);aspect-ratio:3/2;border-radius:18px;overflow:hidden;
+    background:#0b1410;border:1px solid var(--edge);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  body.full #frame{width:auto;height:auto;aspect-ratio:auto;inset:0;border:none;border-radius:0;box-shadow:none}
+  .pos-tl #frame{top:24px;left:24px}
+  .pos-tr #frame{top:24px;right:24px}
+  .pos-bl #frame{bottom:24px;left:24px}
+  .pos-br #frame{bottom:24px;right:24px}
+  .pos-tc #frame{top:24px;left:50%;margin-left:calc(var(--size) / -2)}
+  .pos-bc #frame{bottom:24px;left:50%;margin-left:calc(var(--size) / -2)}
+
+  #map{position:absolute;inset:0;background:#0b1410}
+  .leaflet-container{background:#0b1410;font-family:var(--font)}
+
+  .pin{position:relative;width:18px;height:18px}
+  .pin .ring{position:absolute;inset:-7px;border-radius:50%;border:2px solid var(--c1);opacity:.6;animation:ping 2.2s ease-out infinite}
+  .pin .dot{position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--c2), var(--c1));
+    box-shadow:0 0 0 3px rgba(43,212,106,.30), 0 0 16px var(--c1)}
+  .pin .arrow{position:absolute;left:50%;top:50%;width:0;height:0;
+    border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:13px solid var(--c2);
+    transform:translate(-50%,-160%) rotate(var(--hd,0deg));transform-origin:50% 160%;
+    filter:drop-shadow(0 0 4px var(--c1));opacity:var(--arrow,0)}
+  @keyframes ping{0%{transform:scale(.55);opacity:.7}100%{transform:scale(1.7);opacity:0}}
+
+  #hud{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 12px;
+    background:linear-gradient(to top, rgba(5,8,6,.94) 6%, rgba(5,8,6,.5) 58%, transparent);
+    display:flex;align-items:flex-end;justify-content:space-between;gap:10px;pointer-events:none}
+  #area{display:flex;align-items:center;gap:7px;min-width:0;font-weight:700;font-size:15px;color:var(--ink);text-shadow:0 2px 8px rgba(0,0,0,.6)}
+  #area .liveDot{width:8px;height:8px;border-radius:50%;background:var(--c1);flex:none;box-shadow:0 0 10px var(--c1);animation:blink 2s ease-in-out infinite}
+  #area .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stats{display:flex;gap:8px;flex:none}
+  .stat{background:rgba(255,255,255,.08);border:1px solid var(--edge);border-radius:10px;padding:5px 9px;text-align:center;backdrop-filter:blur(6px)}
+  .stat b{display:block;font-size:14px;font-weight:800;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+  .stat span{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  body.hud-off #hud{display:none}
+
+  /* ===== control panel ===== */
+  #panel{width:340px;flex:none;height:100%;overflow-y:auto;background:var(--panel);
+    border-left:1px solid var(--edge);padding:18px 18px 40px}
+  #panel::-webkit-scrollbar{width:7px}#panel::-webkit-scrollbar-thumb{background:var(--edge);border-radius:4px}
+  .p-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .p-head .star{color:var(--c2)}
+  .p-head a{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--ink);text-decoration:none}
+  .p-sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .p-sub b{color:var(--c2)}
+
+  .group{border:1px solid var(--edge);border-radius:13px;padding:13px 13px 15px;margin-bottom:12px;background:var(--panel2)}
+  .group h4{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+  .row{margin-bottom:12px}.row:last-child{margin-bottom:0}
+  .row > label{display:block;font-weight:600;font-size:12.5px;margin-bottom:6px}
+  .row .rv{color:var(--c2);font-family:'JetBrains Mono',monospace;font-size:11.5px}
+  input[type=range]{width:100%;accent-color:var(--c1)}
+  select{width:100%;padding:9px 11px;border-radius:9px;color:var(--ink);background:rgba(0,0,0,.32);
+    border:1px solid var(--edge);font:500 13px 'Plus Jakarta Sans',sans-serif}
+  select option{background:#0a0f0b}
+  .seg{display:flex;border:1px solid var(--edge);border-radius:10px;overflow:hidden}
+  .seg button{flex:1;padding:9px 6px;background:transparent;border:none;cursor:pointer;
+    font:600 12px 'Plus Jakarta Sans',sans-serif;color:var(--muted)}
+  .seg button.on{background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b}
+  .toggles{display:flex;flex-wrap:wrap;gap:7px}
+  .toggles button{padding:8px 11px;border-radius:9px;border:1px solid var(--edge);background:rgba(255,255,255,.05);
+    cursor:pointer;font:600 12px 'Plus Jakarta Sans',sans-serif;color:var(--muted)}
+  .toggles button.on{background:linear-gradient(120deg,var(--c1),var(--c1-deep));color:#04160b;border-color:transparent}
+  .colorrow{display:flex;gap:9px;align-items:center}
+  input[type=color]{width:42px;height:34px;border:1px solid var(--edge);border-radius:9px;background:transparent;padding:3px;cursor:pointer}
+  .mini{padding:8px 12px;border-radius:9px;border:1px solid var(--edge);background:rgba(255,255,255,.06);
+    color:var(--ink);cursor:pointer;font:600 12.5px 'Plus Jakarta Sans',sans-serif}
+  .mini:hover{background:rgba(43,212,106,.12);border-color:rgba(43,212,106,.4)}
+  .play-row{display:flex;gap:9px}
+  .play-row .mini{flex:1;text-align:center}
+  .play-row .mini.primary{background:linear-gradient(180deg,var(--c2),var(--c1-deep));color:#04160b;border:none}
+  .foot{color:rgba(143,163,148,.6);font-size:11px;text-align:center;margin-top:6px}
+  .foot a{color:var(--c2)}
+
+  @media(max-width:760px){
+    body{flex-direction:column}
+    #scene{flex:none;height:46vh}
+    #panel{width:100%;height:54vh;border-left:none;border-top:1px solid var(--edge)}
+  }
+  @media (prefers-reduced-motion:reduce){.pin .ring{animation:none}}
+</style>
+</head>
+<body class="pos-br">
+
+  <!-- ===== the "stream" ===== -->
+  <div id="scene">
+    <div class="scene-grain"></div>
+    <div class="live-badge"><i></i>LIVE</div>
+    <div class="scene-title">🚶 IRL Walk — exploring the city</div>
+    <div class="scene-hint">Camera feed<small>(simulated — your overlay sits on top, just like OBS)</small></div>
+
+    <div id="frame">
+      <div id="map"></div>
+      <div id="hud">
+        <div id="area"><span class="liveDot"></span><span class="txt">Locating…</span></div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== controls ===== -->
+  <aside id="panel">
+    <div class="p-head"><a href="index.html">TEZ<span class="star">✦</span> Live Map</a></div>
+    <div class="p-sub"><b>Simulation.</b> A fake streamer is on the move — toggle anything and watch the real overlay react.</div>
+
+    <div class="group">
+      <h4>The journey</h4>
+      <div class="row">
+        <div class="play-row">
+          <button class="mini primary" id="playBtn">⏸ Pause</button>
+          <button class="mini" id="resetBtn">↺ Reset</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Travel mode</label>
+        <div class="seg" id="modeSeg">
+          <button data-v="walk">🚶 Walk</button>
+          <button data-v="bike" class="on">🚲 Bike</button>
+          <button data-v="drive">🚗 Drive</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Time speed</label>
+        <div class="seg" id="rateSeg">
+          <button data-v="1">1×</button>
+          <button data-v="4" class="on">4×</button>
+          <button data-v="16">16×</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Map</h4>
+      <div class="row">
+        <label>Map style</label>
+        <div class="seg" id="themeSeg">
+          <button data-v="dark" class="on">Dark</button>
+          <button data-v="voyager">Voyager</button>
+          <button data-v="light">Light</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Zoom <span class="rv" id="zoomVal">15</span></label>
+        <input type="range" id="zoomRange" min="10" max="18" step="1" value="15">
+      </div>
+      <div class="row">
+        <label>Street names</label>
+        <div class="seg" id="labelSeg"><button data-v="on" class="on">Show</button><button data-v="off">Hide</button></div>
+      </div>
+      <div class="row">
+        <label>Route trail</label>
+        <div class="seg" id="trailSeg"><button data-v="on" class="on">Show</button><button data-v="off">Hide</button></div>
+      </div>
+      <div class="row">
+        <label>Follow the pin</label>
+        <div class="seg" id="followSeg"><button data-v="on" class="on">Follow</button><button data-v="off">Free</button></div>
+      </div>
+      <div class="row">
+        <label>Privacy mode</label>
+        <div class="seg" id="fuzzSeg"><button data-v="off" class="on">Precise</button><button data-v="on">Coarse</button></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Card</h4>
+      <div class="row">
+        <label>Position</label>
+        <select id="posSel">
+          <option value="br">Bottom right</option><option value="bl">Bottom left</option>
+          <option value="tr">Top right</option><option value="tl">Top left</option>
+          <option value="bc">Bottom center</option><option value="tc">Top center</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Size <span class="rv" id="sizeVal">420px</span></label>
+        <input type="range" id="sizeRange" min="260" max="640" step="10" value="420">
+      </div>
+      <div class="row">
+        <label>Fill the whole screen</label>
+        <div class="seg" id="fullSeg"><button data-v="off" class="on">Card</button><button data-v="on">Full</button></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4>Readouts &amp; units</h4>
+      <div class="row">
+        <label>Show</label>
+        <div class="toggles" id="showToggles">
+          <button data-v="area" class="on">📍 Area</button>
+          <button data-v="speed" class="on">⚡ Speed</button>
+          <button data-v="heading" class="on">🧭 Heading</button>
+          <button data-v="elev" class="on">⛰️ Elevation</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Units</label>
+        <div class="seg" id="unitSeg"><button data-v="mi" class="on">mph / ft</button><button data-v="km">km/h / m</button></div>
+      </div>
+      <div class="row">
+        <label>Accent colors</label>
+        <div class="colorrow">
+          <input type="color" id="c1Input" value="#2BD46A">
+          <input type="color" id="c2Input" value="#4ADE80">
+          <button class="mini" id="resetColors">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">Set up your real overlay on the <a href="index.html">Live Map page</a>.</div>
+  </aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   TEZ Creations — Live Map SIMULATION
+   The same overlay rendering as overlay.html, but driven by a
+   fake streamer travelling a city route instead of an rtirl feed.
+   Every control applies live so you can see each option work.
+   ============================================================ */
+const $ = id => document.getElementById(id);
+
+const cfg = {
+  theme:'dark', pos:'br', size:420, zoom:15, units:'mi',
+  follow:true, trail:true, labels:true, fuzz:false, full:false,
+  show:new Set(['area','speed','heading','elev']),
+};
+let mode = 6, rate = 4, playing = true;   // mode = m/s nominal speed
+
+/* ---------- map ---------- */
+const CARTO = p => `https://{s}.basemaps.cartocdn.com/${p}/{z}/{x}/{y}{r}.png`;
+const TILES = {
+  dark:    { base:'dark_nolabels',                labels:'dark_only_labels' },
+  light:   { base:'light_nolabels',               labels:'light_only_labels' },
+  voyager: { base:'rastertiles/voyager_nolabels', labels:'rastertiles/voyager_only_labels' },
+};
+const tileOpts = { subdomains:'abcd', maxZoom:20, detectRetina:true };
+
+const ROUTE = [
+  [40.7220,-74.0030],[40.7265,-74.0023],[40.7330,-74.0050],[40.7390,-74.0060],
+  [40.7445,-74.0050],[40.7500,-74.0030],[40.7560,-73.9980],[40.7590,-73.9910],
+  [40.7560,-73.9855],[40.7536,-73.9832],[40.7510,-73.9800],[40.7480,-73.9772],
+  [40.7440,-73.9790],[40.7390,-73.9830],[40.7359,-73.9870],[40.7320,-73.9880],
+  [40.7280,-73.9850],[40.7240,-73.9880],[40.7200,-73.9930],[40.7185,-73.9980],
+  [40.7205,-74.0010],[40.7220,-74.0030],
+];
+
+const map = L.map('map', {
+  zoomControl:false, attributionControl:false,
+  dragging:false, scrollWheelZoom:false, doubleClickZoom:false,
+  boxZoom:false, keyboard:false, touchZoom:false, inertia:false,
+}).setView(ROUTE[0], cfg.zoom);
+
+let baseLayer = null, labelLayer = null;
+function effZoom(){ return cfg.fuzz ? Math.min(cfg.zoom, 13) : cfg.zoom; }
+function buildTiles(){
+  const t = TILES[cfg.theme] || TILES.dark;
+  if (baseLayer) map.removeLayer(baseLayer);
+  if (labelLayer){ map.removeLayer(labelLayer); labelLayer = null; }
+  baseLayer = L.tileLayer(CARTO(t.base), tileOpts).addTo(map);
+  if (cfg.labels) labelLayer = L.tileLayer(CARTO(t.labels), tileOpts).addTo(map);
+}
+function syncLabels(){
+  const t = TILES[cfg.theme] || TILES.dark;
+  if (cfg.labels && !labelLayer) labelLayer = L.tileLayer(CARTO(t.labels), tileOpts).addTo(map);
+  else if (!cfg.labels && labelLayer){ map.removeLayer(labelLayer); labelLayer = null; }
+}
+buildTiles();
+
+const pinHTML = '<div class="pin"><div class="ring"></div><div class="arrow"></div><div class="dot"></div></div>';
+const marker = L.marker(ROUTE[0], {
+  icon: L.divIcon({ className:'', html:pinHTML, iconSize:[18,18], iconAnchor:[9,9] }),
+  interactive:false, keyboard:false,
+}).addTo(map);
+
+let trail = null, trailPts = [];
+function buildTrail(){
+  if (trail){ map.removeLayer(trail); trail = null; trailPts = []; }
+  if (cfg.trail && !cfg.fuzz) trail = L.polyline([], { color:cfg.c1 || '#2BD46A', weight:3, opacity:.65, lineCap:'round' }).addTo(map);
+}
+buildTrail();
+
+/* ---------- geometry helpers ---------- */
+function haversine(a,b,c,d){ const R=6371000,r=x=>x*Math.PI/180;
+  const dLat=r(c-a),dLon=r(d-b);
+  const s=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s)); }
+function bearing(a,b,c,d){ const r=x=>x*Math.PI/180,g=x=>x*180/Math.PI;
+  const y=Math.sin(r(d-b))*Math.cos(r(c));
+  const x=Math.cos(r(a))*Math.sin(r(c))-Math.sin(r(a))*Math.cos(r(c))*Math.cos(r(d-b));
+  return (g(Math.atan2(y,x))+360)%360; }
+const compass = d => ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];
+
+// cumulative segment lengths around the loop
+const segLen = [], cum = [0];
+let total = 0;
+for (let i = 0; i < ROUTE.length - 1; i++){
+  const L0 = haversine(ROUTE[i][0],ROUTE[i][1],ROUTE[i+1][0],ROUTE[i+1][1]);
+  segLen.push(L0); total += L0; cum.push(total);
+}
+function posAt(dist){
+  let d = ((dist % total) + total) % total;
+  let i = 0; while (i < segLen.length - 1 && cum[i+1] <= d) i++;
+  const f = segLen[i] ? (d - cum[i]) / segLen[i] : 0;
+  const A = ROUTE[i], B = ROUTE[i+1];
+  return { lat:A[0]+(B[0]-A[0])*f, lng:A[1]+(B[1]-A[1])*f, heading:bearing(A[0],A[1],B[0],B[1]) };
+}
+
+/* ---------- readouts ---------- */
+const el = { area:document.querySelector('#area .txt'), stats:$('stats') };
+function render(){
+  if (!tgt) return;
+  const items = [];
+  if (cfg.show.has('speed')){
+    const v = cfg.units === 'km' ? Math.round(tgt.speed*3.6) : Math.round(tgt.speed*2.23694);
+    items.push(`<div class="stat"><b>${v}</b><span>${cfg.units==='km'?'km/h':'mph'}</span></div>`);
+  }
+  if (cfg.show.has('heading') && tgt.heading != null) items.push(`<div class="stat"><b>${compass(tgt.heading)}</b><span>heading</span></div>`);
+  if (cfg.show.has('elev') && tgt.elev != null){
+    const e = cfg.units === 'km' ? Math.round(tgt.elev) : Math.round(tgt.elev*3.28084);
+    items.push(`<div class="stat"><b>${e}</b><span>${cfg.units==='km'?'m':'ft'}</span></div>`);
+  }
+  el.stats.innerHTML = items.join('');
+  const root = marker.getElement();
+  if (root){
+    root.style.setProperty('--hd', (tgt.heading != null ? tgt.heading : 0) + 'deg');
+    root.style.setProperty('--arrow', (tgt.heading != null && tgt.speed > 0.4) ? '1' : '0');
+  }
+}
+
+let geoAt = 0, geoLL = null;
+async function maybeGeocode(lat, lon){
+  if (!cfg.show.has('area')) return;
+  const now = Date.now();
+  if (now - geoAt < 8000) return;
+  if (geoLL && haversine(geoLL[0],geoLL[1],lat,lon) < 300 && now - geoAt < 60000) return;
+  geoAt = now; geoLL = [lat, lon];
+  try{
+    const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+    const j = await r.json();
+    const city = j.city || j.locality || '', region = j.principalSubdivision || '';
+    el.area.textContent = cfg.fuzz ? (region || j.countryName || city || '—') : ([city, region].filter(Boolean).join(', ') || j.countryName || '—');
+  }catch(e){}
+}
+
+/* ---------- the simulation loop ---------- */
+let dist = 0, cur = null, tgt = null, lastT = performance.now(), trailAt = 0, geoTick = 0;
+function fuzzC(v){ return cfg.fuzz ? Math.round(v*100)/100 : v; }
+function lerp(a,b,t){ return a+(b-a)*t; }
+(function step(now){
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  if (playing){
+    dist += mode * dt * rate;
+    const p = posAt(dist);
+    const lat = fuzzC(p.lat), lng = fuzzC(p.lng);
+    tgt = { lat, lng, speed: mode, heading: p.heading, elev: 14 + 8 * Math.sin(dist / 350) };
+    if (trail && now - trailAt > 250){
+      trailAt = now;
+      const last = trailPts[trailPts.length - 1];
+      if (!last || haversine(last[0],last[1],lat,lng) > 4){
+        trailPts.push([lat,lng]); if (trailPts.length > 600) trailPts.shift();
+        trail.setLatLngs(trailPts);
+      }
+    }
+    if (now - geoTick > 1000){ geoTick = now; maybeGeocode(lat, lng); render(); }
+  }
+  if (tgt){
+    if (!cur) cur = { lat:tgt.lat, lng:tgt.lng };
+    cur.lat = lerp(cur.lat, tgt.lat, 0.16);
+    cur.lng = lerp(cur.lng, tgt.lng, 0.16);
+    marker.setLatLng([cur.lat, cur.lng]);
+    if (cfg.follow) map.setView([cur.lat, cur.lng], effZoom(), { animate:false });
+  }
+  requestAnimationFrame(step);
+})();
+render();
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+function wireSeg(id, fn){
+  $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    $(id).querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); fn(b.dataset.v);
+  }));
+}
+function setBodyClasses(){
+  document.body.className = 'pos-' + cfg.pos + (cfg.full ? ' full' : '') + (cfg.show.size ? '' : ' hud-off');
+  setTimeout(() => map.invalidateSize(), 60);
+}
+
+wireSeg('themeSeg', v => { cfg.theme = v; buildTiles(); });
+wireSeg('labelSeg', v => { cfg.labels = (v === 'on'); syncLabels(); });
+wireSeg('trailSeg', v => { cfg.trail = (v === 'on'); buildTrail(); });
+wireSeg('followSeg', v => { cfg.follow = (v === 'on'); });
+wireSeg('fuzzSeg', v => { cfg.fuzz = (v === 'on'); buildTrail(); map.setZoom(effZoom()); });
+wireSeg('unitSeg', v => { cfg.units = v; render(); });
+wireSeg('fullSeg', v => { cfg.full = (v === 'on'); setBodyClasses(); });
+wireSeg('modeSeg', v => { mode = v === 'walk' ? 1.4 : v === 'drive' ? 14 : 6; render(); });
+wireSeg('rateSeg', v => { rate = +v; });
+
+$('posSel').addEventListener('change', () => { cfg.pos = $('posSel').value; setBodyClasses(); });
+$('zoomRange').addEventListener('input', () => { cfg.zoom = +$('zoomRange').value; $('zoomVal').textContent = cfg.zoom; map.setZoom(effZoom()); });
+$('sizeRange').addEventListener('input', () => { cfg.size = +$('sizeRange').value; $('sizeVal').textContent = cfg.size + 'px';
+  document.documentElement.style.setProperty('--size', cfg.size + 'px'); setTimeout(() => map.invalidateSize(), 60); });
+
+$('showToggles').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  b.classList.toggle('on');
+  b.classList.contains('on') ? cfg.show.add(b.dataset.v) : cfg.show.delete(b.dataset.v);
+  setBodyClasses(); render();
+}));
+
+function applyColors(){
+  const c1 = $('c1Input').value, c2 = $('c2Input').value;
+  cfg.c1 = c1;
+  document.documentElement.style.setProperty('--c1', c1);
+  document.documentElement.style.setProperty('--c2', c2);
+  if (trail) trail.setStyle({ color: c1 });
+}
+['c1Input','c2Input'].forEach(id => $(id).addEventListener('input', applyColors));
+$('resetColors').addEventListener('click', () => { $('c1Input').value = '#2BD46A'; $('c2Input').value = '#4ADE80'; applyColors(); });
+
+$('playBtn').addEventListener('click', () => {
+  playing = !playing;
+  lastT = performance.now();
+  $('playBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+});
+$('resetBtn').addEventListener('click', () => {
+  dist = 0; cur = null; trailPts = []; if (trail) trail.setLatLngs([]);
+  geoAt = 0; geoLL = null;
+});
+
+document.documentElement.style.setProperty('--size', cfg.size + 'px');
+setTimeout(() => map.invalidateSize(), 200);
+addEventListener('resize', () => map.invalidateSize());
+</script>
+</body>
+</html>
