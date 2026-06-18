@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050806">
+<title>TEZ AI — Your AI. Not theirs.</title>
+<meta name="description" content="An AI app that runs on a brain you choose — your own API key or a local model, with TEZ's own hosted model on the way. Join the waitlist.">
+<meta property="og:title" content="TEZ AI — Your AI. Not theirs.">
+<meta property="og:description" content="A clean, fast AI app that runs on a model you control. Join the early-access waitlist.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050806; --ink:#eaf2ec; --muted:#8fa394;
+    --c1:#2BD46A; --c2:#4ADE80; --c1-deep:#16a34a; --gold:#FFD66B;
+    --edge:rgba(255,255,255,.10); --panel:rgba(255,255,255,.04);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--bg)}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.6;
+    min-height:100vh; position:relative; overflow-x:hidden;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---- backdrop: a breathing green orb (no grid — distinct from the catalog) ---- */
+  .orb{position:fixed; top:38%; left:50%; width:90vw; height:90vw; max-width:920px; max-height:920px;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(43,212,106,.20) 0%, rgba(43,212,106,.06) 36%, transparent 64%);
+    filter:blur(34px); pointer-events:none; z-index:0; animation:breathe 9s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.7; transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:1; transform:translate(-50%,-50%) scale(1.07)}}
+  body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(125% 110% at 50% 38%, transparent 52%, rgba(0,0,0,.6))}
+  .grain{position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* ---- tiny top link back to the site ---- */
+  .top{position:relative; z-index:3; padding:clamp(20px,4vw,34px) clamp(22px,6vw,56px)}
+  .top a{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px;
+    color:var(--muted); text-decoration:none; letter-spacing:.02em; transition:color .25s ease}
+  .top a:hover{color:var(--ink)}
+  .top a .star{color:var(--c2)}
+
+  main{position:relative; z-index:3; flex:1; display:flex; flex-direction:column; align-items:center;
+    text-align:center; padding:clamp(8px,3vw,40px) 22px 60px; max-width:760px; margin:0 auto; width:100%}
+
+  .eyebrow{font-family:'Space Mono',monospace; font-size:12px; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:26px; opacity:0; animation:rise .8s ease forwards .1s}
+
+  /* ---- the wordmark ---- */
+  .wm{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em;
+    font-size:clamp(64px,17vw,150px); line-height:.95; margin-bottom:8px;
+    opacity:0; animation:rise .9s ease forwards .2s}
+  .wm .ai{
+    background:linear-gradient(110deg, var(--c1) 18%, var(--c2) 38%, #e9ffe9 50%, var(--c2) 62%, var(--c1) 82%);
+    background-size:240% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:sheen 4.5s linear infinite}
+  @keyframes sheen{to{background-position:-240% 0}}
+  .wm .cursor{color:var(--c2); font-weight:400; animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .tagline{font-size:clamp(18px,3.4vw,26px); font-weight:600; color:var(--ink);
+    margin-bottom:8px; opacity:0; animation:rise .9s ease forwards .35s}
+  .tagline .em{color:var(--c2)}
+
+  /* ---- the story ---- */
+  .story{max-width:600px; color:var(--muted); font-size:clamp(15px,2.2vw,17px); margin-top:34px;
+    opacity:0; animation:rise .9s ease forwards .5s}
+  .story p{margin-bottom:16px}
+  .story b{color:var(--ink); font-weight:600}
+  .story .hl{color:var(--c2); font-weight:600}
+
+  /* ---- waitlist ---- */
+  .cta{margin-top:44px; width:100%; max-width:440px; opacity:0; animation:rise .9s ease forwards .65s}
+  .card{background:var(--panel); border:1px solid var(--edge); border-radius:18px; padding:22px;
+    backdrop-filter:blur(10px); box-shadow:0 18px 60px rgba(0,0,0,.4)}
+  .card h2{font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; margin-bottom:4px}
+  .card .sub{font-size:13.5px; color:var(--muted); margin-bottom:16px}
+  .row{display:flex; gap:10px; margin-bottom:10px}
+  @media(max-width:460px){.row{flex-direction:column}}
+  input[type=text],input[type=email]{flex:1; width:100%; padding:13px 14px; border-radius:11px;
+    background:rgba(0,0,0,.34); border:1px solid var(--edge); color:var(--ink);
+    font:500 14.5px 'Plus Jakarta Sans',sans-serif}
+  input::placeholder{color:rgba(143,163,148,.7)}
+  input:focus{outline:none; border-color:rgba(43,212,106,.5); box-shadow:0 0 0 3px rgba(43,212,106,.12)}
+  .hp{position:absolute; left:-9999px; width:1px; height:1px; opacity:0}
+  button.join{width:100%; border:none; cursor:pointer; margin-top:4px;
+    font:700 15.5px 'Plus Jakarta Sans',sans-serif; color:#04160b; padding:14px 22px; border-radius:12px;
+    background:linear-gradient(180deg,var(--c2) 0%,var(--c1-deep) 100%);
+    box-shadow:0 0 26px rgba(43,212,106,.28), inset 0 1px rgba(255,255,255,.45);
+    transition:transform .15s ease, box-shadow .15s ease}
+  button.join:hover{transform:translateY(-1px); box-shadow:0 10px 30px rgba(43,212,106,.42)}
+  button.join:disabled{opacity:.6; cursor:default; transform:none}
+  .msg{margin-top:12px; font-size:13px; min-height:18px; color:#f78a8a}
+
+  .done{display:none; text-align:center; padding:8px 4px}
+  .done.show{display:block; animation:rise .5s ease}
+  .done .mark{font-size:38px; color:var(--c2); text-shadow:0 0 24px rgba(43,212,106,.6); margin-bottom:8px}
+  .done h2{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; margin-bottom:6px}
+  .done p{color:var(--muted); font-size:14.5px}
+  .done .pos{color:var(--c2); font-weight:700}
+
+  .foot{position:relative; z-index:3; text-align:center; padding:24px; font-size:12px;
+    letter-spacing:.05em; color:rgba(143,163,148,.5)}
+  .foot a{color:rgba(143,163,148,.7); text-decoration:none}
+
+  @keyframes rise{from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){
+    .orb,.wm .ai,.wm .cursor{animation:none}
+    .eyebrow,.wm,.tagline,.story,.cta{animation:none; opacity:1}
+  }
+</style>
+</head>
+<body>
+<div class="orb"></div>
+<div class="grain"></div>
+
+<header class="top"><a href="/">TEZ<span class="star">✦</span></a></header>
+
+<main>
+  <div class="eyebrow">An upcoming TEZ creation</div>
+  <h1 class="wm">TEZ <span class="ai">AI</span><span class="cursor">▍</span></h1>
+  <p class="tagline">Your AI. <span class="em">Not theirs.</span></p>
+
+  <div class="story">
+    <p>Most AI runs on someone else's servers, on someone else's model, learning from
+      your conversations. <b>TEZ AI flips that</b> — a clean, fast, chat-first assistant
+      that runs on a brain <i>you</i> choose.</p>
+    <p>Bring your <span class="hl">own API key</span> or a <span class="hl">local model</span> today.
+      TEZ's own hosted model — built on <span class="hl">GLM&nbsp;5.1</span> — is on the way.
+      Your key. Your model. <b>Your data.</b></p>
+    <p>We're letting people in slowly.</p>
+  </div>
+
+  <div class="cta">
+    <div class="card" id="card">
+      <h2>Apply for early access</h2>
+      <div class="sub">Drop your name and email — we'll reach out when the doors open.</div>
+      <form id="form" autocomplete="on" novalidate>
+        <div class="row">
+          <input type="text" id="name" name="name" placeholder="Your name" maxlength="80" required>
+        </div>
+        <div class="row">
+          <input type="email" id="email" name="email" placeholder="you@email.com" maxlength="120" required>
+        </div>
+        <!-- honeypot: hidden from humans, catches bots -->
+        <input class="hp" type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="join" id="submit" type="submit">Join the waitlist</button>
+        <div class="msg" id="msg"></div>
+      </form>
+      <div class="done" id="done">
+        <div class="mark">✦</div>
+        <h2>You're on the list.</h2>
+        <p id="donemsg">We'll reach out when early access opens.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">© 2026 TEZ Creations · <a href="/">tezcreations.com</a></footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const form = $('form'), msg = $('msg'), submit = $('submit');
+
+  function fail(t){ msg.textContent = t; msg.style.color = '#f78a8a'; }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    msg.textContent = '';
+    const name = $('name').value.trim();
+    const email = $('email').value.trim();
+    if (!name){ fail('What should we call you?'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ fail('That email looks off — mind checking it?'); return; }
+
+    submit.disabled = true;
+    const label = submit.textContent;
+    submit.textContent = 'Joining…';
+    try{
+      const r = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, website: $('website').value }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok){
+        if (j.position) $('donemsg').innerHTML =
+          'You\'re <span class="pos">#' + j.position + '</span> in line. We\'ll reach out when early access opens.';
+        form.style.display = 'none';
+        $('done').classList.add('show');
+      } else {
+        fail(j.error || 'Something went wrong — try again in a moment.');
+        submit.disabled = false; submit.textContent = label;
+      }
+    }catch(err){
+      fail('Network hiccup — give it another try.');
+      submit.disabled = false; submit.textContent = label;
+    }
+  });
+</script>
+</body>
+</html>

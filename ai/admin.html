@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>TEZ AI — Waitlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#050806;--ink:#eaf2ec;--muted:#8fa394;--c1:#2BD46A;--c2:#4ADE80;--c1-deep:#16a34a;--edge:rgba(255,255,255,.1)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:radial-gradient(1000px 500px at 50% -10%,#0a0f0b,transparent 70%),var(--bg);
+    color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;padding:40px 22px}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:4px}
+  h1 .star{color:var(--c2)}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .gate{display:flex;gap:10px;max-width:440px}
+  input{flex:1;padding:12px 14px;border-radius:11px;background:rgba(0,0,0,.34);border:1px solid var(--edge);
+    color:var(--ink);font:500 14px 'Plus Jakarta Sans',sans-serif}
+  input:focus{outline:1px solid var(--c1)}
+  button{border:none;cursor:pointer;font:700 14px 'Plus Jakarta Sans',sans-serif;color:#04160b;
+    padding:12px 20px;border-radius:11px;background:linear-gradient(180deg,var(--c2),var(--c1-deep))}
+  button.ghost{background:rgba(255,255,255,.08);color:var(--ink);border:1px solid var(--edge)}
+  .err{color:#f78a8a;font-size:13px;margin-top:12px;min-height:16px}
+  .bar{display:flex;align-items:center;justify-content:space-between;margin:22px 0 12px}
+  .count{font-family:'Space Mono',monospace;color:var(--c2);font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    padding:8px 10px;border-bottom:1px solid var(--edge)}
+  td{padding:10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+  td.num{font-family:'Space Mono',monospace;color:var(--muted);width:42px}
+  td.when{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  a.email{color:var(--c2);text-decoration:none}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TEZ<span class="star">✦</span> AI — Waitlist</h1>
+  <div class="sub">Private admin view. Enter the admin key to load signups.</div>
+
+  <div class="gate" id="gate">
+    <input type="password" id="key" placeholder="Admin key" autocomplete="off">
+    <button id="load">Load</button>
+  </div>
+  <div class="err" id="err"></div>
+
+  <div id="result" class="hidden">
+    <div class="bar">
+      <div class="count" id="count"></div>
+      <div>
+        <button class="ghost" id="copy">Copy emails</button>
+        <button class="ghost" id="logout">Lock</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Joined</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  function fmt(ts){ try{ return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+  let emails = [];
+
+  async function load(key){
+    $('err').textContent = '';
+    try{
+      const r = await fetch('/api/waitlist?key=' + encodeURIComponent(key));
+      if (r.status === 403){ $('err').textContent = 'Wrong key.'; return; }
+      const j = await r.json();
+      if (!r.ok){ $('err').textContent = j.error || 'Could not load.'; return; }
+      sessionStorage.setItem('tezai_admin', key);
+      render(j);
+    }catch(e){ $('err').textContent = 'Network error.'; }
+  }
+
+  function render(j){
+    $('gate').classList.add('hidden');
+    $('result').classList.remove('hidden');
+    $('count').textContent = (j.count || 0) + ' on the list';
+    emails = (j.entries || []).map(e => e.email);
+    $('rows').innerHTML = (j.entries || []).map((e, i) =>
+      `<tr><td class="num">${i + 1}</td><td>${esc(e.name)}</td>` +
+      `<td><a class="email" href="mailto:${esc(e.email)}">${esc(e.email)}</a></td>` +
+      `<td class="when">${fmt(e.ts)}</td></tr>`).join('') ||
+      '<tr><td colspan="4" style="color:var(--muted);padding:18px">No signups yet.</td></tr>';
+  }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  $('load').addEventListener('click', () => load($('key').value.trim()));
+  $('key').addEventListener('keydown', e => { if (e.key === 'Enter') load($('key').value.trim()); });
+  $('copy').addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText(emails.join(', ')); $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy emails', 1500); }catch(e){}
+  });
+  $('logout').addEventListener('click', () => { sessionStorage.removeItem('tezai_admin'); location.reload(); });
+
+  const saved = sessionStorage.getItem('tezai_admin');
+  if (saved) load(saved);
+</script>
+</body>
+</html>

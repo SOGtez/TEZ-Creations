@@ -725,6 +725,26 @@ body.page {
   padding: 32px 24px 40px;
 }
 
+/* discreet teaser for the upcoming TEZ AI page */
+.ai-teaser {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(143, 163, 148, 0.38);
+  text-decoration: none;
+  transition: color 0.35s ease, text-shadow 0.35s ease, letter-spacing 0.35s ease;
+}
+.ai-teaser:hover {
+  color: var(--accent-bright);
+  text-shadow: 0 0 18px var(--accent-glow);
+  letter-spacing: 0.26em;
+}
+.ai-teaser .spark {
+  color: var(--accent);
+}
+
 @media (max-width: 720px) {
   .feed {
     grid-template-columns: 1fr;
