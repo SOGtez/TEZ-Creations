@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- clean-URL shim: anchor relative links to this folder whether served as /subgoal, /subgoal/ or .../index.html -->
+<script>(function(){var p=location.pathname.replace(/index\.html$/,"");if(p.charAt(p.length-1)!=="/")p+="/";var b=document.createElement("base");b.href=location.origin+p;document.head.insertBefore(b,document.head.firstChild);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Free auto-updating Twitch sub goal overlay for OBS. Live sub counting, automatic goal tiers, and a clean look — by TEZ Creations.">
@@ -367,8 +369,11 @@ $('connectBtn').addEventListener('click', () => {
   sset('tw_state', st);
   const u = new URL('https://id.twitch.tv/oauth2/authorize');
   u.searchParams.set('client_id', CLIENT_ID);
-  u.searchParams.set('redirect_uri',
-    location.origin + location.pathname.replace(/index\.html$/,''));
+  // force a trailing slash so this matches the registered Twitch redirect (/subgoal/)
+  // even when the page is served at the clean URL /subgoal (no .html, no slash)
+  let rp = location.pathname.replace(/index\.html$/,'');
+  if (rp.charAt(rp.length - 1) !== '/') rp += '/';
+  u.searchParams.set('redirect_uri', location.origin + rp);
   u.searchParams.set('response_type', 'token');
   u.searchParams.set('scope', SCOPES);
   u.searchParams.set('state', st);

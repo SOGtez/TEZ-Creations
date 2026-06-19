@@ -568,7 +568,7 @@
     function updateLink() {
       const onWeb = location.protocol === "http:" || location.protocol === "https:";
       if (onWeb) {
-        const base = location.origin + location.pathname.replace(/builder\.html$/, "");
+        const base = location.origin + location.pathname.replace(/[^/]*$/, "");
         linkEl.value = base + overlayFile() + "?" + overlayParams(true);
       } else {
         linkEl.value = "(push the site live to get your real OBS link)";
