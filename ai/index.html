@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#050806">
-<title>TEZ AI — Your AI. Not theirs.</title>
-<meta name="description" content="An AI app that runs on a brain you choose — your own API key or a local model, with TEZ's own hosted model on the way. Join the waitlist.">
-<meta property="og:title" content="TEZ AI — Your AI. Not theirs.">
-<meta property="og:description" content="A clean, fast AI app that runs on a model you control. Join the early-access waitlist.">
+<title>TEZ AI — Every model. One app.</title>
+<meta name="description" content="A general-purpose AI app that runs many models — not just one. Free to start, with GLM-5.2 on the premium tier. In development — join the waitlist.">
+<meta property="og:title" content="TEZ AI — Every model. One app.">
+<meta property="og:description" content="One AI app wired into many models. Switch brains mid-chat, search the web, run code, build artifacts. Free tier plus GLM-5.2 premium. Join the early-access waitlist.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -74,6 +74,23 @@
   .story b{color:var(--ink); font-weight:600}
   .story .hl{color:var(--c2); font-weight:600}
 
+  /* ---- feature list ---- */
+  .feats{margin-top:30px; width:100%; max-width:580px; text-align:left;
+    display:grid; grid-template-columns:1fr 1fr; gap:13px 26px;
+    opacity:0; animation:rise .9s ease forwards .58s}
+  @media(max-width:560px){.feats{grid-template-columns:1fr; gap:12px}}
+  .feat{display:flex; gap:10px; align-items:flex-start;
+    font-size:14.5px; color:var(--muted); line-height:1.45}
+  .feat .fm{color:var(--c2); flex:none; font-size:13px;
+    text-shadow:0 0 10px rgba(43,212,106,.55)}
+  .feat b{color:var(--ink); font-weight:600}
+
+  /* ---- tier note ---- */
+  .tiers{margin-top:30px; max-width:560px; color:var(--muted);
+    font-size:clamp(14px,2.1vw,15.5px); opacity:0; animation:rise .9s ease forwards .62s}
+  .tiers b{color:var(--ink); font-weight:600}
+  .tiers .hl{color:var(--c2); font-weight:600}
+
   /* ---- waitlist ---- */
   .cta{margin-top:44px; width:100%; max-width:440px; opacity:0; animation:rise .9s ease forwards .65s}
   .card{background:var(--panel); border:1px solid var(--edge); border-radius:18px; padding:22px;
@@ -122,18 +139,32 @@
 <header class="top"><a href="/">TEZ<span class="star">✦</span></a></header>
 
 <main>
-  <div class="eyebrow">An upcoming TEZ creation</div>
+  <div class="eyebrow">In development · Early-access waitlist</div>
   <h1 class="wm" aria-label="TEZ AI">TEZ <span class="ai">Ai</span><span class="cursor">▍</span></h1>
-  <p class="tagline">Your AI. <span class="em">Not theirs.</span></p>
+  <p class="tagline">Every model. <span class="em">One app.</span></p>
 
   <div class="story">
-    <p>Most AI runs on someone else's servers, on someone else's model, learning from
-      your conversations. <b>TEZ AI flips that</b> — a clean, fast, chat-first assistant
-      that runs on a brain <i>you</i> choose.</p>
-    <p>Bring your <span class="hl">own API key</span> or a <span class="hl">local model</span> today.
-      TEZ's own hosted model — built on <span class="hl">GLM&nbsp;5.1</span> — is on the way.
-      Your key. Your model. <b>Your data.</b></p>
-    <p>We're letting people in slowly.</p>
+    <p>TEZ AI is a <b>general-purpose</b> AI app wired into many models at once —
+      <b>not locked to a single one.</b> Use it for code, writing, research, images,
+      anything — and switch to the right model mid-conversation.</p>
+  </div>
+
+  <div class="feats">
+    <div class="feat"><span class="fm">✦</span><span><b>Many models, one app.</b> Switch between top AI models any time.</span></div>
+    <div class="feat"><span class="fm">✦</span><span><b>Web search built in.</b> Live answers, not a frozen cutoff.</span></div>
+    <div class="feat"><span class="fm">✦</span><span><b>Code interpreter.</b> Runs real code in a secure sandbox.</span></div>
+    <div class="feat"><span class="fm">✦</span><span><b>Artifacts.</b> Builds live React, HTML &amp; diagrams in chat.</span></div>
+    <div class="feat"><span class="fm">✦</span><span><b>Images &amp; files.</b> Generate visuals; upload and chat with docs.</span></div>
+    <div class="feat"><span class="fm">✦</span><span><b>Agents &amp; voice.</b> Custom AI agents, tools, and hands-free speech.</span></div>
+  </div>
+
+  <p class="tiers"><b>Free to start</b> on a lineup of fast, free models. Want maximum
+    capability? Upgrade to <span class="hl">GLM-5.2</span> — a frontier-class model —
+    on the premium tier.</p>
+
+  <div class="story" style="margin-top:26px">
+    <p>Still in the build. The waitlist is how we gauge interest before launch —
+      join now and you'll be first through the door.</p>
   </div>
 
   <div class="cta">
