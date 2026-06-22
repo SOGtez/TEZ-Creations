@@ -194,9 +194,14 @@
     the connect button works.<br>
     1. Register an app at <b>dev.twitch.tv/console/apps</b> (free)<br>
     2. OAuth Redirect URL: <code style="font-family:'JetBrains Mono',monospace">https://tezcreations.com/subgoal/</code>
-       — Category: Broadcaster Suite — Client Type: <b>Public</b><br>
+       — Category: Broadcaster Suite — Client Type: <b>Confidential</b> (needed for the
+       never-expiring token flow)<br>
     3. Paste the Client ID into <code style="font-family:'JetBrains Mono',monospace">CLIENT_ID</code>
-       at the top of the script in this file and redeploy.<br>
+       at the top of the script, then set <code style="font-family:'JetBrains Mono',monospace">TWITCH_CLIENT_SECRET</code>,
+       <code style="font-family:'JetBrains Mono',monospace">SUPABASE_URL</code> and
+       <code style="font-family:'JetBrains Mono',monospace">SUPABASE_SERVICE_ROLE_KEY</code>
+       in Vercel, run <code style="font-family:'JetBrains Mono',monospace">subgoal/schema.sql</code>
+       in Supabase, and redeploy.<br>
     Visitors never see this message once it's set.
   </div>
 
@@ -214,6 +219,7 @@
     <div class="connected hidden" id="connectedRow">
       <img class="avatar" id="avatar" alt="">
       <div class="who"><b id="whoName"></b><div>Connected · read-only</div></div>
+      <button class="btn ghost" id="disconnectBtn" style="margin-left:auto;padding:9px 14px;font-size:13px">Disconnect</button>
     </div>
   </div>
 
@@ -318,9 +324,10 @@
       <li>Paste the URL · Width <b>1920</b> · Height <b>1080</b> (the card positions itself)</li>
       <li>Check "Shutdown source when not visible" is <b>off</b> so the live connection stays open</li>
     </ol>
-    <div class="note"><b>Keep this URL private.</b> It contains your access token (read-only,
-      but it reveals your sub count). Don't show it on stream. Tokens expire after a while —
-      if the overlay says "reconnect," come back here and generate a fresh URL.</div>
+    <div class="note"><b>Keep this URL private.</b> It holds a private link to your
+      read-only sub data, so don't show it on stream. Good news: this link
+      <b>doesn't expire</b> — the connection refreshes itself, so you won't have to come
+      back and reconnect.</div>
   </div>
 
   <div style="margin-top:34px;text-align:center;color:var(--muted);font-size:13px">
@@ -339,25 +346,43 @@
    1. Register an app at https://dev.twitch.tv/console/apps
       - OAuth Redirect URLs: https://tezcreations.com/subgoal/
         (add http://localhost:3000/subgoal/ too for local testing)
-      - Category: Broadcaster Suite. Client type: Public.
+      - Category: Broadcaster Suite. Client type: CONFIDENTIAL.
+      - Generate a Client Secret.
    2. Paste the Client ID below.
+   3. In Vercel, set env vars: TWITCH_CLIENT_SECRET, SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY. Run subgoal/schema.sql in Supabase. Redeploy.
+   Auth-code flow keeps a refresh token server-side (Supabase) so the overlay
+   URL holds only an opaque id and never expires. See api/twitch-auth.js + token.js.
    ============================================================ */
-const CLIENT_ID = "hkyfmvy9yfvfk7b3sq2dwcz5ggfa9m";
+const CLIENT_ID = "i5n7ykd3ns3n0fxgbith466dnj51fc";
 const SCOPES = "channel:read:goals channel:read:subscriptions";
 const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
 
 const $ = id => document.getElementById(id);
-const state = { token:null, login:null, userId:null, mode:'sync', tierMode:'step',
+const state = { id:null, mode:'sync', tierMode:'step',
                 style:'card', font:'classic', match:false, streamUrl:'' };
 
 /* ---------- client id guard ---------- */
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
 
-/* ---------- OAuth (implicit grant, fully client-side) ---------- */
-// storage helpers that survive browsers blocking sessionStorage (e.g. file://)
+/* ---------- OAuth (Authorization Code flow; refresh token stays server-side) ----------
+   The setup page sends the one-time ?code= to /api/twitch-auth, which exchanges it
+   for a refresh token (kept in Supabase) and returns an opaque id. The overlay URL
+   carries only that id — never a Twitch token — and auto-refreshes, so it never expires. */
+// storage helpers that survive browsers blocking storage (e.g. file://)
 function sset(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
 function sget(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
-function sdel(k){ try{ sessionStorage.removeItem(k); }catch(e){} }
+function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lget(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function ldel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function redirectUri(){
+  // force a trailing slash so this matches the registered Twitch redirect (/subgoal/)
+  // even when the page is served at the clean URL /subgoal (no .html, no slash)
+  let rp = location.pathname.replace(/index\.html$/,'');
+  if (rp.charAt(rp.length - 1) !== '/') rp += '/';
+  return location.origin + rp;
+}
 
 $('connectBtn').addEventListener('click', () => {
   if (location.protocol === 'file:'){
@@ -369,56 +394,71 @@ $('connectBtn').addEventListener('click', () => {
   sset('tw_state', st);
   const u = new URL('https://id.twitch.tv/oauth2/authorize');
   u.searchParams.set('client_id', CLIENT_ID);
-  // force a trailing slash so this matches the registered Twitch redirect (/subgoal/)
-  // even when the page is served at the clean URL /subgoal (no .html, no slash)
-  let rp = location.pathname.replace(/index\.html$/,'');
-  if (rp.charAt(rp.length - 1) !== '/') rp += '/';
-  u.searchParams.set('redirect_uri', location.origin + rp);
-  u.searchParams.set('response_type', 'token');
+  u.searchParams.set('redirect_uri', redirectUri());
+  u.searchParams.set('response_type', 'code');
   u.searchParams.set('scope', SCOPES);
   u.searchParams.set('state', st);
   location.href = u.toString();
 });
 
-function readHashToken(){
-  if (!location.hash.includes('access_token')) return null;
-  const h = new URLSearchParams(location.hash.slice(1));
-  const stored = sget('tw_state');
-  // if storage was unavailable we can't verify state — accept rather than dead-end
-  const ok = stored === null || h.get('state') === stored;
-  history.replaceState(null, '', location.pathname + location.search);
-  if (!ok) return null;
-  return h.get('access_token');
+function showConnected(profile){
+  $('avatar').src = profile.profile_image_url || '';
+  $('whoName').textContent = profile.display_name || profile.login || 'Connected';
+  $('connectBtn').classList.add('hidden');
+  $('connectedRow').classList.remove('hidden');
+  $('configCard').classList.remove('hidden');
+  $('outputCard').classList.remove('hidden');
+  refresh();
+}
+
+async function exchangeCode(code){
+  const r = await fetch(location.origin + '/api/twitch-auth', {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ code, redirect_uri: redirectUri() }),
+  });
+  const j = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(j.error || 'Could not connect — try again.');
+  return j;   // { id, login, display_name, profile_image_url }
 }
 
 async function boot(){
-  const t = readHashToken() || sget('tw_token');
-  if (!t) return;
-  try{
-    const v = await fetch('https://id.twitch.tv/oauth2/validate',
-      { headers:{ Authorization:'OAuth '+t } });
-    if (!v.ok) throw 0;
-    const vj = await v.json();
-    state.token = t; state.login = vj.login; state.userId = vj.user_id;
-    sset('tw_token', t);
-
-    // profile pic for the "connected" row
-    const u = await fetch('https://api.twitch.tv/helix/users?id='+vj.user_id,
-      { headers:{ Authorization:'Bearer '+t, 'Client-Id': vj.client_id } });
-    const uj = await u.json();
-    const me = (uj.data||[])[0] || {};
-    $('avatar').src = me.profile_image_url || '';
-    $('whoName').textContent = me.display_name || vj.login;
-
-    $('connectBtn').classList.add('hidden');
-    $('connectedRow').classList.remove('hidden');
-    $('configCard').classList.remove('hidden');
-    $('outputCard').classList.remove('hidden');
-    refresh();
-  }catch(e){
-    sdel('tw_token');
+  // returning from Twitch with a one-time authorization code?
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code');
+  if (code){
+    const stored = sget('tw_state');
+    const stateOk = stored === null || q.get('state') === stored;  // accept if storage was blocked
+    history.replaceState(null, '', location.pathname);             // scrub code/state from the URL
+    if (stateOk){
+      try{
+        const j = await exchangeCode(code);
+        const profile = { login:j.login, display_name:j.display_name, profile_image_url:j.profile_image_url };
+        state.id = j.id;
+        lset('sg_id', j.id);
+        lset('sg_profile', JSON.stringify(profile));
+        showConnected(profile);
+        return;
+      }catch(e){ alert(e.message || 'Could not connect — try again.'); }
+    }
+  }
+  // already connected on a previous visit? restore from the saved opaque id
+  const savedId = lget('sg_id');
+  if (savedId){
+    state.id = savedId;
+    let profile = {};
+    try{ profile = JSON.parse(lget('sg_profile') || '{}'); }catch(e){}
+    showConnected(profile);
   }
 }
+
+$('disconnectBtn').addEventListener('click', () => {
+  ldel('sg_id'); ldel('sg_profile');
+  state.id = null;
+  $('connectedRow').classList.add('hidden');
+  $('configCard').classList.add('hidden');
+  $('outputCard').classList.add('hidden');
+  $('connectBtn').classList.remove('hidden');
+});
 
 /* ---------- segmented controls ---------- */
 function wireSeg(id, onPick){
@@ -483,9 +523,9 @@ function refresh(){
   if (state.streamUrl) prev.set('stream', state.streamUrl);
   $('preview').src = 'simulation.html?' + prev.toString();
 
-  // shareable OBS URL
-  if (state.token){
-    const out = buildParams({ token: state.token });
+  // shareable OBS URL — carries the opaque id, never a Twitch token
+  if (state.id){
+    const out = buildParams({ id: state.id });
     const base = location.pathname.replace(/index\.html$/,'').replace(/\/$/,'');
     $('urlOut').textContent =
       location.origin + base + '/overlay.html?' + out.toString();

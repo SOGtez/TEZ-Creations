@@ -125,7 +125,8 @@
    TEZ Creations — Twitch Sub Goal Overlay (minimal xx/xx)
    ------------------------------------------------------------
    URL params:
-     token=...        Twitch user access token (from /subgoal/ setup page)
+     id=...           Private link id (from /subgoal/ setup) — auto-refreshes, never expires
+     token=...        Legacy: a raw Twitch access token (older URLs; still supported)
      mode=sync        Mirror the goal set in the Twitch dashboard (default)
      mode=custom      Track total sub count against your own tiers
      goals=50,100,150 Custom tier list (custom mode)
@@ -144,6 +145,7 @@
 
 const qs = new URLSearchParams(location.search);
 const P = {
+  id:      qs.get('id') || '',
   token:   qs.get('token') || '',
   mode:    (qs.get('mode') || 'sync').toLowerCase(),
   goals:   (qs.get('goals') || '').split(',').map(n=>parseInt(n.trim(),10))
@@ -209,6 +211,8 @@ const S = {
   celebrating: false,
   broadcasterId: null,
   clientId: null,
+  token: '',         // current access token (refreshed in id-mode, static in legacy token-mode)
+  tokenExp: 0,       // ms epoch when the current token should be refreshed (id-mode)
   achieved: new Set(),
 };
 
@@ -287,9 +291,31 @@ function celebrate(done){
 /* ============================================================
    TWITCH API
    ============================================================ */
+function authHeaders(){ return { Authorization:'Bearer '+S.token, 'Client-Id': S.clientId }; }
+
+// id-mode: ask our server for a fresh short-lived access token (refresh stays server-side)
+async function refreshToken(){
+  const r = await fetch(location.origin + '/api/twitch-token?id=' + encodeURIComponent(P.id),
+    { cache:'no-store' });
+  if (!r.ok) throw new Error('auth');           // 401 reauth / 404 unknown id → reconnect
+  const j = await r.json();
+  if (!j.access_token) throw new Error('auth');
+  S.token = j.access_token;
+  S.broadcasterId = j.broadcaster_id;
+  S.clientId = j.client_id;
+  S.tokenExp = Date.now() + Math.max(30, (j.expires_in || 3600) - 90) * 1000;  // refresh ~90s early
+}
+
+async function ensureToken(force){
+  if (P.id && (force || !S.token || Date.now() >= S.tokenExp)) await refreshToken();
+}
+
 async function validateToken(){
+  if (P.id){ await refreshToken(); return; }    // id-mode: server refresh sets broadcaster + client
+  // legacy token-mode: validate the raw token from the URL
+  S.token = P.token;
   const r = await fetch('https://id.twitch.tv/oauth2/validate',
-    { headers:{ Authorization:'OAuth ' + P.token } });
+    { headers:{ Authorization:'OAuth ' + S.token } });
   if (!r.ok) throw new Error('auth');
   const j = await r.json();
   S.broadcasterId = j.user_id;
@@ -297,21 +323,23 @@ async function validateToken(){
 }
 
 async function helix(path){
-  const r = await fetch('https://api.twitch.tv/helix/' + path, {
-    headers:{ Authorization:'Bearer '+P.token, 'Client-Id': S.clientId }
-  });
+  await ensureToken();
+  const url = 'https://api.twitch.tv/helix/' + path;
+  let r = await fetch(url, { headers: authHeaders() });
+  if (r.status === 401 && P.id){ await ensureToken(true); r = await fetch(url, { headers: authHeaders() }); }
   if (r.status === 401) throw new Error('auth');
   if (r.status === 400 || r.status === 403) throw new Error('forbidden');
   if (!r.ok) throw new Error('http '+r.status);
   return r.json();
 }
 async function helixPost(path, body){
-  const r = await fetch('https://api.twitch.tv/helix/' + path, {
-    method:'POST',
-    headers:{ Authorization:'Bearer '+P.token, 'Client-Id': S.clientId,
-              'Content-Type':'application/json' },
-    body: JSON.stringify(body)
-  });
+  await ensureToken();
+  const url = 'https://api.twitch.tv/helix/' + path;
+  const opts = () => ({ method:'POST',
+    headers:{ ...authHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify(body) });
+  let r = await fetch(url, opts());
+  if (r.status === 401 && P.id){ await ensureToken(true); r = await fetch(url, opts()); }
   if (r.status === 401) throw new Error('auth');
   return r;
 }
@@ -422,7 +450,8 @@ setInterval(()=>{
    ============================================================ */
 function handleErr(e){
   if (e && e.message === 'auth'){
-    setStatus('Token expired — reconnect at tezcreations.com/subgoal');
+    // id-mode only reaches here if the connection was revoked; token-mode = token expired
+    setStatus('Connection lost — reconnect at tezcreations.com/subgoal');
   } else if (e && e.message === 'forbidden'){
     setStatus('Sub data unavailable — Twitch Affiliate or Partner required');
   } else {
@@ -461,9 +490,9 @@ function startDemo(){
    ============================================================ */
 (async function init(){
   if (P.demo){ startDemo(); return; }
-  if (!P.token){
+  if (!P.token && !P.id){
     el.card.classList.add('show');
-    setStatus('Missing token — get your URL at tezcreations.com/subgoal');
+    setStatus('Missing link — get your URL at tezcreations.com/subgoal');
     return;
   }
   try{
