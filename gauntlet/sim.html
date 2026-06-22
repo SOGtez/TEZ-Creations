@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gauntlet — Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050806; --text:#eaf2ec; --muted:#8fa394;
+    --accent:#2bd46a; --accent-bright:#4ade80; --accent-deep:#16a34a;
+    --accent-glow:rgba(43,212,106,.16);
+    --font-display:"Space Grotesk",sans-serif; --font-sans:"Plus Jakarta Sans",sans-serif; --font-mono:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;padding:24px}
+  .head{max-width:1080px;margin:0 auto 20px}
+  .wordmark{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.5px}
+  .star{color:var(--accent)}
+  h1{font-family:var(--font-display);font-size:22px;margin:10px 0 4px}
+  .sub{color:var(--muted);font-size:14px}
+  .layout{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:380px 1fr;gap:22px}
+  @media(max-width:840px){.layout{grid-template-columns:1fr}}
+
+  .panel{background:rgba(8,14,10,.55);border:1px solid rgba(43,212,106,.16);border-radius:16px;padding:18px;backdrop-filter:blur(12px)}
+  .panel h2{font-family:var(--font-display);font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px}
+
+  .role{display:flex;gap:8px;margin-bottom:14px}
+  .role button{flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:9px;padding:8px;font-family:var(--font-sans);font-size:13px;cursor:pointer;transition:.15s}
+  .role button.on{border-color:var(--accent);color:var(--text);background:rgba(43,212,106,.12)}
+
+  .chatbox{display:flex;gap:8px;margin-bottom:12px}
+  .chatbox input{flex:1;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:9px;color:var(--text);font-family:var(--font-mono);font-size:13px;padding:10px 12px}
+  .chatbox input:focus{outline:none;border-color:var(--accent)}
+  .chatbox button{background:var(--accent);color:var(--bg);border:none;border-radius:9px;font-weight:700;font-family:var(--font-display);padding:0 16px;cursor:pointer}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .chip{font-family:var(--font-mono);font-size:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:7px;padding:5px 9px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent);color:var(--accent-bright)}
+
+  .log{background:rgba(0,0,0,.3);border-radius:10px;padding:10px;height:190px;overflow-y:auto;font-family:var(--font-mono);font-size:12px;line-height:1.7}
+  .log .l{margin-bottom:3px}
+  .log .who{color:var(--accent-bright)}
+  .log .vwho{color:#7aa3ff}
+  .log .res{color:var(--muted)}
+  .log .err{color:#ff8b6b}
+  .log .ok{color:var(--accent)}
+
+  .opts{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted)}
+  .opts label{display:flex;align-items:center;gap:7px;cursor:pointer}
+  .reset{margin-top:12px;width:100%;background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--text);border-radius:9px;padding:9px;cursor:pointer;font-family:var(--font-sans)}
+  .reset:hover{border-color:#ff8b6b;color:#ff8b6b}
+
+  /* ===== faux stream stage + the real overlay ===== */
+  .stage{border-radius:16px;overflow:hidden;position:relative;min-height:520px;border:1px solid rgba(255,255,255,.08);
+    background:
+      radial-gradient(900px 500px at 70% 20%, #14342a 0%, transparent 60%),
+      radial-gradient(700px 600px at 20% 90%, #1a2138 0%, transparent 55%),
+      repeating-linear-gradient(135deg,#0a0f0c 0 22px,#0c120e 22px 44px);
+    display:flex;align-items:flex-start;justify-content:flex-start;padding:24px}
+  .stage::after{content:"gameplay";position:absolute;right:18px;bottom:14px;font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,.18);letter-spacing:2px}
+
+  /* overlay widget — same as overlay.html */
+  .board{width:340px;background:rgba(8,14,10,.62);border:1px solid rgba(43,212,106,.18);border-radius:18px;backdrop-filter:blur(14px) saturate(120%);box-shadow:0 18px 50px rgba(0,0,0,.45);overflow:hidden}
+  .board-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(43,212,106,.10),transparent)}
+  .board-title{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:.3px;text-transform:uppercase}
+  .count{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--accent-bright)}
+  .feature{height:0;overflow:hidden;position:relative;transition:height .4s ease}
+  .feature.show{height:120px}
+  .feature-art{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
+  .feature::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(8,14,10,0) 35%,rgba(8,14,10,.95))}
+  .feature-txt{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column}
+  .feature-label{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent-bright);padding:0 16px}
+  .feature-name{font-family:var(--font-display);font-weight:700;font-size:18px;padding:2px 16px 12px;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+  .feature.swap .feature-art{animation:artIn .55s cubic-bezier(.2,.6,.2,1)}
+  .feature.swap .feature-name{animation:nameIn .5s cubic-bezier(.2,.6,.2,1)}
+  .feature.swap .feature-label{animation:nameIn .5s .04s cubic-bezier(.2,.6,.2,1) backwards}
+  @keyframes artIn{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
+  @keyframes nameIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  ul{list-style:none}
+  .thumb{width:34px;height:34px;border-radius:7px;flex-shrink:0;background-size:cover;background-position:center;background-color:rgba(255,255,255,.05);box-shadow:0 1px 4px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:#fff}
+  .game{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);position:relative;transition:background .25s,opacity .35s}
+  .game:last-child{border-bottom:none}
+  .num{font-family:var(--font-mono);font-size:12px;color:var(--muted);min-width:20px}
+  .name{font-size:15px;font-weight:500;flex:1;position:relative;transition:color .3s}
+  .name::after{content:"";position:absolute;left:0;top:50%;height:2px;width:0;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);transition:width .45s cubic-bezier(.6,.1,.2,1)}
+  .game.done .name::after{width:100%}
+  .game.done .name{color:var(--muted)}
+  .game.done{opacity:.55}
+  .game.done .thumb{filter:grayscale(1) brightness(.7)}
+  .check{width:18px;height:18px;flex-shrink:0;opacity:0;transform:scale(.5);transition:.3s;color:var(--accent)}
+  .game.done .check{opacity:1;transform:scale(1)}
+  .game.active{background:linear-gradient(90deg,rgba(43,212,106,.14),transparent 80%)}
+  .game.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  .game.active .thumb{width:40px;height:40px;box-shadow:0 0 12px var(--accent-glow)}
+  .badge{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--bg);background:var(--accent);padding:3px 8px;border-radius:999px;font-weight:700;box-shadow:0 0 14px var(--accent-glow);animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 10px var(--accent-glow)}50%{box-shadow:0 0 20px rgba(43,212,106,.5)}}
+  .toast{position:absolute;left:24px;bottom:24px;background:rgba(8,14,10,.9);border:1px solid rgba(43,212,106,.3);color:var(--text);font-size:13px;padding:10px 14px;border-radius:12px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+  <div class="head">
+    <div class="wordmark">TEZ<span class="star">✦</span> <span style="color:var(--muted);font-weight:500;font-size:14px">Gauntlet Simulator</span></div>
+    <h1>Test the overlay</h1>
+    <p class="sub">Type chat commands on the left — the overlay on the right reacts exactly like it will on stream. No accounts needed.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Chat</h2>
+      <div class="role" id="role">
+        <button data-r="broadcaster" class="on">Broadcaster</button>
+        <button data-r="mod">Mod</button>
+        <button data-r="viewer">Viewer</button>
+      </div>
+      <div class="chatbox">
+        <input id="cmd" placeholder="!win elden" autocomplete="off" />
+        <button id="send">Send</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="log" id="log"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="autoadv" /> auto-advance ACTIVE on win</label>
+      </div>
+      <button class="reset" id="reset">↺ Reset board</button>
+    </div>
+
+    <div class="stage">
+      <div class="board" id="board">
+        <div class="board-head"><span class="star">✦</span><span class="board-title" id="title">The Gauntlet</span><span class="count" id="count"></span></div>
+        <div class="feature" id="feature">
+          <div class="feature-art" id="featureArt"></div>
+          <div class="feature-txt"><span class="feature-label">NOW PLAYING</span><span class="feature-name" id="featureName"></span></div>
+        </div>
+        <ul id="list"></ul>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+<script>
+const $ = id=>document.getElementById(id);
+const norm = s => (s||"").toLowerCase().trim();
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* sample games — procedural covers stand in for RAWG art */
+const SAMPLE = ["Elden Ring","Hollow Knight","Celeste","Cuphead","Hades","Sekiro"];
+function coverFor(name){
+  let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))>>>0;
+  const a=h%360, b=(h>>3)%360;
+  const init=name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  return { grad:`linear-gradient(135deg,hsl(${a} 55% 32%),hsl(${b} 60% 20%))`, init };
+}
+let board, AUTO_ADVANCE_ACTIVE=false, role="broadcaster", lastActive=null;
+function freshBoard(){
+  return { title:"The Gauntlet", active:null,
+    games: SAMPLE.map(n=>({ name:n, cover:coverFor(n), done:false })) };
+}
+
+/* ===== render (mirrors overlay.html) ===== */
+function render(){
+  $("title").textContent = board.title;
+  const g = board.games;
+  $("count").textContent = `${g.filter(x=>x.done).length}/${g.length}`;
+  const active = g.find(x=>board.active && norm(board.active)===norm(x.name) && !x.done);
+  const f=$("feature");
+  if(active){
+    $("featureArt").style.backgroundImage = active.cover.grad;
+    $("featureName").textContent = active.name;
+    f.classList.add("show");
+    if(active.name !== lastActive){ f.classList.remove("swap"); void f.offsetWidth; f.classList.add("swap"); }
+    lastActive = active.name;
+  } else { f.classList.remove("show","swap"); lastActive=null; }
+  $("list").innerHTML = g.map((x,i)=>{
+    const isA = board.active && norm(board.active)===norm(x.name) && !x.done;
+    return `<li class="game ${x.done?'done':''} ${isA?'active':''}">
+      <span class="thumb" style="background-image:${x.cover.grad}">${x.cover.init}</span>
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      <span class="name">${escapeHtml(x.name)}</span>
+      ${x.done?'<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      ${isA?'<span class="badge">ACTIVE</span>':''}
+    </li>`;
+  }).join("");
+}
+let toastTimer;
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
+
+/* ===== command logic (mirrors overlay.html) ===== */
+function findGame(arg){
+  const games=board.games; arg=norm(arg);
+  if(!arg) return {error:"no game given"};
+  if(/^\d+$/.test(arg)){ const i=parseInt(arg,10)-1; if(i>=0&&i<games.length) return {game:games[i]}; return {error:"no game #"+arg}; }
+  const m=games.filter(g=>norm(g.name).includes(arg));
+  if(m.length===1) return {game:m[0]};
+  if(m.length===0) return {error:"no match for “"+arg+"”"};
+  return {error:"“"+arg+"” matches "+m.length+" — be specific"};
+}
+function nextPending(){ return board.games.find(g=>!g.done)||null; }
+
+function handleCommand(cmd,arg){
+  const res=findGame(arg);
+  if(res.error){ toast(res.error); return {err:res.error}; }
+  const g=res.game;
+  if(cmd==="win"){
+    g.done=true;
+    if(board.active && norm(board.active)===norm(g.name)) board.active = AUTO_ADVANCE_ACTIVE ? (nextPending()?.name||null) : null;
+    toast("✓ won: "+g.name); render(); return {ok:"✓ won: "+g.name};
+  }
+  if(cmd==="lost"){ g.done=false; toast("↺ back on: "+g.name); render(); return {ok:"↺ back: "+g.name}; }
+  if(cmd==="active"){ board.active=g.name; toast("● active: "+g.name); render(); return {ok:"● active: "+g.name}; }
+  return {err:"unknown command"};
+}
+
+/* ===== chat plumbing ===== */
+function logLine(html){ const l=$("log"); l.insertAdjacentHTML("beforeend",`<div class="l">${html}</div>`); l.scrollTop=l.scrollHeight; }
+function submit(text){
+  text=text.trim(); if(!text) return;
+  const whoCls = role==="viewer" ? "vwho" : "who";
+  const label = role==="broadcaster"?"streamer":role;
+  if(text[0]!=="!"){ logLine(`<span class="${whoCls}">${label}:</span> ${escapeHtml(text)}`); return; }
+  const parts=text.slice(1).split(/\s+/); const cmd=parts[0].toLowerCase(); const arg=parts.slice(1).join(" ");
+  // permission gate — same as overlay (broadcaster + mod only)
+  const allowed = role==="broadcaster" || role==="mod";
+  if(!["win","lost","active"].includes(cmd)){ logLine(`<span class="${whoCls}">${label}:</span> ${escapeHtml(text)} <span class="res">— not a gauntlet command</span>`); return; }
+  if(!allowed){ logLine(`<span class="vwho">${label}:</span> ${escapeHtml(text)} <span class="res">— ignored (mods only)</span>`); return; }
+  const r=handleCommand(cmd,arg);
+  const tag = r.err?`<span class="err">${escapeHtml(r.err)}</span>`:`<span class="ok">${escapeHtml(r.ok)}</span>`;
+  logLine(`<span class="${whoCls}">${label}:</span> ${escapeHtml(text)} <span class="res">→</span> ${tag}`);
+}
+
+/* quick chips */
+const CHIPS=["!active elden","!win elden","!win 2","!lost 2","!active hades","!win cup","!win mario"];
+$("chips").innerHTML=CHIPS.map(c=>`<button class="chip">${c}</button>`).join("");
+$("chips").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ $("cmd").value=b.textContent; submit(b.textContent); $("cmd").value=""; });
+
+$("send").onclick=()=>{ submit($("cmd").value); $("cmd").value=""; };
+$("cmd").addEventListener("keydown",e=>{ if(e.key==="Enter"){ submit($("cmd").value); $("cmd").value=""; } });
+$("role").querySelectorAll("button").forEach(b=>b.onclick=()=>{ role=b.dataset.r; $("role").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("autoadv").onchange=e=>AUTO_ADVANCE_ACTIVE=e.target.checked;
+$("reset").onclick=()=>{ board=freshBoard(); render(); $("log").innerHTML=""; logLine('<span class="res">board reset — try !active elden</span>'); };
+
+board=freshBoard(); render();
+logLine('<span class="res">Try: !active elden → !win elden → watch the badge move. Switch to Viewer to see commands ignored.</span>');
+</script>
+</body>
+</html>

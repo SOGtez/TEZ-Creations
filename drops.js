@@ -10,6 +10,16 @@
 */
 const DROPS = [
   {
+    id: "004",
+    title: "Game Gauntlet",
+    description:
+      "A win-to-advance gauntlet tracker for OBS. Search and add your games with cover art, then mods cross them off live in chat with !win / !lost / !active. The active game gets a NOW PLAYING banner. State is saved, so an OBS refresh never loses progress.",
+    date: "2026-06-21",
+    type: "tool",
+    image: "",
+    action: { kind: "use", url: "gauntlet/index.html" }
+  },
+  {
     id: "003",
     title: "Live Map",
     description:

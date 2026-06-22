@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- clean-URL shim: anchor relative links to this folder whether served as /gauntlet, /gauntlet/ or .../index.html -->
+<script>(function(){var p=location.pathname.replace(/index\.html$/,"");if(p.charAt(p.length-1)!=="/")p+="/";var b=document.createElement("base");b.href=location.origin+p;document.head.insertBefore(b,document.head.firstChild);})();</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEZ Creations — Gauntlet Setup</title>
+<meta name="theme-color" content="#050806" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050806; --text:#eaf2ec; --muted:#8fa394;
+    --accent:#2bd46a; --accent-bright:#4ade80; --accent-deep:#16a34a;
+    --accent-glow:rgba(43,212,106,.16);
+    --font-display:"Space Grotesk",sans-serif; --font-sans:"Plus Jakarta Sans",sans-serif; --font-mono:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden}
+  .grid-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;perspective:1200px}
+  .grid{position:absolute;inset:-30%;background-image:linear-gradient(rgba(43,212,106,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(43,212,106,.07) 1px,transparent 1px);background-size:46px 46px;transform:scale(1.08)}
+  .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:32px 22px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+  .wordmark{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.5px;color:var(--text);text-decoration:none}
+  .star{color:var(--accent);filter:drop-shadow(0 0 6px var(--accent-glow))}
+  h1{font-family:var(--font-display);font-size:26px;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .card{background:rgba(8,14,10,.55);border:1px solid rgba(43,212,106,.16);border-radius:16px;padding:20px;margin-bottom:18px;backdrop-filter:blur(12px)}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.5px}
+  input,textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-family:var(--font-sans);font-size:15px;padding:11px 13px;margin-bottom:16px}
+  input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  textarea{min-height:130px;resize:vertical;font-family:var(--font-mono);font-size:13px;line-height:1.7}
+  .row{display:flex;gap:12px}.row>div{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--bg);font-weight:700;font-family:var(--font-display);border:none;border-radius:10px;padding:12px 20px;font-size:15px;cursor:pointer;transition:filter .2s}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.15)}
+  .url-box{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.35);border:1px solid rgba(43,212,106,.25);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
+  .url-box span{flex:1;color:var(--accent-bright)}
+  .mini{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:16px}
+  .editor-game{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .editor-game img,.editor-game .ph{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--font-mono);font-size:11px}
+  .editor-game .gname{flex:1;font-size:14px}
+  .editor-game.done .gname{text-decoration:line-through;color:var(--muted)}
+  .pill{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--bg);background:var(--accent);padding:2px 7px;border-radius:999px;font-weight:700}
+  .chip{font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:8px;padding:5px 10px;cursor:pointer}
+  .chip:hover{border-color:var(--accent)}
+  .num{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:18px}
+  .hidden{display:none}
+  .note{font-size:13px;color:var(--muted);line-height:1.6}
+  code{font-family:var(--font-mono);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--accent-bright)}
+  .ok{color:var(--accent-bright);font-size:13px;margin-left:10px}
+  /* game search */
+  .results{display:flex;flex-direction:column;gap:6px;margin:-8px 0 16px;max-height:300px;overflow-y:auto}
+  .result{display:flex;align-items:center;gap:12px;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;background:rgba(0,0,0,.25);transition:border-color .15s}
+  .result:hover{border-color:var(--accent)}
+  .result img,.result .ph{width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
+  .result .ph{display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--font-mono);font-size:11px}
+  .result .meta{flex:1;min-width:0}
+  .result .rn{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .result .ry{font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+  .result .add{font-size:12px;color:var(--accent-bright)}
+  .picked{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+  .picked-game{display:flex;align-items:center;gap:12px;padding:8px;border:1px solid rgba(43,212,106,.2);border-radius:10px;background:rgba(43,212,106,.05)}
+  .picked-game img,.picked-game .ph{width:40px;height:40px;border-radius:7px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
+  .picked-game .pn{flex:1;font-size:14px}
+  .picked-game .num{min-width:18px}
+  .picked-game .rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 6px}
+  .picked-game .rm:hover{color:#ff6b6b}
+  .manual{margin-bottom:6px}
+  .manual summary{font-size:13px;color:var(--muted);cursor:pointer}
+  .searching{font-size:12px;color:var(--muted);font-family:var(--font-mono);padding:4px 2px}
+</style>
+</head>
+<body>
+<div class="grid-wrap"><div class="grid" id="grid"></div></div>
+<div class="wrap">
+  <header>
+    <a class="wordmark" href="../home.html">TEZ<span class="star">✦</span></a>
+    <a class="wordmark" href="../home.html" style="font-size:13px;color:var(--muted)">← all drops</a>
+  </header>
+
+  <h1>Gauntlet Setup</h1>
+  <p class="sub">A win-to-advance game tracker for OBS. Mods cross games off live with chat commands.</p>
+
+  <div class="card" id="setupCard">
+    <div class="row">
+      <div>
+        <label>Twitch channel</label>
+        <input id="channel" placeholder="yourname" autocomplete="off" />
+      </div>
+      <div>
+        <label>Board title</label>
+        <input id="title" placeholder="The Gauntlet" autocomplete="off" />
+      </div>
+    </div>
+    <label>Add games — search and click to add</label>
+    <input id="search" placeholder="Search a game… (e.g. Elden Ring)" autocomplete="off" />
+    <div id="results" class="results"></div>
+
+    <div id="picked" class="picked"></div>
+    <details class="manual">
+      <summary>Add a game manually (no art)</summary>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <input id="manualName" placeholder="Game name" style="margin:0" />
+        <button class="btn ghost" id="manualAdd" style="white-space:nowrap">Add</button>
+      </div>
+    </details>
+
+    <button class="btn" id="createBtn" style="margin-top:18px">Create board</button>
+    <span class="ok hidden" id="createOk">saved ✓</span>
+    <p class="mini" style="margin-top:14px">Game search & art by <a href="https://rawg.io" target="_blank" rel="noopener" style="color:var(--accent-bright)">RAWG</a>.</p>
+  </div>
+
+  <div class="card hidden" id="liveCard">
+    <label>OBS browser source URL</label>
+    <div class="url-box"><span id="overlayUrl"></span><button class="chip" id="copyBtn">copy</button></div>
+    <p class="mini">Add it in OBS as a Browser Source (width ~390, height ~600, transparent).</p>
+
+    <label style="margin-top:6px">Current board</label>
+    <div id="editor"></div>
+    <p class="mini" style="margin-top:14px">Chat commands (broadcaster + mods): <code>!win &lt;game&gt;</code> &nbsp; <code>!lost &lt;game&gt;</code> &nbsp; <code>!active &lt;game&gt;</code>. Use a name fragment or the list number, e.g. <code>!win elden</code> or <code>!active 3</code>.</p>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn ghost" id="editListBtn">Edit game list</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="note"><b>First time?</b> Run <code>schema.sql</code> in your Supabase SQL editor, then paste your project URL + anon key into <code>config.js</code>. That's the only setup.</p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const $ = id=>document.getElementById(id);
+const sb = (SUPABASE_URL.includes("YOUR-PROJECT")) ? null : supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let board = null;
+
+const norm = s => (s||"").toLowerCase().trim();
+function makeId(ch){ return norm(ch).replace(/[^a-z0-9]/g,"") + "-" + Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- game search (RAWG via /api/games) ---------- */
+let picked = [];   // [{ name, image, done:false }]
+let searchTimer;
+
+function renderResults(items){
+  const el = $("results");
+  if(!items.length){ el.innerHTML = ""; return; }
+  el.innerHTML = items.map((g,i)=>{
+    const art = g.image
+      ? `<img src="${g.image}" alt="" onerror="this.outerHTML='<div class=ph>?</div>'" />`
+      : `<div class="ph">?</div>`;
+    return `<div class="result" data-i="${i}">
+      ${art}
+      <div class="meta"><div class="rn">${escapeHtml(g.name)}</div><div class="ry">${g.released||'—'}</div></div>
+      <span class="add">+ add</span>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".result").forEach(r=>r.onclick=()=>addGame(items[+r.dataset.i]));
+}
+
+async function runSearch(q){
+  if(!q){ $("results").innerHTML=""; return; }
+  $("results").innerHTML = `<div class="searching">searching…</div>`;
+  try{
+    const r = await fetch("../api/games?q="+encodeURIComponent(q));
+    const d = await r.json();
+    if(d.error){ $("results").innerHTML = `<div class="searching">${escapeHtml(d.error)}</div>`; return; }
+    renderResults(d.results||[]);
+  }catch(e){ $("results").innerHTML = `<div class="searching">search unavailable</div>`; }
+}
+
+function addGame(g){
+  if(picked.some(p=>norm(p.name)===norm(g.name))) return;  // no dupes
+  picked.push({ name:g.name, image:g.image||"", done:false });
+  $("search").value=""; $("results").innerHTML="";
+  renderPicked();
+}
+function renderPicked(){
+  $("picked").innerHTML = picked.map((g,i)=>{
+    const art = g.image
+      ? `<img src="${g.image}" alt="" onerror="this.outerHTML='<div class=ph>#</div>'" />`
+      : `<div class="ph">${i+1}</div>`;
+    return `<div class="picked-game">
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      ${art}
+      <span class="pn">${escapeHtml(g.name)}</span>
+      <button class="rm" data-i="${i}" title="remove">×</button>
+    </div>`;
+  }).join("");
+  $("picked").querySelectorAll(".rm").forEach(b=>b.onclick=()=>{ picked.splice(+b.dataset.i,1); renderPicked(); });
+}
+
+$("search").oninput = e=>{ clearTimeout(searchTimer); const q=e.target.value.trim(); searchTimer=setTimeout(()=>runSearch(q),300); };
+$("manualAdd").onclick = ()=>{ const n=$("manualName").value.trim(); if(n){ addGame({name:n,image:""}); $("manualName").value=""; } };
+
+async function createBoard(){
+  if(!sb){ alert("Fill in config.js first (Supabase URL + anon key)."); return; }
+  const channel = norm($("channel").value);
+  const title = $("title").value.trim() || "Gauntlet";
+  if(!channel){ alert("Enter your Twitch channel."); return; }
+  if(!picked.length){ alert("Add at least one game."); return; }
+  const games = picked.map(g=>({ name:g.name, image:g.image||"", done:false }));
+  const id = makeId(channel);
+  const row = { id, channel, title, games, active:null, updated_at:new Date().toISOString() };
+  const { error } = await sb.from("gauntlet_boards").insert(row);
+  if(error){ alert("Supabase error: "+error.message); return; }
+  board = row;
+  localStorage.setItem("gauntlet_last", id);
+  $("createOk").classList.remove("hidden");
+  showLive();
+}
+
+function overlayURL(){
+  let p = location.pathname.replace(/index\.html$/,"");
+  if(p.charAt(p.length-1)!=="/") p+="/";   // clean-URL safe: /gauntlet -> /gauntlet/
+  return location.origin + p + "overlay.html?board=" + board.id;
+}
+
+function showLive(){
+  $("setupCard").classList.add("hidden");
+  $("liveCard").classList.remove("hidden");
+  $("overlayUrl").textContent = overlayURL();
+  renderEditor();
+  subscribe();
+}
+
+function renderEditor(){
+  const games = board.games||[];
+  $("editor").innerHTML = games.map((g,i)=>{
+    const art = g.image
+      ? `<img src="${g.image}" alt="" onerror="this.outerHTML='<div class=ph>#</div>'" />`
+      : `<div class="ph">${i+1}</div>`;
+    return `<div class="editor-game ${g.done?'done':''}">
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      ${art}
+      <span class="gname">${escapeHtml(g.name)}</span>
+      ${board.active===g.name?'<span class="pill">ACTIVE</span>':''}
+      <button class="chip" data-act="active" data-i="${i}">active</button>
+      <button class="chip" data-act="toggle" data-i="${i}">${g.done?'undo':'won'}</button>
+    </div>`;
+  }).join("");
+  $("editor").querySelectorAll(".chip").forEach(b=>b.onclick=()=>manual(b.dataset.act, +b.dataset.i));
+}
+
+async function manual(act, i){
+  const g = board.games[i];
+  if(act==="toggle") g.done = !g.done;
+  if(act==="active"){ board.active = g.name; g.done=false; }
+  if(act==="toggle" && g.done && board.active===g.name) board.active = AUTO_ADVANCE_ACTIVE ? (board.games.find(x=>!x.done)?.name||null) : null;
+  await sb.from("gauntlet_boards").update({games:board.games,active:board.active,updated_at:new Date().toISOString()}).eq("id",board.id);
+  renderEditor();
+}
+
+function subscribe(){
+  sb.channel("setup-"+board.id).on("postgres_changes",
+    {event:"*",schema:"public",table:"gauntlet_boards",filter:`id=eq.${board.id}`},
+    p=>{ if(p.new){ board=p.new; renderEditor(); } }).subscribe();
+}
+
+async function loadLast(){
+  const last = localStorage.getItem("gauntlet_last");
+  if(!last || !sb) return;
+  const { data } = await sb.from("gauntlet_boards").select("*").eq("id",last).maybeSingle();
+  if(data){ board=data; showLive(); }
+}
+
+$("createBtn").onclick = createBoard;
+$("copyBtn").onclick = ()=>{ navigator.clipboard.writeText(overlayURL()); $("copyBtn").textContent="copied"; setTimeout(()=>$("copyBtn").textContent="copy",1500); };
+$("editListBtn").onclick = ()=>{ $("setupCard").classList.remove("hidden"); $("liveCard").classList.add("hidden");
+  $("channel").value=board.channel; $("title").value=board.title;
+  picked = board.games.map(g=>({name:g.name,image:g.image||"",done:false}));
+  renderPicked();
+  $("createBtn").textContent="Save changes";
+  $("createBtn").onclick=async()=>{
+    board.channel=norm($("channel").value); board.title=$("title").value.trim()||"Gauntlet";
+    // keep done state for games that still exist by name
+    const prev=Object.fromEntries(board.games.map(g=>[norm(g.name),g.done]));
+    board.games=picked.map(g=>({name:g.name,image:g.image||"",done:prev[norm(g.name)]||false}));
+    if(board.active && !board.games.some(g=>g.name===board.active)) board.active=null;
+    await sb.from("gauntlet_boards").update({channel:board.channel,title:board.title,games:board.games,active:board.active,updated_at:new Date().toISOString()}).eq("id",board.id);
+    showLive();
+  };
+};
+
+/* grid warp */
+const grid=$("grid"); let tx=0,ty=0,cx=0,cy=0;
+addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2;});
+(function tick(){cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;grid.style.transform=`rotateX(${(-cy*1.4).toFixed(2)}deg) rotateY(${(cx*1.4).toFixed(2)}deg) translate(${(-cx*7).toFixed(1)}px,${(-cy*7).toFixed(1)}px) scale(1.08)`;requestAnimationFrame(tick);})();
+
+loadLast();
+</script>
+</body>
+</html>

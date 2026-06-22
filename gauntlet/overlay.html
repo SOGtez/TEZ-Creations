@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEZ Creations — Gauntlet Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050806; --text:#eaf2ec; --muted:#8fa394;
+    --accent:#2bd46a; --accent-bright:#4ade80; --accent-deep:#16a34a;
+    --accent-glow:rgba(43,212,106,.16);
+    --font-display:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-sans:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-mono:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:transparent}           /* transparent for OBS */
+  body{
+    font-family:var(--font-sans); color:var(--text);
+    padding:24px; -webkit-font-smoothing:antialiased;
+  }
+  .board{
+    width:340px;
+    background:rgba(8,14,10,.62);
+    border:1px solid rgba(43,212,106,.18);
+    border-radius:18px;
+    backdrop-filter:blur(14px) saturate(120%);
+    -webkit-backdrop-filter:blur(14px) saturate(120%);
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .board-head{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 18px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg,rgba(43,212,106,.10),transparent);
+  }
+  .star{color:var(--accent);filter:drop-shadow(0 0 6px var(--accent-glow))}
+  .board-title{
+    font-family:var(--font-display); font-weight:700; font-size:16px;
+    letter-spacing:.3px; text-transform:uppercase;
+  }
+  .count{
+    margin-left:auto; font-family:var(--font-mono); font-size:12px;
+    color:var(--accent-bright);
+  }
+  ul{list-style:none}
+  /* per-game cover thumbnail */
+  .thumb{
+    width:34px; height:34px; border-radius:7px; flex-shrink:0;
+    background-size:cover; background-position:center;
+    background-color:rgba(255,255,255,.05);
+    box-shadow:0 1px 4px rgba(0,0,0,.3);
+  }
+  .thumb.ph{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+  .game.done .thumb{filter:grayscale(1) brightness(.7)}
+  .game.active .thumb{width:40px;height:40px;box-shadow:0 0 12px var(--accent-glow)}
+  /* featured "now playing" cover for the active game */
+  .feature{
+    height:0; overflow:hidden; position:relative;
+    transition:height .4s ease;
+  }
+  .feature.show{height:120px}
+  .feature-art{
+    position:absolute; inset:0; z-index:0;
+    background-size:cover; background-position:center;
+  }
+  .feature::after{   /* readability gradient, above art, below text */
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(180deg,rgba(8,14,10,0) 35%,rgba(8,14,10,.95));
+  }
+  .feature-txt{
+    position:absolute; left:0; right:0; bottom:0; z-index:2;
+    display:flex; flex-direction:column;
+  }
+  .feature-label{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent-bright);padding:0 16px}
+  .feature-name{font-family:var(--font-display);font-weight:700;font-size:18px;padding:2px 16px 12px;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+  /* swap animation when the active game changes */
+  .feature.swap .feature-art{animation:artIn .55s cubic-bezier(.2,.6,.2,1)}
+  .feature.swap .feature-name{animation:nameIn .5s cubic-bezier(.2,.6,.2,1)}
+  .feature.swap .feature-label{animation:nameIn .5s .04s cubic-bezier(.2,.6,.2,1) backwards}
+  @keyframes artIn{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
+  @keyframes nameIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .game{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 18px;
+    border-bottom:1px solid rgba(255,255,255,.04);
+    position:relative;
+    transition:background .25s ease, opacity .35s ease;
+  }
+  .game:last-child{border-bottom:none}
+  .num{
+    font-family:var(--font-mono); font-size:12px; color:var(--muted);
+    min-width:20px;
+  }
+  .name{
+    font-size:15px; font-weight:500; flex:1;
+    position:relative; transition:color .3s ease;
+  }
+  /* strike-through draws across on win */
+  .name::after{
+    content:""; position:absolute; left:0; top:50%;
+    height:2px; width:0; background:var(--accent);
+    box-shadow:0 0 8px var(--accent-glow);
+    transition:width .45s cubic-bezier(.6,.1,.2,1);
+  }
+  .game.done .name::after{width:100%}
+  .game.done .name{color:var(--muted)}
+  .game.done{opacity:.55}
+  .check{
+    width:18px; height:18px; flex-shrink:0; opacity:0;
+    transform:scale(.5); transition:opacity .3s ease, transform .3s ease;
+    color:var(--accent);
+  }
+  .game.done .check{opacity:1; transform:scale(1)}
+
+  /* ACTIVE highlight + badge */
+  .game.active{
+    background:linear-gradient(90deg,rgba(43,212,106,.14),transparent 80%);
+  }
+  .game.active::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--accent); box-shadow:0 0 12px var(--accent);
+  }
+  .badge{
+    margin-left:auto; font-family:var(--font-mono); font-size:10px;
+    letter-spacing:1px; color:var(--bg); background:var(--accent);
+    padding:3px 8px; border-radius:999px; font-weight:700;
+    box-shadow:0 0 14px var(--accent-glow);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 10px var(--accent-glow)}50%{box-shadow:0 0 20px rgba(43,212,106,.5)}}
+
+  .toast{
+    position:fixed; left:24px; bottom:24px;
+    background:rgba(8,14,10,.9); border:1px solid rgba(43,212,106,.3);
+    color:var(--text); font-size:13px; padding:10px 14px; border-radius:12px;
+    opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateY(0)}
+  .status{
+    padding:14px 18px; font-size:13px; color:var(--muted);
+    font-family:var(--font-mono);
+  }
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--muted);margin-right:7px;vertical-align:middle}
+  .dot.live{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+  <div class="board" id="board">
+    <div class="board-head">
+      <span class="star">✦</span>
+      <span class="board-title" id="title">Gauntlet</span>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="feature" id="feature">
+      <div class="feature-art" id="featureArt"></div>
+      <div class="feature-txt"><span class="feature-label">NOW PLAYING</span><span class="feature-name" id="featureName"></span></div>
+    </div>
+    <ul id="list"></ul>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">connecting…</span></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const boardId = new URLSearchParams(location.search).get("board");
+const listEl = document.getElementById("list");
+const titleEl = document.getElementById("title");
+const countEl = document.getElementById("count");
+const featureEl = document.getElementById("feature");
+const featureArtEl = document.getElementById("featureArt");
+const featureNameEl = document.getElementById("featureName");
+let lastActive = null;
+const dotEl = document.getElementById("dot");
+const statusText = document.getElementById("statusText");
+const toastEl = document.getElementById("toast");
+
+let board = null;           // { id, channel, title, games:[{name,done}], active }
+let writing = false;
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function setStatus(text, live){ statusText.textContent = text; dotEl.classList.toggle("live", !!live); }
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2600);
+}
+
+const CHECK = '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function render(){
+  if(!board){ return; }
+  titleEl.textContent = board.title || "Gauntlet";
+  const games = board.games || [];
+  const done = games.filter(g=>g.done).length;
+  countEl.textContent = `${done}/${games.length}`;
+
+  // featured cover for the active game
+  const activeGame = games.find(g => board.active && norm(board.active)===norm(g.name) && !g.done);
+  if(activeGame && activeGame.image){
+    featureArtEl.style.backgroundImage = `url("${activeGame.image}")`;
+    featureNameEl.textContent = activeGame.name;
+    featureEl.classList.add("show");
+    if(activeGame.name !== lastActive){
+      featureEl.classList.remove("swap"); void featureEl.offsetWidth; featureEl.classList.add("swap");
+    }
+    lastActive = activeGame.name;
+  } else {
+    featureEl.classList.remove("show","swap");
+    lastActive = null;
+  }
+
+  listEl.innerHTML = games.map((g,i)=>{
+    const isActive = board.active && norm(board.active)===norm(g.name) && !g.done;
+    const thumb = g.image
+      ? `<span class="thumb" style="background-image:url('${g.image}')"></span>`
+      : `<span class="thumb ph">${String(i+1).padStart(2,'0')}</span>`;
+    return `<li class="game ${g.done?'done':''} ${isActive?'active':''}">
+      ${thumb}
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      <span class="name">${escapeHtml(g.name)}</span>
+      ${g.done?CHECK:''}
+      ${isActive?'<span class="badge">ACTIVE</span>':''}
+    </li>`;
+  }).join("");
+}
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function norm(s){return (s||"").toLowerCase().trim();}
+
+/* ---------- load + realtime sync ---------- */
+async function loadBoard(){
+  const { data, error } = await sb.from("gauntlet_boards").select("*").eq("id", boardId).maybeSingle();
+  if(error){ setStatus("supabase error", false); console.error(error); return; }
+  if(!data){ setStatus("board not found", false); return; }
+  board = data; render();
+  connectChat(board.channel);
+}
+function subscribeRealtime(){
+  sb.channel("gauntlet-"+boardId)
+    .on("postgres_changes",
+      { event:"*", schema:"public", table:"gauntlet_boards", filter:`id=eq.${boardId}` },
+      (payload)=>{ if(payload.new){ board = payload.new; render(); } })
+    .subscribe();
+}
+
+async function saveBoard(){
+  if(!board) return;
+  writing = true;
+  const { error } = await sb.from("gauntlet_boards")
+    .update({ games: board.games, active: board.active, updated_at: new Date().toISOString() })
+    .eq("id", boardId);
+  writing = false;
+  if(error){ console.error(error); toast("save failed"); }
+}
+
+/* ---------- command logic ---------- */
+function findGame(arg){
+  const games = board.games || [];
+  arg = norm(arg);
+  if(!arg) return { error:"no game given" };
+  // numeric index (1-based)
+  if(/^\d+$/.test(arg)){
+    const i = parseInt(arg,10)-1;
+    if(i>=0 && i<games.length) return { game:games[i] };
+    return { error:"no game #"+arg };
+  }
+  // partial, case-insensitive
+  const matches = games.filter(g=>norm(g.name).includes(arg));
+  if(matches.length===1) return { game:matches[0] };
+  if(matches.length===0) return { error:"no match for “"+arg+"”" };
+  return { error:"“"+arg+"” matches "+matches.length+" — be specific" };
+}
+
+function nextPending(){
+  return (board.games||[]).find(g=>!g.done) || null;
+}
+
+function handleCommand(cmd, arg){
+  if(!board) return;
+  const res = findGame(arg);
+  if(res.error){ toast(res.error); return; }
+  const g = res.game;
+
+  if(cmd==="win"){
+    g.done = true;
+    if(board.active && norm(board.active)===norm(g.name)){
+      board.active = AUTO_ADVANCE_ACTIVE ? (nextPending()?.name || null) : null;
+    }
+    toast("✓ won: "+g.name);
+  } else if(cmd==="lost"){
+    g.done = false;
+    toast("↺ back on: "+g.name);
+  } else if(cmd==="active"){
+    board.active = g.name;
+    toast("● active: "+g.name);
+  }
+  render();
+  saveBoard();
+}
+
+/* ---------- Twitch chat (anonymous IRC over WebSocket) ---------- */
+let ws, reconnectTimer;
+function connectChat(channel){
+  channel = norm(channel);
+  if(!channel){ setStatus("no channel set", false); return; }
+  setStatus("joining #"+channel+"…", false);
+  ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+
+  ws.onopen = ()=>{
+    ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands");
+    ws.send("NICK justinfan"+Math.floor(Math.random()*99999));
+    ws.send("JOIN #"+channel);
+  };
+  ws.onmessage = (e)=>{
+    const lines = e.data.split("\r\n");
+    for(const line of lines){
+      if(!line) continue;
+      if(line.startsWith("PING")){ ws.send("PONG :tmi.twitch.tv"); continue; }
+      if(line.includes(" JOIN ")){ setStatus("live · #"+channel, true); continue; }
+      if(line.includes(" PRIVMSG ")) parsePrivmsg(line, channel);
+    }
+  };
+  ws.onclose = ()=>{ setStatus("reconnecting…", false); clearTimeout(reconnectTimer); reconnectTimer=setTimeout(()=>connectChat(channel),3000); };
+  ws.onerror = ()=>{ try{ws.close();}catch(_){} };
+}
+
+function parsePrivmsg(line, channel){
+  // format: @tags :user!user@user.tmi.twitch.tv PRIVMSG #chan :message
+  let tags = {};
+  if(line.startsWith("@")){
+    const sp = line.indexOf(" ");
+    line.slice(1,sp).split(";").forEach(kv=>{ const [k,v]=kv.split("="); tags[k]=v; });
+    line = line.slice(sp+1);
+  }
+  const msgIdx = line.indexOf("PRIVMSG #"+channel+" :");
+  if(msgIdx<0) return;
+  const text = line.slice(msgIdx + ("PRIVMSG #"+channel+" :").length).trim();
+  if(text[0] !== "!") return;
+
+  // permissions: broadcaster or mod only
+  const badges = tags.badges || "";
+  const isBroadcaster = badges.includes("broadcaster/") || norm(tags["display-name"]||"")===channel;
+  const isMod = tags.mod==="1" || badges.includes("moderator/");
+  if(!isBroadcaster && !isMod) return;
+
+  const parts = text.slice(1).split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(" ");
+  if(cmd==="win" || cmd==="lost" || cmd==="active") handleCommand(cmd, arg);
+}
+
+/* ---------- boot ---------- */
+if(!boardId){
+  setStatus("add ?board=ID to the URL", false);
+} else if(SUPABASE_URL.includes("YOUR-PROJECT")){
+  setStatus("fill in config.js", false);
+} else {
+  subscribeRealtime();
+  loadBoard();
+}
+</script>
+</body>
+</html>
