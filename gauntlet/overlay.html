@@ -308,6 +308,35 @@ function handleCommand(cmd, arg){
   saveBoard();
 }
 
+// !addgame <name> — append a game (best-effort cover art from RAWG)
+async function addGameCmd(name){
+  if(!board) return;
+  name = (name||"").trim();
+  if(!name){ toast("usage: !addgame <name>"); return; }
+  board.games = board.games || [];
+  if(board.games.some(g=>norm(g.name)===norm(name))){ toast("already on the list: "+name); return; }
+  let image = "";
+  try{
+    const r = await fetch("../api/games?q="+encodeURIComponent(name));
+    if(r.ok){ const d = await r.json(); const top = (d.results||[])[0]; if(top) image = top.image || ""; }
+  }catch(_){ /* no art is fine */ }
+  board.games.push({ name, image, done:false });
+  toast("＋ added: "+name);
+  render(); saveBoard();
+}
+
+// !removegame <name|#> — drop a game from the list
+function removeGameCmd(arg){
+  if(!board) return;
+  const res = findGame(arg);
+  if(res.error){ toast(res.error); return; }
+  const g = res.game;
+  board.games = (board.games||[]).filter(x=>x!==g);
+  if(board.active && norm(board.active)===norm(g.name)) board.active = null;
+  toast("✕ removed: "+g.name);
+  render(); saveBoard();
+}
+
 /* ---------- Twitch chat (anonymous IRC over WebSocket) ---------- */
 let ws, reconnectTimer;
 function connectChat(channel){
@@ -357,6 +386,8 @@ function parsePrivmsg(line, channel){
   const cmd = parts[0].toLowerCase();
   const arg = parts.slice(1).join(" ");
   if(cmd==="win" || cmd==="lost" || cmd==="active") handleCommand(cmd, arg);
+  else if(cmd==="addgame") addGameCmd(arg);
+  else if(cmd==="removegame") removeGameCmd(arg);
 }
 
 /* ---------- boot ---------- */

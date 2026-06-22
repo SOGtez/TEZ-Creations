@@ -207,6 +207,21 @@ function findGame(arg){
 function nextPending(){ return board.games.find(g=>!g.done)||null; }
 
 function handleCommand(cmd,arg){
+  if(cmd==="addgame"){
+    const name=(arg||"").trim();
+    if(!name){ toast("usage: !addgame <name>"); return {err:"no name"}; }
+    if(board.games.some(g=>norm(g.name)===norm(name))){ toast("already on the list"); return {err:"dupe"}; }
+    board.games.push({ name, cover:coverFor(name), done:false });
+    toast("＋ added: "+name); render(); return {ok:"＋ added: "+name};
+  }
+  if(cmd==="removegame"){
+    const res=findGame(arg);
+    if(res.error){ toast(res.error); return {err:res.error}; }
+    const g=res.game;
+    board.games=board.games.filter(x=>x!==g);
+    if(board.active && norm(board.active)===norm(g.name)) board.active=null;
+    toast("✕ removed: "+g.name); render(); return {ok:"✕ removed: "+g.name};
+  }
   const res=findGame(arg);
   if(res.error){ toast(res.error); return {err:res.error}; }
   const g=res.game;
@@ -230,7 +245,7 @@ function submit(text){
   const parts=text.slice(1).split(/\s+/); const cmd=parts[0].toLowerCase(); const arg=parts.slice(1).join(" ");
   // permission gate — same as overlay (broadcaster + mod only)
   const allowed = role==="broadcaster" || role==="mod";
-  if(!["win","lost","active"].includes(cmd)){ logLine(`<span class="${whoCls}">${label}:</span> ${escapeHtml(text)} <span class="res">— not a gauntlet command</span>`); return; }
+  if(!["win","lost","active","addgame","removegame"].includes(cmd)){ logLine(`<span class="${whoCls}">${label}:</span> ${escapeHtml(text)} <span class="res">— not a gauntlet command</span>`); return; }
   if(!allowed){ logLine(`<span class="vwho">${label}:</span> ${escapeHtml(text)} <span class="res">— ignored (mods only)</span>`); return; }
   const r=handleCommand(cmd,arg);
   const tag = r.err?`<span class="err">${escapeHtml(r.err)}</span>`:`<span class="ok">${escapeHtml(r.ok)}</span>`;
@@ -238,7 +253,7 @@ function submit(text){
 }
 
 /* quick chips */
-const CHIPS=["!active elden","!win elden","!win 2","!lost 2","!active hades","!win cup","!win mario"];
+const CHIPS=["!active elden","!win elden","!addgame Stardew Valley","!removegame 2","!lost 2","!active hades"];
 $("chips").innerHTML=CHIPS.map(c=>`<button class="chip">${c}</button>`).join("");
 $("chips").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ $("cmd").value=b.textContent; submit(b.textContent); $("cmd").value=""; });
 
@@ -249,7 +264,7 @@ $("autoadv").onchange=e=>AUTO_ADVANCE_ACTIVE=e.target.checked;
 $("reset").onclick=()=>{ board=freshBoard(); render(); $("log").innerHTML=""; logLine('<span class="res">board reset — try !active elden</span>'); };
 
 board=freshBoard(); render();
-logLine('<span class="res">Try: !active elden → !win elden → watch the badge move. Switch to Viewer to see commands ignored.</span>');
+logLine('<span class="res">Try: !active elden → !win elden → watch the badge move. !addgame &lt;name&gt; / !removegame &lt;name|#&gt; edit the list. Switch to Viewer to see commands ignored.</span>');
 </script>
 </body>
 </html>

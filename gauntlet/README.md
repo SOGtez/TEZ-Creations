@@ -22,8 +22,11 @@ your board, so you can come back to this page anytime to edit your game list.
 - `!win <game>`  — cross a game off (you beat it)
 - `!lost <game>` — put it back on the board
 - `!active <game>` — highlight it and show its NOW PLAYING cover
+- `!addgame <name>` — add a game to the board (grabs cover art automatically)
+- `!removegame <game>` — drop a game from the board
 
 `<game>` can be part of the name or its list number: `!win elden`, `!active 3`.
+(`!addgame` takes the full name you type, e.g. `!addgame Stardew Valley`.)
 Only the broadcaster and mods can run these — regular chat is ignored.
 
 ## Tips
