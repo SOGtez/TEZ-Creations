@@ -125,6 +125,8 @@
    TEZ Creations — Twitch Sub Goal Overlay (minimal xx/xx)
    ------------------------------------------------------------
    URL params:
+     platform=twitch  Platform (default). platform=kick counts via our webhook (Supabase realtime)
+     start=0          Kick only: starting sub count to add to the live tally
      id=...           Private link id (from /subgoal/ setup) — auto-refreshes, never expires
      token=...        Legacy: a raw Twitch access token (older URLs; still supported)
      mode=sync        Mirror the goal set in the Twitch dashboard (default)
@@ -145,6 +147,8 @@
 
 const qs = new URLSearchParams(location.search);
 const P = {
+  platform:(qs.get('platform') || 'twitch').toLowerCase(),  // twitch | kick
+  start:   Math.max(0, parseInt(qs.get('start')||'0',10) || 0),  // kick: starting sub count
   id:      qs.get('id') || '',
   token:   qs.get('token') || '',
   mode:    (qs.get('mode') || 'sync').toLowerCase(),
@@ -486,10 +490,48 @@ function startDemo(){
 }
 
 /* ============================================================
+   KICK MODE — count comes from Supabase realtime (our webhook fills it).
+   Kick has no sub-total API, so we count events from connect time + a start offset.
+   Reuses the custom-tier logic (advanceTier / applyCustomCount / celebrate).
+   ============================================================ */
+const KICK_SB_URL = "https://taodbtlgpvaabvcnsekg.supabase.co";
+const KICK_SB_KEY = "sb_publishable_imq8qxgP3woB_umzNjMDSw_4CpBrgvp";  // public anon key (read-only)
+function loadSupabase(cb){
+  if (window.supabase){ cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload = cb;
+  s.onerror = ()=>setStatus('could not load realtime');
+  document.head.appendChild(s);
+}
+function startKick(){
+  el.card.classList.add('show');
+  if (!P.id){ setStatus('Missing link — get your URL at tezcreations.com/subgoal'); return; }
+  loadSupabase(()=>{
+    const sb = supabase.createClient(KICK_SB_URL, KICK_SB_KEY);
+    let first = true;
+    function apply(rowCount){
+      const c = P.start + (rowCount||0);
+      if (first){ advanceTier(c); applyCustomCount(c, false); first = false; }  // don't celebrate past tiers
+      else applyCustomCount(c, true);
+    }
+    sb.from('kick_subs').select('count').eq('id', P.id).maybeSingle().then(({data,error})=>{
+      if (error){ setStatus('connection error'); return; }
+      apply(data ? data.count : 0);
+      setStatus('');
+    });
+    sb.channel('kick-'+P.id).on('postgres_changes',
+      { event:'*', schema:'public', table:'kick_subs', filter:`id=eq.${P.id}` },
+      (p)=>{ if (p.new) apply(p.new.count); }).subscribe();
+  });
+}
+
+/* ============================================================
    BOOT
    ============================================================ */
 (async function init(){
   if (P.demo){ startDemo(); return; }
+  if (P.platform === 'kick'){ startKick(); return; }
   if (!P.token && !P.id){
     el.card.classList.add('show');
     setStatus('Missing link — get your URL at tezcreations.com/subgoal');

@@ -109,9 +109,11 @@
   .btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   .btn.twitch{background:#9146FF;color:#fff;box-shadow:none}
   .btn.twitch:hover{box-shadow:0 8px 26px rgba(145,70,255,.45)}
+  .btn.kick{background:#53fc18;color:#0a0f0b;box-shadow:none}
+  .btn.kick:hover{box-shadow:0 8px 26px rgba(83,252,24,.4)}
   .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);
     color:var(--ink);box-shadow:none}
-  .btn svg{width:18px;height:18px;fill:#fff}
+  .btn svg{width:18px;height:18px;fill:currentColor}
 
   .connected{display:flex;align-items:center;gap:12px}
   .avatar{width:42px;height:42px;border-radius:12px;border:1px solid var(--edge)}
@@ -208,9 +210,14 @@
   <!-- STEP 1 — connect -->
   <div class="card">
     <div class="stepline"><div class="stepnum">1</div>
-      <div><div class="steptitle">Connect your Twitch</div>
-      <div class="hint">Read-only access: your sub count and goals. Nothing is posted, nothing is changed.
-        Requires Twitch Affiliate or Partner (subs don't exist below that).</div></div>
+      <div><div class="steptitle">Connect your account</div>
+      <div class="hint">Read-only access to your subs. Nothing is posted, nothing is changed.
+        <span class="twitchonly">Twitch needs Affiliate or Partner (subs don't exist below that).</span>
+        <span class="kickonly hidden">On Kick the goal counts new + gifted subs from when you connect (set a starting number below).</span></div></div>
+    </div>
+    <div class="seg" id="platSeg" style="margin-bottom:14px;max-width:320px">
+      <button data-v="twitch" class="on">Twitch</button>
+      <button data-v="kick">Kick</button>
     </div>
     <button class="btn twitch" id="connectBtn">
       <svg viewBox="0 0 24 24"><path d="M4.3 1 1.7 5.7V20h5.1v3h2.9l2.9-3h4.3l5.4-5.4V1H4.3zm16 12.7-3.1 3.1h-5.1l-2.9 2.9v-2.9H5V3h15.3v10.7zM17 6.9v5.7h-2V6.9h2zm-5.4 0v5.7h-2V6.9h2z"/></svg>
@@ -231,12 +238,18 @@
     </div>
 
     <div class="grid">
-      <div class="field" style="grid-column:1/-1">
+      <div class="field twitchonly" style="grid-column:1/-1">
         <label>Goal source</label>
         <div class="seg" id="modeSeg">
           <button data-v="sync" class="on">Twitch dashboard goal</button>
           <button data-v="custom">Custom auto-advancing tiers</button>
         </div>
+      </div>
+
+      <div class="field kickonly hidden" style="grid-column:1/-1">
+        <label>Starting sub count</label>
+        <input type="number" id="kickStart" value="0" min="0" placeholder="0">
+        <div class="hint" style="margin-top:6px">Kick can't read your current total, so the overlay starts here and counts new + gifted subs as they come in.</div>
       </div>
 
       <div class="field customonly hidden" style="grid-column:1/-1">
@@ -356,11 +369,18 @@
    ============================================================ */
 const CLIENT_ID = "i5n7ykd3ns3n0fxgbith466dnj51fc";
 const SCOPES = "channel:read:goals channel:read:subscriptions";
+const KICK_CLIENT_ID = "01KVRE8MZK5EY1QMJ178V7FV4V";
+const KICK_SCOPES = "user:read channel:read events:subscribe";
 const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
 
 const $ = id => document.getElementById(id);
-const state = { id:null, mode:'sync', tierMode:'step',
-                style:'card', font:'classic', match:false, streamUrl:'' };
+const state = { platform:'twitch', id:null, mode:'sync', tierMode:'step',
+                style:'card', font:'classic', match:false, streamUrl:'', start:0 };
+
+/* PKCE helpers (Kick) — code_verifier + S256 code_challenge */
+function b64url(bytes){ return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function randVerifier(){ const a=new Uint8Array(48); crypto.getRandomValues(a); return b64url(a); }
+async function challengeFor(verifier){ const d=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)); return b64url(d); }
 
 /* ---------- client id guard ---------- */
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
@@ -384,14 +404,29 @@ function redirectUri(){
   return location.origin + rp;
 }
 
-$('connectBtn').addEventListener('click', () => {
+$('connectBtn').addEventListener('click', async () => {
   if (location.protocol === 'file:'){
-    alert('The Twitch connect flow only works on the live site — go to tezcreations.com/subgoal');
+    alert('The connect flow only works on the live site — go to tezcreations.com/subgoal');
     return;
   }
   const st = (crypto.randomUUID && crypto.randomUUID()) ||
     Math.random().toString(36).slice(2) + Date.now().toString(36);
   sset('tw_state', st);
+  sset('connect_platform', state.platform);   // boot() reads this when we come back with ?code
+  if (state.platform === 'kick'){
+    const verifier = randVerifier();
+    sset('kick_verifier', verifier);
+    const u = new URL('https://id.kick.com/oauth/authorize');
+    u.searchParams.set('client_id', KICK_CLIENT_ID);
+    u.searchParams.set('redirect_uri', redirectUri());
+    u.searchParams.set('response_type', 'code');
+    u.searchParams.set('scope', KICK_SCOPES);
+    u.searchParams.set('state', st);
+    u.searchParams.set('code_challenge', await challengeFor(verifier));
+    u.searchParams.set('code_challenge_method', 'S256');
+    location.href = u.toString();
+    return;
+  }
   const u = new URL('https://id.twitch.tv/oauth2/authorize');
   u.searchParams.set('client_id', CLIENT_ID);
   u.searchParams.set('redirect_uri', redirectUri());
@@ -411,30 +446,50 @@ function showConnected(profile){
   refresh();
 }
 
-async function exchangeCode(code){
-  const r = await fetch(location.origin + '/api/twitch-auth', {
+async function exchangeCode(code, platform){
+  const ep = platform === 'kick' ? '/api/kick-auth' : '/api/twitch-auth';
+  const payload = { code, redirect_uri: redirectUri() };
+  if (platform === 'kick') payload.code_verifier = sget('kick_verifier') || '';
+  const r = await fetch(location.origin + ep, {
     method:'POST', headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ code, redirect_uri: redirectUri() }),
+    body: JSON.stringify(payload),
   });
   const j = await r.json().catch(()=>({}));
   if (!r.ok) throw new Error(j.error || 'Could not connect — try again.');
   return j;   // { id, login, display_name, profile_image_url }
 }
 
+function setPlatform(p){
+  state.platform = p;
+  $('platSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.v===p));
+  document.querySelectorAll('.twitchonly').forEach(el=>el.classList.toggle('hidden', p!=='twitch'));
+  document.querySelectorAll('.kickonly').forEach(el=>el.classList.toggle('hidden', p!=='kick'));
+  // Kick has no dashboard goal → force custom tiers; show all tier controls
+  if (p === 'kick'){ state.mode = 'custom'; document.querySelectorAll('.customonly').forEach(el=>el.classList.remove('hidden')); }
+  const TWITCH_LOGO = '<svg viewBox="0 0 24 24"><path d="M4.3 1 1.7 5.7V20h5.1v3h2.9l2.9-3h4.3l5.4-5.4V1H4.3zm16 12.7-3.1 3.1h-5.1l-2.9 2.9v-2.9H5V3h15.3v10.7zM17 6.9v5.7h-2V6.9h2zm-5.4 0v5.7h-2V6.9h2z"/></svg>';
+  const KICK_LOGO = '<svg viewBox="0 0 24 24"><path d="M1.333 0h8v5.333H12V2.667h2.667V0h8v8H20v2.667h-2.667v2.666H20V16h2.667v8h-8v-2.667H12v-2.666H9.333V24h-8Z"/></svg>';
+  $('connectBtn').className = 'btn ' + (p==='kick' ? 'kick' : 'twitch');
+  $('connectBtn').innerHTML = (p==='kick' ? KICK_LOGO : TWITCH_LOGO) + ' Connect with ' + (p==='kick' ? 'Kick' : 'Twitch');
+  refresh();
+}
+
 async function boot(){
-  // returning from Twitch with a one-time authorization code?
+  // returning from Twitch/Kick with a one-time authorization code?
   const q = new URLSearchParams(location.search);
   const code = q.get('code');
   if (code){
+    const platform = sget('connect_platform') || 'twitch';
     const stored = sget('tw_state');
     const stateOk = stored === null || q.get('state') === stored;  // accept if storage was blocked
     history.replaceState(null, '', location.pathname);             // scrub code/state from the URL
     if (stateOk){
       try{
-        const j = await exchangeCode(code);
+        const j = await exchangeCode(code, platform);
         const profile = { login:j.login, display_name:j.display_name, profile_image_url:j.profile_image_url };
+        setPlatform(platform);
         state.id = j.id;
         lset('sg_id', j.id);
+        lset('sg_platform', platform);
         lset('sg_profile', JSON.stringify(profile));
         showConnected(profile);
         return;
@@ -444,6 +499,7 @@ async function boot(){
   // already connected on a previous visit? restore from the saved opaque id
   const savedId = lget('sg_id');
   if (savedId){
+    setPlatform(lget('sg_platform') || 'twitch');
     state.id = savedId;
     let profile = {};
     try{ profile = JSON.parse(lget('sg_profile') || '{}'); }catch(e){}
@@ -452,13 +508,17 @@ async function boot(){
 }
 
 $('disconnectBtn').addEventListener('click', () => {
-  ldel('sg_id'); ldel('sg_profile');
+  ldel('sg_id'); ldel('sg_profile'); ldel('sg_platform');
   state.id = null;
   $('connectedRow').classList.add('hidden');
   $('configCard').classList.add('hidden');
   $('outputCard').classList.add('hidden');
   $('connectBtn').classList.remove('hidden');
 });
+
+/* platform picker (Twitch / Kick) */
+$('platSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setPlatform(b.dataset.v)));
+$('kickStart').addEventListener('input', debounce(() => { state.start = Math.max(0, parseInt($('kickStart').value,10) || 0); refresh(); }, 350));
 
 /* ---------- segmented controls ---------- */
 function wireSeg(id, onPick){
@@ -523,9 +583,13 @@ function refresh(){
   if (state.streamUrl) prev.set('stream', state.streamUrl);
   $('preview').src = 'simulation.html?' + prev.toString();
 
-  // shareable OBS URL — carries the opaque id, never a Twitch token
+  // shareable OBS URL — carries the opaque id, never a token
   if (state.id){
     const out = buildParams({ id: state.id });
+    if (state.platform === 'kick'){
+      out.set('platform', 'kick');
+      if (state.start > 0) out.set('start', String(state.start));
+    }
     const base = location.pathname.replace(/index\.html$/,'').replace(/\/$/,'');
     $('urlOut').textContent =
       location.origin + base + '/overlay.html?' + out.toString();
