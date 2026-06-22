@@ -75,8 +75,9 @@
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(43,212,106,.4)}
   .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);color:var(--text);box-shadow:none;font-weight:600;font-family:var(--font-sans)}
   .btn.ghost:hover{transform:none;border-color:var(--accent)}
-  .url-box{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.4);border:1px solid rgba(43,212,106,.25);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
-  .url-box span{flex:1;color:var(--accent-bright)}
+  .url-box{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.4);border:1px solid rgba(43,212,106,.25);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:12px}
+  .url-box span{flex:1;min-width:0;display:block;overflow-x:auto;white-space:nowrap;color:var(--accent-bright);-webkit-overflow-scrolling:touch}
+  .url-box .chip{flex:0 0 auto}
   .mini{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:16px}
   .editor-game{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
   .editor-game img,.editor-game .ph{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--font-mono);font-size:11px}
