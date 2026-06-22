@@ -5,38 +5,77 @@
 <script>(function(){var p=location.pathname.replace(/index\.html$/,"");if(p.charAt(p.length-1)!=="/")p+="/";var b=document.createElement("base");b.href=location.origin+p;document.head.insertBefore(b,document.head.firstChild);})();</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TEZ Creations — Gauntlet Setup</title>
+<title>Game Gauntlet — TEZ Creations</title>
+<meta name="description" content="A win-to-advance game tracker for OBS. Build your game list — you or your mods cross games off live with Twitch chat commands. By TEZ Creations." />
 <meta name="theme-color" content="#050806" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#050806; --text:#eaf2ec; --muted:#8fa394;
+    --bg:#050806; --bg-2:#0a0f0b; --text:#eaf2ec; --muted:#8fa394;
     --accent:#2bd46a; --accent-bright:#4ade80; --accent-deep:#16a34a;
     --accent-glow:rgba(43,212,106,.16);
+    --panel:rgba(255,255,255,.045); --edge:rgba(255,255,255,.10);
     --font-display:"Space Grotesk",sans-serif; --font-sans:"Plus Jakarta Sans",sans-serif; --font-mono:"Space Mono",monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden}
-  .grid-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;perspective:1200px}
-  .grid{position:absolute;inset:-30%;background-image:linear-gradient(rgba(43,212,106,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(43,212,106,.07) 1px,transparent 1px);background-size:46px 46px;transform:scale(1.08)}
-  .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:32px 22px 80px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-  .wordmark{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.5px;color:var(--text);text-decoration:none}
-  .star{color:var(--accent);filter:drop-shadow(0 0 6px var(--accent-glow))}
-  h1{font-family:var(--font-display);font-size:26px;margin-bottom:6px}
-  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
-  .card{background:rgba(8,14,10,.55);border:1px solid rgba(43,212,106,.16);border-radius:16px;padding:20px;margin-bottom:18px;backdrop-filter:blur(12px)}
+  body{background:radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent 70%), var(--bg);
+    color:var(--text);font-family:var(--font-sans);min-height:100vh;line-height:1.55;position:relative;overflow-x:hidden}
+
+  /* ===== signature site backdrop (matches home + other drops) ===== */
+  .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%);
+    mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,#000 25%,transparent 80%)}
+  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+    background-image:linear-gradient(to right, rgba(120,200,150,.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(120,200,150,.06) 1px, transparent 1px);
+    background-size:64px 64px;animation:grid-drift 28s linear infinite;
+    transform:perspective(1200px) scale(1.08);will-change:transform}
+  @keyframes grid-drift{to{background-position:64px 64px}}
+  .glow{position:fixed;top:-12%;left:50%;width:70vw;height:70vw;max-width:760px;max-height:760px;
+    transform:translateX(-50%);background:radial-gradient(circle,var(--accent-glow) 0%,transparent 60%);
+    filter:blur(40px);pointer-events:none;z-index:0;animation:breathe 8s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}50%{opacity:.85;transform:translateX(-50%) scale(1.08)}}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(120% 100% at 50% 50%,transparent 55%,rgba(0,0,0,.55))}
+  .grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* ===== header / hero ===== */
+  .site-head{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+    gap:24px;padding:clamp(22px,5vw,40px) clamp(22px,6vw,64px) 0;max-width:1180px;margin:0 auto}
+  .wordmark{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:.02em;color:var(--text);text-decoration:none}
+  .wordmark .star{color:var(--accent-bright)}
+  .back-link{font-size:14px;letter-spacing:.04em;color:var(--muted);text-decoration:none;transition:color .2s ease}
+  .back-link:hover{color:var(--text)}
+
+  .shell{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:30px 22px 40px}
+  .hero-meta{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .type-tag{font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:1px solid var(--edge);border-radius:8px;padding:5px 12px}
+  h1{font-family:var(--font-display);font-weight:700;font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.01em;text-shadow:0 0 70px rgba(43,212,106,.12)}
+  h1 .grad{background:linear-gradient(100deg,var(--accent),var(--accent-bright));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:16px;max-width:620px;margin-top:12px}
+
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:26px}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .col-head{display:flex;align-items:center;justify-content:space-between;gap:12px;height:42px;margin-bottom:14px}
+  .col-head .lbl{font-family:var(--font-display);font-weight:700;font-size:17px}
+  .col-head .btn{height:38px;padding:0 16px}
+  .sim-frame{width:100%;height:700px;border:1px solid var(--edge);border-radius:16px;display:block;background:var(--bg);overflow:hidden}
+
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:22px;margin-bottom:18px;backdrop-filter:blur(8px)}
   label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.5px}
-  input,textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-family:var(--font-sans);font-size:15px;padding:11px 13px;margin-bottom:16px}
+  input,textarea{width:100%;background:rgba(0,0,0,.32);border:1px solid var(--edge);border-radius:10px;color:var(--text);font-family:var(--font-sans);font-size:15px;padding:11px 13px;margin-bottom:16px}
   input:focus,textarea:focus{outline:none;border-color:var(--accent)}
-  textarea{min-height:130px;resize:vertical;font-family:var(--font-mono);font-size:13px;line-height:1.7}
   .row{display:flex;gap:12px}.row>div{flex:1}
-  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--bg);font-weight:700;font-family:var(--font-display);border:none;border-radius:10px;padding:12px 20px;font-size:15px;cursor:pointer;transition:filter .2s}
-  .btn:hover{filter:brightness(1.1)}
-  .btn.ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.15)}
-  .url-box{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.35);border:1px solid rgba(43,212,106,.25);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;color:#04160b;
+    background:linear-gradient(180deg,var(--accent-bright) 0%,var(--accent-deep) 100%);padding:12px 20px;border-radius:12px;
+    box-shadow:0 0 22px rgba(43,212,106,.22), inset 0 1px rgba(255,255,255,.45);transition:transform .15s ease,box-shadow .15s ease,border-color .2s ease}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(43,212,106,.4)}
+  .btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--edge);color:var(--text);box-shadow:none;font-weight:600;font-family:var(--font-sans)}
+  .btn.ghost:hover{transform:none;border-color:var(--accent)}
+  .url-box{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.4);border:1px solid rgba(43,212,106,.25);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
   .url-box span{flex:1;color:var(--accent-bright)}
   .mini{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:16px}
   .editor-game{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -47,6 +86,7 @@
   .chip{font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:8px;padding:5px 10px;cursor:pointer}
   .chip:hover{border-color:var(--accent)}
   .num{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:18px}
+  .hero-meta .num{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--accent-bright);min-width:0}
   .hidden{display:none}
   .note{font-size:13px;color:var(--muted);line-height:1.6}
   code{font-family:var(--font-mono);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--accent-bright)}
@@ -71,20 +111,28 @@
   .manual{margin-bottom:6px}
   .manual summary{font-size:13px;color:var(--muted);cursor:pointer}
   .searching{font-size:12px;color:var(--muted);font-family:var(--font-mono);padding:4px 2px}
+  .site-foot{position:relative;z-index:3;text-align:center;font-size:13px;letter-spacing:.04em;color:rgba(143,163,148,.55);padding:24px 24px 40px}
 </style>
 </head>
 <body>
 <div class="grid-wrap"><div class="grid" id="grid"></div></div>
-<div class="wrap">
-  <header>
-    <a class="wordmark" href="../home.html">TEZ<span class="star">✦</span></a>
-    <a class="wordmark" href="../home.html" style="font-size:13px;color:var(--muted)">← all drops</a>
-  </header>
+<div class="glow"></div>
+<div class="grain"></div>
 
-  <h1>Gauntlet Setup</h1>
-  <p class="sub">A win-to-advance game tracker for OBS. Mods cross games off live with chat commands.</p>
+<header class="site-head">
+  <a class="wordmark" href="../home.html">TEZ<span class="star">✦</span></a>
+  <a class="back-link" href="../home.html">← All drops</a>
+</header>
 
-  <div class="card" id="setupCard">
+<div class="shell">
+  <div class="hero-meta"><span class="num">#004</span><span class="type-tag">Stream Tool</span></div>
+  <h1>Game <span class="grad">Gauntlet</span></h1>
+  <p class="sub">A win-to-advance game tracker for OBS. Build your game list — then you or your mods cross games off live with Twitch chat commands. Your progress is saved, so refreshing OBS never loses your place.</p>
+
+  <div class="cols">
+   <div class="col-main">
+    <div class="col-head"><span class="lbl">Set up your board</span></div>
+    <div class="card" id="setupCard">
     <div class="row">
       <div>
         <label>Twitch channel</label>
@@ -129,7 +177,19 @@
   <div class="card">
     <p class="note"><b>How it works:</b> add your games, enter your Twitch channel, and hit <b>Create board</b> — you'll get an OBS browser source URL. Drop that into OBS as a Browser Source (~390&times;600, transparent). Then you or your mods cross games off live with <code>!win</code>, <code>!lost</code>, and <code>!active</code> in chat. Your progress is saved, so refreshing OBS never loses your place. No account or install needed.</p>
   </div>
+   </div><!-- /col-main -->
+
+   <div class="col-side">
+    <div class="col-head">
+      <span class="lbl">Try it</span>
+      <a class="btn ghost" href="sim.html" target="_blank" rel="noopener" style="white-space:nowrap">Open full simulator ↗</a>
+    </div>
+    <iframe class="sim-frame" id="simFrame" src="sim.html?embed=1" title="Gauntlet simulator" scrolling="no" loading="lazy"></iframe>
+   </div>
+  </div><!-- /cols -->
 </div>
+
+<footer class="site-foot">© 2026 TEZ Creations</footer>
 
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -286,10 +346,44 @@ $("editListBtn").onclick = ()=>{ $("setupCard").classList.remove("hidden"); $("l
   };
 };
 
-/* grid warp */
-const grid=$("grid"); let tx=0,ty=0,cx=0,cy=0;
-addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2;});
-(function tick(){cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;grid.style.transform=`rotateX(${(-cy*1.4).toFixed(2)}deg) rotateY(${(cx*1.4).toFixed(2)}deg) translate(${(-cx*7).toFixed(1)}px,${(-cy*7).toFixed(1)}px) scale(1.08)`;requestAnimationFrame(tick);})();
+/* grid warp — same feel as home + other drops (cursor on desktop, tilt on mobile) */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const grid = $("grid");
+if(grid && !reduce){
+  let tx=0,ty=0,cx=0,cy=0;
+  addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2;});
+  (function(){
+    let b0=null,g0=null; const clamp=v=>Math.max(-1.6,Math.min(1.6,v));
+    function onTilt(e){ if(e.gamma==null||e.beta==null) return; if(g0===null){g0=e.gamma;b0=e.beta;} tx=clamp((e.gamma-g0)/18); ty=clamp((e.beta-b0)/18); }
+    const D=window.DeviceOrientationEvent;
+    if(D && typeof D.requestPermission==="function"){
+      const ask=()=>D.requestPermission().then(s=>{ if(s==="granted") addEventListener("deviceorientation",onTilt); }).catch(()=>{});
+      addEventListener("touchend",ask,{once:true}); addEventListener("click",ask,{once:true});
+    } else if(D){ addEventListener("deviceorientation",onTilt); }
+  })();
+  (function tick(){
+    cx+=(tx-cx)*.06; cy+=(ty-cy)*.06;
+    grid.style.transform=`perspective(1200px) rotateX(${(-cy*1.6).toFixed(3)}deg) rotateY(${(cx*1.6).toFixed(3)}deg) translate(${(-cx*8).toFixed(2)}px,${(-cy*8).toFixed(2)}px) scale(1.08)`;
+    requestAnimationFrame(tick);
+  })();
+}
+
+/* size the simulator iframe to its content so it doesn't sit in a scroll box */
+(function(){
+  const f = $("simFrame"); if(!f) return;
+  function fit(){
+    try{
+      const d = f.contentWindow.document;
+      const h = Math.max(d.body.scrollHeight, d.documentElement.scrollHeight);
+      if(h) f.style.height = h + "px";
+    }catch(e){}
+  }
+  f.addEventListener("load", ()=>{
+    fit();
+    try{ new ResizeObserver(fit).observe(f.contentWindow.document.body); }catch(e){}
+  });
+  addEventListener("resize", fit);
+})();
 
 loadLast();
 </script>

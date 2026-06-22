@@ -99,6 +99,11 @@
   @keyframes pulse{0%,100%{box-shadow:0 0 10px var(--accent-glow)}50%{box-shadow:0 0 20px rgba(43,212,106,.5)}}
   .toast{position:absolute;left:24px;bottom:24px;background:rgba(8,14,10,.9);border:1px solid rgba(43,212,106,.3);color:var(--text);font-size:13px;padding:10px 14px;border-radius:12px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
   .toast.show{opacity:1;transform:translateY(0)}
+
+  /* embed mode — strips the page header so it can live inside the setup page */
+  body.embed{padding:14px}
+  body.embed .head{display:none}
+  body.embed .stage{min-height:380px}
 </style>
 </head>
 <body>
@@ -143,6 +148,7 @@
 
 <script>
 const $ = id=>document.getElementById(id);
+if(new URLSearchParams(location.search).get("embed")==="1") document.body.classList.add("embed");
 const norm = s => (s||"").toLowerCase().trim();
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
