@@ -405,6 +405,7 @@ function redirectUri(){
 }
 
 $('connectBtn').addEventListener('click', async () => {
+ try {
   if (location.protocol === 'file:'){
     alert('The connect flow only works on the live site — go to tezcreations.com/subgoal');
     return;
@@ -434,6 +435,7 @@ $('connectBtn').addEventListener('click', async () => {
   u.searchParams.set('scope', SCOPES);
   u.searchParams.set('state', st);
   location.href = u.toString();
+ } catch (err){ alert('Could not start the login: ' + (err && err.message || err)); }
 });
 
 function showConnected(profile){
@@ -477,24 +479,32 @@ async function boot(){
   // returning from Twitch/Kick with a one-time authorization code?
   const q = new URLSearchParams(location.search);
   const code = q.get('code');
+  const oerr = q.get('error');   // providers send ?error=access_denied etc. if the user declines
+  if (oerr){
+    history.replaceState(null, '', location.pathname);
+    alert('Login was cancelled or failed (' + oerr + '). Please try again.');
+  }
   if (code){
     const platform = sget('connect_platform') || 'twitch';
-    const stored = sget('tw_state');
-    const stateOk = stored === null || q.get('state') === stored;  // accept if storage was blocked
+    const stored = sget('tw_state'), got = q.get('state');
     history.replaceState(null, '', location.pathname);             // scrub code/state from the URL
-    if (stateOk){
-      try{
-        const j = await exchangeCode(code, platform);
-        const profile = { login:j.login, display_name:j.display_name, profile_image_url:j.profile_image_url };
-        setPlatform(platform);
-        state.id = j.id;
-        lset('sg_id', j.id);
-        lset('sg_platform', platform);
-        lset('sg_profile', JSON.stringify(profile));
-        showConnected(profile);
-        return;
-      }catch(e){ alert(e.message || 'Could not connect — try again.'); }
+    // CSRF check: only block if a state actually came back AND it doesn't match.
+    // (Some providers don't echo state — don't silently dead-end on that.)
+    if (stored && got && got !== stored){
+      alert('Login security check failed — please try connecting again.');
+      return;
     }
+    try{
+      const j = await exchangeCode(code, platform);
+      const profile = { login:j.login, display_name:j.display_name, profile_image_url:j.profile_image_url };
+      setPlatform(platform);
+      state.id = j.id;
+      lset('sg_id', j.id);
+      lset('sg_platform', platform);
+      lset('sg_profile', JSON.stringify(profile));
+      showConnected(profile);
+      return;
+    }catch(e){ alert(e.message || 'Could not connect — try again.'); }
   }
   // already connected on a previous visit? restore from the saved opaque id
   const savedId = lget('sg_id');
