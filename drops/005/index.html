@@ -129,8 +129,12 @@
   details.how li{margin:8px 0}
   details.how b{color:var(--text);font-weight:600}
   details.how code{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent-bright);background:rgba(43,212,106,.08);padding:2px 6px;border-radius:5px}
-  details.how a{color:var(--accent-bright);text-decoration:underline;text-underline-offset:2px;transition:color .15s}
-  details.how a:hover{color:var(--accent)}
+  details.how a{display:inline-flex;align-items:center;gap:5px;color:var(--accent-bright);font-weight:600;text-decoration:none;
+    background:rgba(43,212,106,.1);border:1px solid rgba(43,212,106,.4);border-radius:8px;padding:2px 9px;
+    transition:background .15s,border-color .15s,box-shadow .15s}
+  details.how a b{color:var(--accent-bright);font-weight:600}
+  details.how a::after{content:"↗";font-size:11px;opacity:.85}
+  details.how a:hover{background:rgba(43,212,106,.18);border-color:rgba(43,212,106,.7);box-shadow:0 0 16px var(--accent-glow)}
   /* ---- results ---- */
   #results{display:none}
   #results.show{display:block}
