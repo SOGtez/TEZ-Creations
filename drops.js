@@ -10,6 +10,16 @@
 */
 const DROPS = [
   {
+    id: "005",
+    title: "Ghosted",
+    description:
+      "Find out who doesn't follow you back on Instagram — and who quietly unfollowed you. Upload your own data export and everything is computed right in your browser; nothing is ever sent to a server. Check again later and it shows exactly who left since last time.",
+    date: "2026-06-23",
+    type: "tool",
+    image: "drops/005/cover.png",
+    action: { kind: "use", url: "drops/005/index.html" }
+  },
+  {
     id: "004",
     title: "Game Gauntlet",
     description:
