@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEZ Creations — About</title>
+  <meta name="description" content="About TEZ Creations — random creations, dropped for you to use." />
+  <meta name="theme-color" content="#050806" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* About page — reuses the drop-detail width container */
+    .about-body p {
+      font-family: var(--font-sans);
+      font-size: clamp(1rem, 2.4vw, 1.12rem);
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 62ch;
+      margin-bottom: 20px;
+    }
+    .about-body h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.2rem, 3vw, 1.5rem);
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin: 40px 0 14px;
+    }
+    .about-body a {
+      color: var(--accent-bright);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(74, 222, 128, 0.35);
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+    .about-body a:hover {
+      color: #7af0a4;
+      border-bottom-color: var(--accent-bright);
+    }
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .contact-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    }
+    .contact-pill:hover {
+      border-color: rgba(43, 212, 106, 0.4);
+      background: rgba(43, 212, 106, 0.06);
+      transform: translateY(-2px);
+    }
+    .contact-pill .ic {
+      color: var(--accent-bright);
+    }
+  </style>
+</head>
+<body class="page app-shell fade-in">
+  <div class="grid-wrap"><div class="grid"></div></div>
+  <div class="grain"></div>
+
+  <main class="shell-main">
+    <header class="shell-head">
+      <div>
+        <h1 class="shell-title">About</h1>
+        <p class="shell-sub">what this place is</p>
+      </div>
+    </header>
+
+    <div class="drop-detail about-body">
+      <p>
+        <strong style="color:var(--text)">TEZ Creations</strong> is a personal lab where
+        random creations get dropped for anyone to use — free. Tools, overlays, and little
+        experiments, built whenever a good idea (or a bit of inspiration) shows up.
+      </p>
+      <p>
+        Most drops are <strong style="color:var(--text)">stream tools</strong> for OBS —
+        live score bugs, sub-goal trackers, GPS map overlays, gauntlet trackers. Others are
+        standalone <strong style="color:var(--text)">web apps</strong> that run entirely in
+        your browser. New stuff lands in the <a href="home.html">Drops</a> feed as it's made.
+      </p>
+
+      <h2>Get in touch</h2>
+      <p>
+        Have an idea, feedback, or want something built? Reach out — I'd love to hear what
+        you'd use.
+      </p>
+      <div class="contact-row">
+        <a class="contact-pill" href="mailto:hello@tezcreations.com">
+          <span class="ic">✉</span> hello@tezcreations.com
+        </a>
+        <a class="contact-pill" href="https://github.com/SOGtez" target="_blank" rel="noopener">
+          <span class="ic">↗</span> GitHub
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="drops.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    /* Soft gate: bounce to the front door if they haven't entered the password */
+    if (!sessionStorage.getItem("tez_access")) {
+      location.replace("index.html");
+    }
+
+    /* Grid mouse warp (same as the other catalog pages) */
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function () {
+        let b0 = null, g0 = null;
+        const clamp = (v) => Math.max(-1.6, Math.min(1.6, v));
+        function onTilt(e) {
+          if (e.gamma == null || e.beta == null) return;
+          if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
+          tx = clamp((e.gamma - g0) / 18);
+          ty = clamp((e.beta - b0) / 18);
+        }
+        const D = window.DeviceOrientationEvent;
+        if (D && typeof D.requestPermission === "function") {
+          const ask = () =>
+            D.requestPermission()
+              .then((s) => { if (s === "granted") window.addEventListener("deviceorientation", onTilt); })
+              .catch(() => {});
+          window.addEventListener("touchend", ask, { once: true });
+          window.addEventListener("click", ask, { once: true });
+        } else if (D) {
+          window.addEventListener("deviceorientation", onTilt);
+        }
+      })();
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>

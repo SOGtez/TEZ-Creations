@@ -756,6 +756,326 @@ body.page {
   }
 }
 
+/* ===== Global sidebar shell (home + drop detail + about) ===== */
+:root {
+  --side-w: 264px;
+}
+
+/* The shell pages scroll the document; the sidebar is fixed alongside */
+body.app-shell {
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  width: var(--side-w);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(22px, 3vw, 30px) 16px;
+  background: rgba(8, 13, 9, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  overflow-y: auto;
+}
+
+.side-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  text-decoration: none;
+  padding: 0 10px;
+  display: inline-block;
+}
+
+.side-brand .star {
+  color: var(--accent-bright);
+}
+
+.side-tag {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 6px 10px 0;
+}
+
+.side-nav {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-link.active {
+  background: var(--accent-glow);
+  color: var(--accent-bright);
+}
+
+.nav-link .ico {
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-link.active .ico {
+  color: var(--accent-bright);
+}
+
+.nav-link.nav-ai .ico {
+  color: var(--accent);
+}
+
+.nav-soon {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 8px;
+  padding-left: 4px;
+}
+
+.nav-cat {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(143, 163, 148, 0.6);
+  padding: 12px 12px 5px;
+}
+
+.nav-drop {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-drop:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+}
+
+.nav-drop.active {
+  color: var(--accent-bright);
+  background: rgba(43, 212, 106, 0.06);
+  border-left-color: var(--accent);
+}
+
+.nav-drop .dnum {
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  color: rgba(143, 163, 148, 0.6);
+}
+
+.nav-drop.active .dnum {
+  color: var(--accent);
+}
+
+.nav-drop .dtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-spacer {
+  flex: 1;
+  min-height: 16px;
+}
+
+.side-foot {
+  padding: 14px 12px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(143, 163, 148, 0.55);
+}
+
+/* Main content sits to the right of the fixed sidebar */
+.shell-main {
+  position: relative;
+  z-index: 3;
+  margin-left: var(--side-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-head {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) clamp(24px, 6vw, 72px) 4px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shell-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.shell-sub {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.shell-back {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.shell-back:hover {
+  color: var(--text);
+}
+
+/* The feed inside the shell drops its old top padding (shell-head owns it) */
+.shell-main .feed {
+  padding-top: 16px;
+}
+
+/* Hamburger + scrim are mobile-only */
+.nav-toggle {
+  display: none;
+}
+
+.nav-scrim {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: min(280px, 82vw);
+    transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(0.76, 0, 0.24, 1);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+  body.nav-open .sidebar {
+    transform: translateX(0);
+  }
+  .shell-main {
+    margin-left: 0;
+  }
+  .shell-head {
+    padding-top: 76px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 6;
+    width: 44px;
+    height: 44px;
+    padding: 0 11px;
+    background: rgba(8, 13, 9, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .nav-toggle span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+  }
+  body.nav-open .nav-toggle span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+  body.nav-open .nav-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+  body.nav-open .nav-toggle span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  body.nav-open .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glow,
   .grid,

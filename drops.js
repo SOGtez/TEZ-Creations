@@ -7,6 +7,8 @@
    - "download" → button downloads the file at url
    - "use"      → button opens the on-site tool at url
    image: path to a cover image, or "" to auto-generate a cover
+   category: groups the drop in the sidebar nav (e.g. "Stream Tools", "Apps").
+            Sidebar category order is set in sidebar.js (CAT_ORDER).
 */
 const DROPS = [
   {
@@ -16,6 +18,7 @@ const DROPS = [
       "Find out who doesn't follow you back on Instagram — and who quietly unfollowed you. Upload your own data export and everything is computed right in your browser; nothing is ever sent to a server. Check again later and it shows exactly who left since last time.",
     date: "2026-06-23",
     type: "tool",
+    category: "Apps",
     image: "drops/005/cover.png",
     action: { kind: "use", url: "drops/005/index.html" }
   },
@@ -26,6 +29,7 @@ const DROPS = [
       "A win-to-advance gauntlet tracker for OBS. Search and add your games with cover art, then mods cross them off live in chat with !win / !lost / !active. The active game gets a NOW PLAYING banner. State is saved, so an OBS refresh never loses progress.",
     date: "2026-06-21",
     type: "tool",
+    category: "Stream Tools",
     image: "",
     action: { kind: "use", url: "gauntlet/index.html" }
   },
@@ -36,6 +40,7 @@ const DROPS = [
       "A live GPS map overlay for IRL & travel streams. Powered by your RealtimeIRL feed — your location glides across a clean dark map in OBS, with speed, heading, and where you are. Paste your pull key, copy a link, done.",
     date: "2026-06-14",
     type: "tool",
+    category: "Stream Tools",
     image: "",
     action: { kind: "use", url: "drops/003/index.html" }
   },
@@ -46,6 +51,7 @@ const DROPS = [
       "An auto-updating Twitch sub goal overlay for OBS. Connect your Twitch, set your tiers, copy a link — it counts subs live, celebrates on goal, and rolls to the next one.",
     date: "2026-06-12",
     type: "tool",
+    category: "Stream Tools",
     image: "subgoal/cover.png",
     action: { kind: "use", url: "subgoal/index.html" }
   },
@@ -56,6 +62,7 @@ const DROPS = [
       "Pop a live score tracker on your stream. Pick a game, copy a link, paste it into OBS — scores, clock, and win celebrations update live while the game plays.",
     date: "2026-06-10",
     type: "tool",
+    category: "Stream Tools",
     image: "drops/001/cover.png",
     action: { kind: "use", url: "drops/001/index.html" }
   }

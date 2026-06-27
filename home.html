@@ -11,23 +11,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="page fade-in">
+<body class="page app-shell fade-in">
   <div class="grid-wrap"><div class="grid"></div></div>
   <div class="grain"></div>
 
-  <header class="site-head">
-    <a class="wordmark" href="home.html">TEZ<span class="star">✦</span></a>
-    <p class="tagline">random creations, dropped for you</p>
-  </header>
-
-  <main class="feed" id="feed"></main>
-
-  <footer class="site-foot">
-    <a class="ai-teaser" href="ai/"><span class="spark">✦</span> TEZ AI — something is coming</a>
-    <div>© 2026 TEZ Creations</div>
-  </footer>
+  <main class="shell-main">
+    <header class="shell-head">
+      <div>
+        <h1 class="shell-title">Drops</h1>
+        <p class="shell-sub">random creations, dropped for you</p>
+      </div>
+    </header>
+    <div class="feed" id="feed"></div>
+  </main>
 
   <script src="drops.js"></script>
+  <script src="sidebar.js"></script>
   <script>
     /* Soft gate: bounce to the front door if they haven't entered the password */
     if (!sessionStorage.getItem("tez_access")) {
