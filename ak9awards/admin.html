@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow" />
+<title>AK9 AWARDS — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070707; --panel:rgba(255,255,255,.035); --panel-2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.22);
+    --text:#f4f4f4; --muted:#9a9a9a; --faint:#6a6a6a; --white:#fff; --black:#0a0a0a;
+    --fd:"Space Grotesk",sans-serif; --fs:"Plus Jakarta Sans",sans-serif; --fm:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--fs);min-height:100%}
+  body{-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:30px 22px 90px}
+  a{color:inherit}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .brand{font-family:var(--fd);font-weight:700;font-size:22px;letter-spacing:.5px}
+  .brand small{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.2em;display:block;margin-top:2px}
+  .acct{font-family:var(--fm);font-size:12px;color:var(--muted);display:flex;gap:12px;align-items:center}
+  .acct a{text-decoration:none;border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;font-size:11px}
+  .acct .out{cursor:pointer;color:var(--faint);text-decoration:underline}
+
+  .tabs{display:flex;gap:8px;margin:22px 0 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{cursor:pointer;font-family:var(--fm);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);padding:11px 14px;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.on{color:#fff;border-bottom-color:#fff}
+
+  .panel{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:22px;margin-bottom:18px}
+  .panel h3{font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:4px}
+  .panel .sub{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.5}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  label{display:block;font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+  input,textarea,select{width:100%;background:#0d0d0d;border:1px solid var(--line);border-radius:10px;
+    color:#fff;font-family:var(--fs);font-size:14px;padding:11px 13px}
+  input:focus,textarea:focus{outline:none;border-color:var(--line-2)}
+  textarea{resize:vertical;min-height:64px}
+  .field{flex:1;min-width:180px;margin-bottom:12px}
+  .btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--fs);font-weight:600;font-size:14px;
+    border-radius:10px;padding:11px 18px;border:1px solid var(--white);background:var(--white);color:var(--black);transition:.16s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn.ghost:hover{background:var(--panel-2)}
+  .btn.danger{background:transparent;border-color:#7a2b2b;color:#ff8d8d}
+  .btn.danger:hover{background:rgba(122,43,43,.18)}
+  .btn.sm{padding:7px 12px;font-size:12px}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+
+  .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)}
+  .switch input{width:auto;accent-color:#fff;width:17px;height:17px}
+
+  /* results */
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:14px 18px;background:var(--panel)}
+  .stat b{font-family:var(--fm);font-size:26px;display:block}
+  .stat span{font-size:12px;color:var(--muted)}
+  .award-res{border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;background:var(--panel)}
+  .award-res h4{font-family:var(--fd);font-size:16px;margin-bottom:12px}
+  .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
+  .bar .lbl{width:150px;font-size:13px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar .track{flex:1;height:14px;background:#161616;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+  .bar .fill{height:100%;background:#fff}
+  .bar .cnt{width:64px;text-align:right;font-family:var(--fm);font-size:12px;color:var(--muted);flex:none}
+  .bar.win .fill{background:#fff}
+  .bar.win .lbl{font-weight:700}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--fm);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  td .mini{color:var(--muted);font-size:12px}
+
+  /* manage */
+  .award-edit{border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;background:var(--panel)}
+  .nom-edit{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+  .nom-edit input{flex:1;min-width:120px}
+  .nom-edit .x{cursor:pointer;color:var(--faint);border:1px solid var(--line);border-radius:8px;padding:8px 11px;background:#0d0d0d}
+  .nom-edit .x:hover{color:#ff8d8d;border-color:#7a2b2b}
+  .badge{display:inline-block;font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--line-2);border-radius:999px;padding:3px 9px;color:var(--muted)}
+  .ok{color:#9affb0}.bad{color:#ff8d8d}
+  .hidden{display:none !important}
+  .center{text-align:center}
+  .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite;margin:30px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);z-index:9;
+    background:#fff;color:#0a0a0a;font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:#1a1a1a;color:#fff;border:1px solid var(--line-2)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">AK9 AWARDS <small>ADMIN</small></div>
+      <div id="acct" class="acct"></div>
+    </div>
+    <div id="gate"><div class="spin"></div></div>
+    <div id="app" class="hidden">
+      <div class="tabs">
+        <div class="tab on" data-tab="results">Results</div>
+        <div class="tab" data-tab="manage">Manage awards</div>
+        <div class="tab" data-tab="settings">Settings</div>
+      </div>
+      <div id="tab-results"></div>
+      <div id="tab-manage" class="hidden"></div>
+      <div id="tab-settings" class="hidden"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+<script>
+const CLIENT_ID = 'i5n7ykd3ns3n0fxgbith466dnj51fc';
+const REDIRECT = location.origin + '/ak9awards/';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+let TOK = sessionStorage.getItem('ak9_tok') || '';
+let DATA = null;
+
+function toast(m, e) { const t = $('#toast'); t.textContent = m; t.className = 'toast show' + (e ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 2800); }
+async function api(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  if (TOK) headers.Authorization = 'Bearer ' + TOK;
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  const r = await fetch(path, { method: opts.method || 'GET', headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  let j = null; try { j = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, json: j || {} };
+}
+function b64e(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))); }
+function login(role) {
+  const csrf = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  sessionStorage.setItem('ak9_csrf', csrf);
+  const state = b64e({ c: csrf, ret: 'admin', role: role === 'broadcaster' ? 'broadcaster' : 'voter' });
+  const scope = role === 'broadcaster' ? 'moderator:read:followers' : '';
+  location.href = 'https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID +
+    '&redirect_uri=' + encodeURIComponent(REDIRECT) + '&response_type=code&scope=' +
+    encodeURIComponent(scope) + '&state=' + encodeURIComponent(state);
+}
+function logout() { sessionStorage.removeItem('ak9_tok'); sessionStorage.removeItem('ak9_user'); TOK = ''; location.reload(); }
+window.ak9Login = login; window.ak9Logout = logout;
+
+function gateMsg(h, p, btns) {
+  $('#gate').innerHTML = '<div class="panel center" style="max-width:520px;margin:40px auto"><h3>' + esc(h) + '</h3>' +
+    '<div class="sub" style="margin-top:8px">' + p + '</div>' + (btns || '') + '</div>';
+}
+const twitchBtn = (label, role) => '<button class="btn" type="button" onclick="ak9Login(' + (role ? "'" + role + "'" : '') + ')" style="margin-top:6px">' + esc(label) + '</button>';
+
+/* ---------- load ---------- */
+async function load() {
+  if (!TOK) { gateMsg('Admin sign-in', 'Log in with the Twitch account that has admin access.', twitchBtn('Log in with Twitch')); return; }
+  const r = await api('/api/ak9-admin');
+  if (r.status === 401) { gateMsg('Session expired', 'Please log in again.', twitchBtn('Log in with Twitch')); return; }
+  if (r.status === 403) { gateMsg('Not an admin account', 'This Twitch account isn’t on the AK9 admin list. Ask an owner to add you.', '<button class="btn ghost" onclick="ak9Logout()" style="margin-top:6px">Switch account</button>'); return; }
+  if (!r.ok) { gateMsg('Couldn’t load', esc(r.json.error || 'Try again in a moment.'), twitchBtn('Retry')); return; }
+  DATA = r.json;
+  $('#acct').innerHTML = '<span>@' + esc((DATA.you || {}).login || '') + '</span><span class="out" onclick="ak9Logout()">log out</span>';
+  $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
+  renderResults(); renderManage(); renderSettings();
+}
+
+/* ---------- results ---------- */
+function renderResults() {
+  const d = DATA, awards = d.awards || [], tallies = d.tallies || {};
+  let html = '<div class="stat-row">' +
+    '<div class="stat"><b>' + (d.totalVoters || 0) + '</b><span>total voters</span></div>' +
+    '<div class="stat"><b>' + awards.length + '</b><span>awards</span></div>' +
+    '<div class="stat"><b>' + (d.broadcaster ? '✓' : '—') + '</b><span>follower check ' + (d.broadcaster ? 'connected (@' + esc(d.broadcaster.login) + ')' : 'NOT connected') + '</span></div>' +
+    '</div>';
+  if (!awards.length) html += '<div class="panel">No awards yet — add some in “Manage awards”.</div>';
+  awards.forEach(a => {
+    const t = tallies[a.id] || {};
+    const noms = (a.nominees || []).map(n => ({ n, c: t[n.id] || 0 })).sort((x, y) => y.c - x.c);
+    const max = Math.max(1, ...noms.map(x => x.c));
+    const top = noms.length && noms[0].c > 0 ? noms[0].c : -1;
+    html += '<div class="award-res"><h4>' + esc(a.title) + '</h4>' +
+      noms.map(x => '<div class="bar' + (x.c === top && x.c > 0 ? ' win' : '') + '">' +
+        '<span class="lbl">' + esc(x.n.name) + '</span>' +
+        '<span class="track"><span class="fill" style="width:' + Math.round(x.c / max * 100) + '%"></span></span>' +
+        '<span class="cnt">' + x.c + '</span></div>').join('') +
+      (noms.length ? '' : '<div class="sub">No nominees.</div>') + '</div>';
+  });
+
+  // voters table
+  html += '<div class="panel"><h3>Voters</h3><div class="sub">Who voted and what they picked. ' +
+    '<button class="btn ghost sm" onclick="ak9Export()" style="margin-left:8px">Export CSV</button></div>';
+  const votes = d.votes || [];
+  if (!votes.length) html += '<div class="sub">No votes yet.</div>';
+  else {
+    html += '<div style="overflow-x:auto"><table><tr><th>Voter</th><th>Picks</th><th>When</th></tr>';
+    votes.forEach(v => {
+      const picks = Object.keys(v.choices || {}).map(awId => {
+        const a = awards.find(x => x.id === awId); if (!a) return '';
+        const n = (a.nominees || []).find(x => x.id === v.choices[awId]);
+        return '<span class="mini">' + esc(a.title) + ': <b style="color:#fff">' + esc(n ? n.name : '—') + '</b></span>';
+      }).filter(Boolean).join('<br>');
+      html += '<tr><td>@' + esc(v.twitch_login || '') + '<div class="mini">' + esc(v.display_name || '') + '</div></td>' +
+        '<td>' + (picks || '<span class="mini">—</span>') + '</td>' +
+        '<td class="mini">' + esc(new Date(v.created_at).toLocaleString()) + '</td></tr>';
+    });
+    html += '</table></div>';
+  }
+  html += '</div>';
+  $('#tab-results').innerHTML = html;
+}
+window.ak9Export = function () {
+  const d = DATA, awards = d.awards || [];
+  const head = ['voter_login', 'display_name', 'when'].concat(awards.map(a => '"' + a.title.replace(/"/g, '""') + '"'));
+  const rows = [head.join(',')];
+  (d.votes || []).forEach(v => {
+    const cells = ['@' + (v.twitch_login || ''), '"' + (v.display_name || '').replace(/"/g, '""') + '"', new Date(v.created_at).toISOString()];
+    awards.forEach(a => {
+      const n = (a.nominees || []).find(x => x.id === (v.choices || {})[a.id]);
+      cells.push('"' + (n ? n.name : '').replace(/"/g, '""') + '"');
+    });
+    rows.push(cells.join(','));
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = 'ak9-awards-votes.csv'; a.click(); URL.revokeObjectURL(url);
+};
+
+/* ---------- manage awards ---------- */
+let editing = {};  // local working copies keyed by award id (or 'new')
+function renderManage() {
+  const awards = DATA.awards || [];
+  let html = '<div class="panel"><h3>Awards</h3><div class="sub">Create the awards and their nominees. ' +
+    'Nominees need a name; image URL + Twitch login are optional.</div>' +
+    '<button class="btn" onclick="ak9NewAward()">+ New award</button></div>';
+  html += '<div id="awardList">' + awards.map(a => awardEditor(a)).join('') + '</div>';
+  $('#tab-manage').innerHTML = html;
+}
+function awardEditor(a) {
+  const noms = (a.nominees || []);
+  return '<div class="award-edit" data-id="' + esc(a.id) + '">' +
+    '<div class="row"><div class="field" style="flex:2"><label>Award title</label><input class="f-title" value="' + esc(a.title) + '"></div>' +
+    '<div class="field" style="max-width:110px"><label>Sort</label><input class="f-sort" type="number" value="' + (a.sort || 0) + '"></div></div>' +
+    '<div class="field"><label>Description</label><textarea class="f-desc">' + esc(a.description || '') + '</textarea></div>' +
+    '<label>Nominees</label><div class="noms-edit">' + noms.map(nomRow).join('') + '</div>' +
+    '<button class="btn ghost sm" onclick="ak9AddNom(this)">+ Add nominee</button>' +
+    '<div class="row" style="margin-top:14px;justify-content:space-between">' +
+    '<button class="btn" onclick="ak9SaveAward(this,\'' + esc(a.id) + '\')">Save award</button>' +
+    '<button class="btn danger sm" onclick="ak9DeleteAward(\'' + esc(a.id) + '\',\'' + esc(a.title).replace(/'/g, "\\'") + '\')">Delete</button>' +
+    '</div></div>';
+}
+function nomRow(n) {
+  n = n || {};
+  return '<div class="nom-edit" data-nid="' + esc(n.id || '') + '">' +
+    '<input class="n-name" placeholder="Name" value="' + esc(n.name || '') + '">' +
+    '<input class="n-img" placeholder="Image URL (optional)" value="' + esc(n.image || '') + '">' +
+    '<input class="n-tw" placeholder="Twitch login (optional)" value="' + esc(n.twitch_login || '') + '" style="max-width:170px">' +
+    '<span class="x" onclick="this.parentElement.remove()">✕</span></div>';
+}
+window.ak9NewAward = function () {
+  const list = $('#awardList');
+  const wrap = document.createElement('div'); wrap.innerHTML = awardEditor({ id: '', title: '', description: '', sort: (DATA.awards || []).length, nominees: [{}] });
+  list.prepend(wrap.firstChild);
+};
+window.ak9AddNom = function (btn) {
+  const box = btn.previousElementSibling; // .noms-edit
+  const d = document.createElement('div'); d.innerHTML = nomRow({}); box.appendChild(d.firstChild);
+};
+window.ak9SaveAward = async function (btn, id) {
+  const card = btn.closest('.award-edit');
+  const nominees = [...card.querySelectorAll('.nom-edit')].map(r => ({
+    id: r.dataset.nid || undefined,
+    name: r.querySelector('.n-name').value.trim(),
+    image: r.querySelector('.n-img').value.trim(),
+    twitch_login: r.querySelector('.n-tw').value.trim(),
+  })).filter(n => n.name);
+  const award = {
+    id: id || undefined,
+    title: card.querySelector('.f-title').value.trim(),
+    description: card.querySelector('.f-desc').value.trim(),
+    sort: +card.querySelector('.f-sort').value || 0,
+    nominees,
+  };
+  if (!award.title) { toast('Award needs a title.', true); return; }
+  btn.disabled = true;
+  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'save_award', award } });
+  btn.disabled = false;
+  if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
+  toast('Award saved'); await reload();
+};
+window.ak9DeleteAward = async function (id, title) {
+  if (!id) { toast('Remove the unsaved award by reloading.'); return; }
+  if (!confirm('Delete “' + title + '”? This cannot be undone.')) return;
+  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'delete_award', id } });
+  if (!r.ok) { toast(r.json.error || 'Delete failed.', true); return; }
+  toast('Award deleted'); await reload();
+};
+
+/* ---------- settings ---------- */
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d)) return '';
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off * 60000);
+  return local.toISOString().slice(0, 16);
+}
+function renderSettings() {
+  const s = DATA.settings || {};
+  const bc = DATA.broadcaster;
+  $('#tab-settings').innerHTML =
+    '<div class="panel"><h3>Voting settings</h3><div class="sub">Set the month, the deadline, and open or close voting.</div>' +
+    '<div class="row"><div class="field"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
+    '<div class="field"><label>Deadline (your local time)</label><input id="s-deadline" type="datetime-local" value="' + toLocalInput(s.deadline) + '"></div></div>' +
+    '<label class="switch" style="margin:6px 0 16px"><input type="checkbox" id="s-open" ' + (s.voting_open !== false ? 'checked' : '') + '> Voting open</label>' +
+    '<div><button class="btn" onclick="ak9SaveSettings(this)">Save settings</button> ' +
+    '<button class="btn ghost" onclick="ak9ClearDeadline()">Clear deadline</button></div></div>' +
+
+    '<div class="panel"><h3>Follower verification</h3><div class="sub">Voting is limited to followers of the channel. ' +
+    'Twitch requires the broadcaster to connect once so the server can check followers. ' +
+    (bc ? 'Connected as <b class="ok">@' + esc(bc.login) + '</b>.' : '<b class="bad">Not connected — voting is blocked until this is done.</b>') +
+    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bc ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button></div>' +
+
+    '<div class="panel"><h3>Danger zone</h3><div class="sub">Clear every vote to start a fresh month. Awards/settings are kept. This cannot be undone.</div>' +
+    '<button class="btn danger" onclick="ak9ResetVotes()">Reset all votes</button></div>';
+}
+window.ak9SaveSettings = async function (btn) {
+  const dl = $('#s-deadline').value;
+  const body = { action: 'save_settings', month_label: $('#s-month').value.trim(),
+    voting_open: $('#s-open').checked, deadline: dl ? new Date(dl).toISOString() : null };
+  btn.disabled = true;
+  const r = await api('/api/ak9-admin', { method: 'POST', body });
+  btn.disabled = false;
+  if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
+  toast('Settings saved'); await reload();
+};
+window.ak9ClearDeadline = function () { $('#s-deadline').value = ''; toast('Deadline cleared — click Save settings.'); };
+window.ak9ResetVotes = async function () {
+  if (!confirm('Delete ALL votes? This cannot be undone.')) return;
+  if (!confirm('Really reset? Every voter will be able to vote again.')) return;
+  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'reset_votes', confirm: true } });
+  if (!r.ok) { toast(r.json.error || 'Reset failed.', true); return; }
+  toast('All votes cleared'); await reload();
+};
+
+async function reload() { const r = await api('/api/ak9-admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } }
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  ['results', 'manage', 'settings'].forEach(n => $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
+}));
+
+load();
+</script>
+</body>
+</html>

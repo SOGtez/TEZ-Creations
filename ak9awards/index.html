@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AK9 AWARDS</title>
+<meta name="description" content="Vote for the AK9 community awards. Log in with Twitch to cast your ballot." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070707; --panel:rgba(255,255,255,.035); --panel-2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.22);
+    --text:#f4f4f4; --muted:#9a9a9a; --faint:#6a6a6a; --white:#fff; --black:#0a0a0a;
+    --fd:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+    --fs:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+    --fm:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--fs);min-height:100%}
+  body{position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  /* backdrop: faint white grid + top spotlight + grain + vignette */
+  .bg-grid{position:fixed;inset:-2px;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+    background-size:54px 54px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+            mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);}
+  .spot{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(900px 520px at 50% -8%, rgba(255,255,255,.10), transparent 60%);}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .vig{position:fixed;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.8);}
+
+  .wrap{position:relative;z-index:2;max-width:880px;margin:0 auto;padding:34px 22px 90px}
+
+  /* ---- header ---- */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+  .acct{display:flex;align-items:center;gap:10px;font-family:var(--fm);font-size:12px;color:var(--muted)}
+  .acct img{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);object-fit:cover}
+  .acct .out{cursor:pointer;color:var(--faint);text-decoration:underline;text-underline-offset:2px}
+  .acct .out:hover{color:var(--text)}
+  .adminlink{font-family:var(--fm);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid var(--line-2);border-radius:999px;padding:7px 13px;color:var(--text);
+    text-decoration:none;transition:.2s}
+  .adminlink:hover{background:var(--white);color:var(--black);border-color:var(--white)}
+
+  .hero{text-align:center;padding:30px 0 22px}
+  .kick{font-family:var(--fm);font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:var(--faint)}
+  .word{font-family:var(--fd);font-weight:700;font-size:clamp(46px,11vw,104px);line-height:.92;
+    letter-spacing:-1px;margin:12px 0 6px;
+    background:linear-gradient(180deg,#fff 0%,#cfcfcf 100%);-webkit-background-clip:text;
+    background-clip:text;color:transparent;text-shadow:0 0 60px rgba(255,255,255,.06)}
+  .month{font-family:var(--fm);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .rule{width:60px;height:1px;background:var(--line-2);margin:20px auto 0}
+
+  /* ---- countdown ---- */
+  .count{display:flex;justify-content:center;gap:10px;margin:26px 0 8px}
+  .cbox{min-width:74px;border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:12px 8px;text-align:center}
+  .cbox b{display:block;font-family:var(--fm);font-weight:700;font-size:30px;line-height:1;color:#fff;
+    font-variant-numeric:tabular-nums}
+  .cbox span{font-family:var(--fm);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .countlbl{text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em}
+
+  /* ---- generic panel / message ---- */
+  .panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:28px 24px;margin-top:22px}
+  .center{text-align:center}
+  .msg-emoji{font-size:30px}
+  .msg-h{font-family:var(--fd);font-weight:600;font-size:22px;margin:10px 0 6px}
+  .msg-p{color:var(--muted);font-size:15px;line-height:1.6;max-width:480px;margin:0 auto}
+
+  /* ---- buttons ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+    font-family:var(--fs);font-weight:600;font-size:15px;border-radius:12px;padding:14px 22px;border:1px solid var(--white);
+    background:var(--white);color:var(--black);transition:.18s;text-decoration:none}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,255,255,.12)}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn.ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn.ghost:hover{background:var(--panel-2);box-shadow:none}
+  .btn svg{width:18px;height:18px;fill:currentColor}
+  .btnrow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+
+  /* ---- awards / ballot ---- */
+  .awards{display:flex;flex-direction:column;gap:18px;margin-top:24px}
+  .award{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:22px 22px 20px}
+  .award .anum{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .award .atitle{font-family:var(--fd);font-weight:600;font-size:21px;margin:3px 0 4px}
+  .award .adesc{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:16px}
+  .noms{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .nom{display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;
+    border:1px solid var(--line);background:transparent;color:var(--text);border-radius:12px;
+    padding:11px 13px;font-family:var(--fs);font-size:14px;font-weight:500;transition:.16s;width:100%;min-height:58px}
+  .nom:hover{border-color:var(--line-2);background:var(--panel-2)}
+  .nom .av{width:34px;height:34px;border-radius:9px;flex:none;background:var(--panel-2);
+    border:1px solid var(--line);background-size:cover;background-position:center;
+    display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:13px;color:var(--faint)}
+  .nom .nm{flex:1;min-width:0;line-height:1.25;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nom .tick{width:18px;height:18px;flex:none;opacity:0;transition:.16s}
+  .nom .tick svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:3}
+  /* selected = inverted white block (the B&W "highlight") */
+  .nom.sel{background:var(--white);color:var(--black);border-color:var(--white)}
+  .nom.sel .av{background-color:rgba(0,0,0,.08);border-color:rgba(0,0,0,.15);color:#444}
+  .nom.sel .tick{opacity:1}
+  .award.readonly .nom{cursor:default}
+  .award.readonly .nom:not(.sel){opacity:.5}
+
+  .ballot-foot{position:sticky;bottom:14px;z-index:3;margin-top:26px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    border:1px solid var(--line-2);background:rgba(12,12,12,.92);backdrop-filter:blur(10px);
+    border-radius:14px;padding:14px 18px}
+  .ballot-foot .prog{font-family:var(--fm);font-size:13px;color:var(--muted)}
+  .ballot-foot .prog b{color:#fff}
+
+  .picks{display:flex;flex-direction:column;gap:7px;margin-top:6px;text-align:left}
+  .pick{display:flex;justify-content:space-between;gap:14px;font-size:14px;
+    border-bottom:1px solid var(--line);padding:9px 2px}
+  .pick:last-child{border-bottom:none}
+  .pick .pa{color:var(--muted)}
+  .pick .pn{font-weight:600;color:#fff}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);z-index:9;
+    background:#fff;color:#0a0a0a;font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;
+    opacity:0;transition:.25s;pointer-events:none;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:#1a1a1a;color:#fff;border:1px solid var(--line-2)}
+
+  .foot{text-align:center;color:var(--faint);font-size:12px;margin-top:40px;line-height:1.7}
+  .hidden{display:none !important}
+  .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;
+    animation:sp 1s linear infinite;margin:10px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}.btn:hover{transform:none}}
+</style>
+</head>
+<body>
+  <div class="bg-grid"></div><div class="spot"></div><div class="grain"></div><div class="vig"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <div id="acct" class="acct"></div>
+      <a id="adminLink" class="adminlink hidden" href="/ak9awards/admin">Admin ↗</a>
+    </div>
+
+    <div class="hero">
+      <div class="kick">Community Awards</div>
+      <div class="word">AK9 AWARDS</div>
+      <div class="month" id="month"></div>
+      <div class="rule"></div>
+    </div>
+
+    <div id="countWrap" class="hidden">
+      <div class="count" id="count"></div>
+      <div class="countlbl" id="countLbl"></div>
+    </div>
+
+    <div id="view"><div class="spin"></div></div>
+
+    <div class="foot">
+      One vote per Twitch account · Your picks stay private until results are announced.<br>
+      AK9 AWARDS · a community vote
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   AK9 AWARDS — voter page
+   Standalone (no TEZ chrome). Twitch login → follow-gated ballot → one vote.
+   ============================================================ */
+const CLIENT_ID = 'i5n7ykd3ns3n0fxgbith466dnj51fc';
+const CHANNEL = 'aleksk9_';
+const REDIRECT = location.origin + '/ak9awards/';
+const $ = s => document.querySelector(s);
+const view = $('#view');
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let TOK = sessionStorage.getItem('ak9_tok') || '';
+let USER = null; try { USER = JSON.parse(sessionStorage.getItem('ak9_user') || 'null'); } catch (_) {}
+let BALLOT = null;          // { settings, awards }
+let ME = null;             // status from /api/ak9-me
+let selection = {};        // awardId -> nomineeId
+let deadlineMs = null, countTimer = null;
+
+/* ---------- helpers ---------- */
+function toast(msg, isErr) {
+  const t = $('#toast'); t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 2800);
+}
+async function api(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  if (TOK) headers.Authorization = 'Bearer ' + TOK;
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  const r = await fetch(path, { method: opts.method || 'GET', headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined });
+  let j = null; try { j = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, json: j || {} };
+}
+function b64e(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function b64d(s) { try { return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (_) { return null; } }
+
+function login(role) {
+  const csrf = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  sessionStorage.setItem('ak9_csrf', csrf);
+  const state = b64e({ c: csrf, ret: role === 'broadcaster' ? 'admin' : (role === 'admin' ? 'admin' : ''),
+    role: role === 'broadcaster' ? 'broadcaster' : 'voter' });
+  const scope = role === 'broadcaster' ? 'moderator:read:followers' : '';
+  const u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID +
+    '&redirect_uri=' + encodeURIComponent(REDIRECT) + '&response_type=code' +
+    '&scope=' + encodeURIComponent(scope) + '&state=' + encodeURIComponent(state);
+  location.href = u;
+}
+function logout() {
+  sessionStorage.removeItem('ak9_tok'); sessionStorage.removeItem('ak9_user');
+  TOK = ''; USER = null; ME = null; selection = {};
+  renderAccount(); boot();
+}
+window.ak9Login = login; window.ak9Logout = logout;
+
+/* ---------- account chip ---------- */
+function renderAccount() {
+  const el = $('#acct');
+  if (USER) {
+    el.innerHTML = (USER.profile_image_url ? '<img src="' + esc(USER.profile_image_url) + '" alt="">' : '') +
+      '<span>@' + esc(USER.login) + '</span><span class="out" onclick="ak9Logout()">log out</span>';
+  } else el.innerHTML = '';
+  $('#adminLink').classList.toggle('hidden', !(ME && ME.isAdmin));
+}
+
+/* ---------- countdown ---------- */
+function startCountdown() {
+  clearInterval(countTimer);
+  const wrap = $('#countWrap');
+  if (!deadlineMs) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  const tick = () => {
+    const diff = deadlineMs - Date.now();
+    if (diff <= 0) {
+      $('#count').innerHTML = cbox(0,'days') + cbox(0,'hrs') + cbox(0,'min') + cbox(0,'sec');
+      $('#countLbl').textContent = 'Voting has ended';
+      clearInterval(countTimer);
+      if (ME && !ME.hasVoted) boot();   // flip to closed state
+      return;
+    }
+    const d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000),
+      m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
+    $('#count').innerHTML = cbox(d,'days') + cbox(h,'hrs') + cbox(m,'min') + cbox(s,'sec');
+    $('#countLbl').textContent = 'until voting closes';
+  };
+  tick(); countTimer = setInterval(tick, 1000);
+}
+const pad = n => String(n).padStart(2, '0');
+function cbox(n, label) { return '<div class="cbox"><b>' + pad(n) + '</b><span>' + label + '</span></div>'; }
+
+/* ---------- award/ballot rendering ---------- */
+function nomTile(award, n, readonly, selectedId) {
+  const sel = selectedId === n.id;
+  const av = n.image ? '<span class="av" style="background-image:url(\'' + esc(n.image) + '\')"></span>'
+    : '<span class="av">' + esc((n.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+  return '<button class="nom' + (sel ? ' sel' : '') + '" type="button"' +
+    (readonly ? ' tabindex="-1"' : ' data-award="' + esc(award.id) + '" data-nom="' + esc(n.id) + '"') + '>' +
+    av + '<span class="nm">' + esc(n.name) + '</span>' +
+    '<span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></button>';
+}
+function awardCard(award, i, readonly, picks) {
+  const selId = picks ? picks[award.id] : selection[award.id];
+  const noms = (award.nominees || []).map(n => nomTile(award, n, readonly, selId)).join('');
+  return '<div class="award' + (readonly ? ' readonly' : '') + '" data-award="' + esc(award.id) + '">' +
+    '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
+    '<div class="atitle">' + esc(award.title) + '</div>' +
+    (award.description ? '<div class="adesc">' + esc(award.description) + '</div>' : '') +
+    '<div class="noms">' + (noms || '<span class="adesc">No nominees yet.</span>') + '</div></div>';
+}
+
+function renderBallot() {
+  const awards = BALLOT.awards || [];
+  if (!awards.length) { renderMessage('🏆', 'Awards coming soon', 'The nominees haven’t been posted yet. Check back shortly.'); return; }
+  let html = '<div class="awards">' + awards.map((a, i) => awardCard(a, i, false)).join('') + '</div>';
+  html += '<div class="ballot-foot"><div class="prog" id="prog"></div>' +
+    '<button class="btn" id="submitBtn" type="button" disabled>Submit ballot</button></div>';
+  view.innerHTML = html;
+  view.querySelectorAll('.nom[data-nom]').forEach(b => b.addEventListener('click', onPick));
+  $('#submitBtn').addEventListener('click', submitVote);
+  updateProgress();
+}
+function onPick(e) {
+  const b = e.currentTarget, awardId = b.dataset.award, nomId = b.dataset.nom;
+  selection[awardId] = nomId;
+  const card = view.querySelector('.award[data-award="' + cssEsc(awardId) + '"]');
+  card.querySelectorAll('.nom').forEach(n => n.classList.toggle('sel', n.dataset.nom === nomId));
+  updateProgress();
+}
+function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
+function updateProgress() {
+  const total = (BALLOT.awards || []).length;
+  const done = (BALLOT.awards || []).filter(a => selection[a.id]).length;
+  $('#prog').innerHTML = '<b>' + done + '</b> of <b>' + total + '</b> awards chosen';
+  $('#submitBtn').disabled = done < total;
+}
+async function submitVote() {
+  const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
+  const r = await api('/api/ak9-vote', { method: 'POST', body: { choices: selection } });
+  if (r.ok) { toast('Your ballot is in 🏆'); ME.hasVoted = true; ME.choices = Object.assign({}, selection); renderVoted(); return; }
+  const err = r.json.error || 'Could not submit — try again.';
+  if (err === 'already_voted') { toast('You’ve already voted.', true); ME.hasVoted = true; boot(); return; }
+  if (err === 'follow_required') { toast('You need to follow the channel to vote.', true); boot(); return; }
+  btn.textContent = 'Submit ballot'; btn.disabled = false;
+  toast(err, true);
+}
+
+/* ---------- states ---------- */
+function renderMessage(emoji, h, p, btns) {
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">' + emoji + '</div>' +
+    '<div class="msg-h">' + esc(h) + '</div><div class="msg-p">' + p + '</div>' +
+    (btns ? '<div class="btnrow">' + btns + '</div>' : '') + '</div>';
+}
+const twitchBtn = (label, role) => '<button class="btn" type="button" onclick="ak9Login(' +
+  (role ? "'" + role + "'" : '') + ')"><svg viewBox="0 0 24 24"><path d="M4 3l-1 4v13h5v3h3l3-3h4l5-5V3H4zm16 11l-3 3h-5l-3 3v-3H6V5h14v9zM15 8h2v5h-2V8zm-5 0h2v5h-2V8z"/></svg>' + esc(label) + '</button>';
+
+function renderGuest() {
+  // show the awards read-only with a login CTA
+  const awards = BALLOT.awards || [];
+  let html = '<div class="panel center"><div class="msg-h">Log in to vote</div>' +
+    '<div class="msg-p">Sign in with Twitch and follow <b>@' + esc(CHANNEL) + '</b> to cast your ballot. One vote per account.</div>' +
+    '<div class="btnrow">' + twitchBtn('Log in with Twitch') + '</div></div>';
+  if (awards.length) html += '<div class="awards">' + awards.map((a, i) => awardCard(a, i, true, {})).join('') + '</div>';
+  view.innerHTML = html;
+}
+function renderFollow() {
+  renderMessage('➕', 'Follow to vote',
+    'AK9 AWARDS voting is open to followers of <b>@' + esc(CHANNEL) + '</b>. Follow the channel, then come back and re-check.',
+    '<a class="btn" href="https://twitch.tv/' + esc(CHANNEL) + '" target="_blank" rel="noopener">Follow @' + esc(CHANNEL) + '</a>' +
+    '<button class="btn ghost" type="button" onclick="ak9Recheck()">I’m following — re-check</button>');
+}
+window.ak9Recheck = async function () { toast('Checking…'); await loadMe(); boot(); };
+
+function renderVoted() {
+  const awards = BALLOT.awards || [];
+  const picks = ME.choices || {};
+  const list = awards.map(a => {
+    const n = (a.nominees || []).find(x => x.id === picks[a.id]);
+    return '<div class="pick"><span class="pa">' + esc(a.title) + '</span><span class="pn">' +
+      esc(n ? n.name : '—') + '</span></div>';
+  }).join('');
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">✅</div>' +
+    '<div class="msg-h">Your ballot is in</div>' +
+    '<div class="msg-p">Thanks for voting in the AK9 AWARDS. You can’t change your picks now — here’s what you submitted:</div>' +
+    '<div class="picks" style="max-width:520px;margin:18px auto 0">' + list + '</div></div>';
+}
+function renderClosed() {
+  const voted = ME && ME.hasVoted;
+  let extra = '';
+  if (voted) {
+    const awards = BALLOT.awards || [], picks = ME.choices || {};
+    extra = '<div class="picks" style="max-width:520px;margin:18px auto 0">' + awards.map(a => {
+      const n = (a.nominees || []).find(x => x.id === picks[a.id]);
+      return '<div class="pick"><span class="pa">' + esc(a.title) + '</span><span class="pn">' + esc(n ? n.name : '—') + '</span></div>';
+    }).join('') + '</div>';
+  }
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">🔒</div>' +
+    '<div class="msg-h">Voting is closed</div>' +
+    '<div class="msg-p">Thanks to everyone who voted. Winners will be announced on stream.' +
+    (voted ? ' Your submitted ballot:' : '') + '</div>' + extra + '</div>';
+}
+
+/* ---------- status load + routing ---------- */
+async function loadMe() {
+  if (!TOK) { ME = null; return; }
+  const r = await api('/api/ak9-me');
+  if (r.status === 401) { logout(); return; }
+  if (r.ok) ME = r.json; else ME = null;
+}
+function votingClosed() {
+  const s = (ME && ME.settings) || (BALLOT && BALLOT.settings) || {};
+  if (s.voting_open === false) return true;
+  if (s.deadline && Date.now() > new Date(s.deadline).getTime()) return true;
+  return false;
+}
+function boot() {
+  renderAccount();
+  if (!BALLOT) return;
+  // countdown from whichever settings we have
+  const s = (ME && ME.settings) || BALLOT.settings || {};
+  $('#month').textContent = s.month_label || '';
+  deadlineMs = s.deadline ? new Date(s.deadline).getTime() : null;
+  startCountdown();
+
+  if (!TOK || !ME) { renderGuest(); return; }
+  if (votingClosed()) { renderClosed(); return; }
+  if (!ME.broadcasterReady && !ME.isAdmin) {
+    renderMessage('⏳', 'Voting opens soon', 'The ballot isn’t quite ready yet. Check back in a bit!'); return;
+  }
+  if (ME.hasVoted) { renderVoted(); return; }
+  if (!ME.isFollower) { renderFollow(); return; }
+  renderBallot();
+}
+
+/* ---------- OAuth return + init ---------- */
+async function handleReturn() {
+  const p = new URLSearchParams(location.search);
+  if (p.get('error')) {
+    history.replaceState({}, '', REDIRECT);
+    toast('Twitch login was cancelled.', true);
+    return;
+  }
+  const code = p.get('code'), state = p.get('state');
+  if (!code || !state) return;
+  const st = b64d(state) || {};
+  const csrf = sessionStorage.getItem('ak9_csrf');
+  history.replaceState({}, '', REDIRECT);
+  if (csrf && st.c && st.c !== csrf) { toast('Login expired — try again.', true); return; }
+  sessionStorage.removeItem('ak9_csrf');
+
+  view.innerHTML = '<div class="spin"></div>';
+  const role = st.role === 'broadcaster' ? 'broadcaster' : 'voter';
+  const r = await api('/api/ak9-auth', { method: 'POST', body: { code, redirect_uri: REDIRECT, role } });
+  if (!r.ok) { toast(r.json.error || 'Login failed — try again.', true); return; }
+
+  if (role === 'broadcaster') { location.replace('/ak9awards/admin'); return; }
+  TOK = r.json.access_token; USER = r.json.user;
+  sessionStorage.setItem('ak9_tok', TOK); sessionStorage.setItem('ak9_user', JSON.stringify(USER));
+  if (st.ret === 'admin') { location.replace('/ak9awards/admin'); return; }
+}
+
+async function init() {
+  await handleReturn();
+  // public ballot (always)
+  try {
+    const b = await api('/api/ak9-ballot');
+    if (b.ok) BALLOT = b.json;
+    else if (b.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
+    else BALLOT = { settings: {}, awards: [] };
+  } catch (_) { BALLOT = { settings: {}, awards: [] }; }
+  await loadMe();
+  boot();
+}
+init();
+</script>
+</body>
+</html>

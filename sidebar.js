@@ -66,6 +66,7 @@
     <a class="side-brand" href="home.html">TEZ<span class="star">✦</span></a>
     <p class="side-tag">random creations</p>
     <nav class="side-nav">
+      <a class="nav-link nav-ak9" href="/ak9awards"><span class="ico">★</span> AK9 Awards</a>
       <a class="nav-link${dropsActive}" href="home.html"><span class="ico">◆</span> Drops</a>
       <div class="nav-sub">${dropsHTML}</div>
       <a class="nav-link nav-ai" href="ai/"><span class="ico">✦</span> TEZ AI <span class="nav-soon">soon</span></a>

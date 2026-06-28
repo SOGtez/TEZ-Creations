@@ -1,0 +1,140 @@
+// AK9 AWARDS — shared backend helpers (NOT an endpoint; the leading underscore
+// keeps Vercel from turning this file into a Serverless Function). Imported by
+// the ak9-*.js route handlers. No SDK — plain fetch, keeps the project build-free.
+//
+// Env (Vercel → Settings → Environment Variables):
+//   TWITCH_CLIENT_SECRET       Twitch app secret — SERVER ONLY
+//   SUPABASE_URL               project URL (same one the other tools use)
+//   SUPABASE_SERVICE_ROLE_KEY  service role key — SERVER ONLY
+//   AK9_ADMINS                 comma-separated Twitch LOGINS allowed in the admin page
+//                              (e.g. "aleksk9_,sogtez"). Case-insensitive. Extend anytime.
+
+// Public Twitch client id — reuses the existing Confidential app (safe to hardcode).
+export const CLIENT_ID = 'i5n7ykd3ns3n0fxgbith466dnj51fc';
+
+// The channel voters must follow, and the broadcaster who connects for follower checks.
+export const CHANNEL_LOGIN = 'aleksk9_';
+
+// Only allow code exchanges for our own registered redirect URI(s).
+export const ALLOWED_REDIRECTS = [
+  'https://www.tezcreations.com/ak9awards/',
+  'https://tezcreations.com/ak9awards/',
+  'http://localhost:3000/ak9awards/',
+];
+
+export const env = () => ({
+  secret: process.env.TWITCH_CLIENT_SECRET,
+  sbUrl: process.env.SUPABASE_URL,
+  sbKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  admins: String(process.env.AK9_ADMINS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+});
+export const configured = () => { const e = env(); return !!(e.secret && e.sbUrl && e.sbKey); };
+
+export function isAdminLogin(login) {
+  return env().admins.includes(String(login || '').toLowerCase());
+}
+
+// ---- tiny Supabase REST wrapper (service role) ----
+export async function sb(method, path, { body, prefer } = {}) {
+  const e = env();
+  const headers = { apikey: e.sbKey, Authorization: 'Bearer ' + e.sbKey };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (prefer) headers.Prefer = prefer;
+  const r = await fetch(e.sbUrl + '/rest/v1/' + path, {
+    method, headers, body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const text = await r.text();
+  let json = null; try { json = text ? JSON.parse(text) : null; } catch (_) { /* non-json */ }
+  return { ok: r.ok, status: r.status, json, text };
+}
+
+// ---- Twitch token validation (identity), cached briefly on warm instances ----
+const valCache = {};   // accessToken -> { user_id, login, exp(ms) }
+export async function validateToken(accessToken) {
+  if (!accessToken) return null;
+  const now = Date.now();
+  const hit = valCache[accessToken];
+  if (hit && hit.exp > now) return { user_id: hit.user_id, login: hit.login };
+  const r = await fetch('https://id.twitch.tv/oauth2/validate',
+    { headers: { Authorization: 'OAuth ' + accessToken } });
+  if (!r.ok) return null;
+  const j = await r.json();
+  if (!j.user_id) return null;
+  if (Object.keys(valCache).length > 800) for (const k in valCache) delete valCache[k];
+  // cache for the shorter of the token's life or 5 min
+  valCache[accessToken] = { user_id: j.user_id, login: j.login,
+    exp: now + Math.min((j.expires_in || 300), 300) * 1000 };
+  return { user_id: j.user_id, login: j.login };
+}
+
+// Pull the bearer token off a request.
+export function bearer(req) {
+  const h = req.headers.authorization || req.headers.Authorization || '';
+  const m = /^Bearer\s+(.+)$/i.exec(String(h));
+  return m ? m[1].trim() : '';
+}
+
+// ---- broadcaster access token (for follower checks): refresh from stored token ----
+let bcCache = null;   // { access_token, broadcaster_id, login, exp(ms) }
+export async function getBroadcaster() {
+  const now = Date.now();
+  if (bcCache && bcCache.exp - 60000 > now) return bcCache;
+  const e = env();
+  const row = (await sb('GET', 'ak9_broadcaster?id=eq.1&select=broadcaster_id,login,refresh_token&limit=1')).json;
+  const rec = (row || [])[0];
+  if (!rec || !rec.refresh_token) return null;        // not connected yet
+  const tok = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID, client_secret: e.secret,
+      grant_type: 'refresh_token', refresh_token: rec.refresh_token,
+    }),
+  });
+  const tj = await tok.json();
+  if (!tok.ok || !tj.access_token) return null;       // refresh dead → broadcaster must reconnect
+  if (tj.refresh_token && tj.refresh_token !== rec.refresh_token) {
+    sb('PATCH', 'ak9_broadcaster?id=eq.1', {
+      body: { refresh_token: tj.refresh_token, updated_at: new Date().toISOString() },
+      prefer: 'return=minimal',
+    }).catch(() => {});
+  }
+  bcCache = { access_token: tj.access_token, broadcaster_id: rec.broadcaster_id,
+    login: rec.login, exp: now + (tj.expires_in || 3600) * 1000 };
+  return bcCache;
+}
+
+// Does userId follow the AK9 channel? null = can't determine (not configured).
+export async function checkFollows(userId) {
+  const bc = await getBroadcaster();
+  if (!bc || !bc.broadcaster_id) return null;
+  const r = await fetch('https://api.twitch.tv/helix/channels/followers?broadcaster_id=' +
+    encodeURIComponent(bc.broadcaster_id) + '&user_id=' + encodeURIComponent(userId),
+    { headers: { Authorization: 'Bearer ' + bc.access_token, 'Client-Id': CLIENT_ID } });
+  if (!r.ok) return null;
+  const j = await r.json();
+  return Array.isArray(j.data) && j.data.length > 0;
+}
+
+// Twitch profile (display name + avatar) for a verified user.
+export async function getProfile(accessToken, userId) {
+  try {
+    const r = await fetch('https://api.twitch.tv/helix/users?id=' + encodeURIComponent(userId),
+      { headers: { Authorization: 'Bearer ' + accessToken, 'Client-Id': CLIENT_ID } });
+    const j = await r.json();
+    const me = (j.data || [])[0] || {};
+    return { display_name: me.display_name || '', profile_image_url: me.profile_image_url || '' };
+  } catch (_) { return { display_name: '', profile_image_url: '' }; }
+}
+
+export function cors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+}
+
+export function readBody(req) {
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = {}; } }
+  return body || {};
+}
