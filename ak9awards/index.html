@@ -22,12 +22,16 @@
   body{position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased}
   a{color:inherit}
   /* backdrop: faint white grid + top spotlight + grain + vignette */
-  .bg-grid{position:fixed;inset:-2px;z-index:0;pointer-events:none;
-    background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
-    background-size:54px 54px;
-    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
-            mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);}
+  /* living drifting grid that warps toward the cursor (same as the site) */
+  .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:radial-gradient(ellipse 90% 88% at 50% 42%, #000 24%, transparent 80%);
+            mask-image:radial-gradient(ellipse 90% 88% at 50% 42%, #000 24%, transparent 80%);}
+  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+    background-image:linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size:64px 64px;animation:grid-drift 28s linear infinite;
+    transform:perspective(1200px) scale(1.08);will-change:transform}
+  @keyframes grid-drift{to{background-position:64px 64px}}
   .spot{position:fixed;inset:0;z-index:0;pointer-events:none;
     background:radial-gradient(900px 520px at 50% -8%, rgba(255,255,255,.10), transparent 60%);}
   .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
@@ -133,11 +137,38 @@
   .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;
     animation:sp 1s linear infinite;margin:10px auto}
   @keyframes sp{to{transform:rotate(360deg)}}
-  @media (prefers-reduced-motion:reduce){.spin{animation:none}.btn:hover{transform:none}}
+  /* ---- motion ---- */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes sheen{to{background-position:220% center}}
+  @keyframes digitPop{0%{transform:translateY(-5px);opacity:.4}100%{transform:none;opacity:1}}
+  @keyframes nomPop{0%{transform:scale(.97)}55%{transform:scale(1.025)}100%{transform:scale(1)}}
+  @keyframes checkPop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+  .top{animation:fadeIn .8s ease both}
+  .kick{animation:fadeUp .6s ease both}
+  .word{background-image:linear-gradient(100deg,#e6e6e6 0%,#fff 50%,#e6e6e6 100%);background-size:220% auto;
+    animation:fadeUp .7s .05s ease both, sheen 7s linear 1.3s infinite}
+  .month{animation:fadeUp .6s .12s ease both}
+  .rule{animation:fadeUp .6s .18s ease both}
+  .cbox{animation:fadeUp .5s ease both}
+  .cbox.tick b{animation:digitPop .4s ease}
+  .panel{animation:fadeUp .5s ease both}
+  .award{animation:fadeUp .55s ease both}
+  .ballot-foot{animation:fadeUp .5s .06s ease both}
+  .nom{will-change:transform}
+  .nom.sel{animation:nomPop .26s ease}
+  .nom .tick{transform:scale(.4)}
+  .nom.sel .tick{transform:scale(1);animation:checkPop .3s ease}
+  @media (prefers-reduced-motion:reduce){
+    .spin{animation:none}.btn:hover{transform:none}
+    .top,.kick,.word,.month,.rule,.cbox,.cbox.tick b,.panel,.award,.ballot-foot,.nom.sel,.nom.sel .tick,.grid{animation:none !important}
+    .word{background-position:0 !important}
+    .nom .tick{transform:scale(1)}
+  }
 </style>
 </head>
 <body>
-  <div class="bg-grid"></div><div class="spot"></div><div class="grain"></div><div class="vig"></div>
+  <div class="grid-wrap"><div class="grid"></div></div><div class="spot"></div><div class="grain"></div><div class="vig"></div>
 
   <div class="wrap">
     <div class="top">
@@ -240,24 +271,34 @@ function startCountdown() {
   const wrap = $('#countWrap');
   if (!deadlineMs) { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
+  // build the four boxes once (staggered entrance), then update digits in place
+  const labels = ['days', 'hrs', 'min', 'sec'];
+  $('#count').innerHTML = labels.map((l, i) =>
+    '<div class="cbox" style="animation-delay:' + (i * 0.06) + 's"><b>00</b><span>' + l + '</span></div>').join('');
+  const boxes = [...$('#count').querySelectorAll('.cbox')];
   const tick = () => {
     const diff = deadlineMs - Date.now();
     if (diff <= 0) {
-      $('#count').innerHTML = cbox(0,'days') + cbox(0,'hrs') + cbox(0,'min') + cbox(0,'sec');
+      boxes.forEach(b => b.querySelector('b').textContent = '00');
       $('#countLbl').textContent = 'Voting has ended';
       clearInterval(countTimer);
       if (ME && !ME.hasVoted) boot();   // flip to closed state
       return;
     }
-    const d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000),
-      m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
-    $('#count').innerHTML = cbox(d,'days') + cbox(h,'hrs') + cbox(m,'min') + cbox(s,'sec');
+    const vals = [Math.floor(diff / 86400000), Math.floor(diff % 86400000 / 3600000),
+      Math.floor(diff % 3600000 / 60000), Math.floor(diff % 60000 / 1000)];
+    vals.forEach((v, i) => {
+      const b = boxes[i].querySelector('b'), t = pad(v);
+      if (b.textContent !== t) {                       // only the changed digit pops
+        b.textContent = t;
+        boxes[i].classList.remove('tick'); void boxes[i].offsetWidth; boxes[i].classList.add('tick');
+      }
+    });
     $('#countLbl').textContent = 'until voting closes';
   };
   tick(); countTimer = setInterval(tick, 1000);
 }
 const pad = n => String(n).padStart(2, '0');
-function cbox(n, label) { return '<div class="cbox"><b>' + pad(n) + '</b><span>' + label + '</span></div>'; }
 
 /* ---------- award/ballot rendering ---------- */
 function nomTile(award, n, readonly, selectedId) {
@@ -272,7 +313,8 @@ function nomTile(award, n, readonly, selectedId) {
 function awardCard(award, i, readonly, picks) {
   const selId = picks ? picks[award.id] : selection[award.id];
   const noms = (award.nominees || []).map(n => nomTile(award, n, readonly, selId)).join('');
-  return '<div class="award' + (readonly ? ' readonly' : '') + '" data-award="' + esc(award.id) + '">' +
+  return '<div class="award' + (readonly ? ' readonly' : '') + '" data-award="' + esc(award.id) + '"' +
+    ' style="animation-delay:' + (i * 0.07) + 's">' +
     '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
     '<div class="atitle">' + esc(award.title) + '</div>' +
     (award.description ? '<div class="adesc">' + esc(award.description) + '</div>' : '') +
@@ -428,6 +470,40 @@ async function handleReturn() {
   sessionStorage.setItem('ak9_tok', TOK); sessionStorage.setItem('ak9_user', JSON.stringify(USER));
   if (st.ret === 'admin') { location.replace('/ak9awards/admin'); return; }
 }
+
+/* ---- living grid: warp toward the cursor (desktop) / device tilt (mobile) — same as the site ---- */
+function setupGridWarp() {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const grid = document.querySelector('.grid');
+  if (!grid || reduce) return;
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  window.addEventListener('mousemove', (e) => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 2;
+    ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  (function () {                                   // mobile: tilt the phone to warp the grid
+    let b0 = null, g0 = null;
+    const clamp = (v) => Math.max(-1.6, Math.min(1.6, v));
+    function onTilt(e) {
+      if (e.gamma == null || e.beta == null) return;
+      if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
+      tx = clamp((e.gamma - g0) / 18); ty = clamp((e.beta - b0) / 18);
+    }
+    const D = window.DeviceOrientationEvent;
+    if (D && typeof D.requestPermission === 'function') {
+      const ask = () => D.requestPermission().then((s) => { if (s === 'granted') window.addEventListener('deviceorientation', onTilt); }).catch(() => {});
+      window.addEventListener('touchend', ask, { once: true });
+      window.addEventListener('click', ask, { once: true });
+    } else if (D) { window.addEventListener('deviceorientation', onTilt); }
+  })();
+  (function tick() {
+    cx += (tx - cx) * 0.06; cy += (ty - cy) * 0.06;
+    grid.style.transform =
+      `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+    requestAnimationFrame(tick);
+  })();
+}
+setupGridWarp();
 
 async function init() {
   await handleReturn();

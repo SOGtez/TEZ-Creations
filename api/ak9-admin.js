@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       const settings = ((await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open&limit=1')).json || [])[0]
         || { month_label: '', deadline: null, voting_open: true };
       const awards = (await sb('GET', 'ak9_awards?select=id,title,description,sort,nominees&order=sort.asc,created_at.asc')).json || [];
-      const votes = (await sb('GET', 'ak9_votes?select=twitch_login,display_name,choices,created_at&order=created_at.asc')).json || [];
+      const votes = (await sb('GET', 'ak9_votes?select=twitch_user_id,twitch_login,display_name,choices,created_at&order=created_at.asc')).json || [];
 
       // tallies: { awardId: { nomineeId: count } }
       const tallies = {};
@@ -119,6 +119,15 @@ export default async function handler(req, res) {
         // delete all rows (id is never null → matches everything)
         const d = await sb('DELETE', 'ak9_votes?id=not.is.null', { prefer: 'return=minimal' });
         if (!d.ok) { res.status(502).json({ error: 'Could not reset votes.' }); return; }
+        res.status(200).json({ ok: true }); return;
+      }
+
+      if (action === 'reset_voter') {
+        // clear ONE person's vote so they can vote again
+        const uid = String(body.twitch_user_id || '');
+        if (!uid) { res.status(400).json({ error: 'Missing voter id.' }); return; }
+        const d = await sb('DELETE', 'ak9_votes?twitch_user_id=eq.' + encodeURIComponent(uid), { prefer: 'return=minimal' });
+        if (!d.ok) { res.status(502).json({ error: 'Could not reset that voter.' }); return; }
         res.status(200).json({ ok: true }); return;
       }
 
