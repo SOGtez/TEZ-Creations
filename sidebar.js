@@ -34,16 +34,26 @@
 
   let dropsHTML = "";
   cats.forEach((c) => {
-    dropsHTML += `<div class="nav-cat">${c}</div>`;
-    byCat[c]
-      .slice()
-      .sort((a, b) => Number(b.id) - Number(a.id))
-      .forEach((d) => {
+    const items = byCat[c].slice().sort((a, b) => Number(b.id) - Number(a.id));
+    const hasActive = items.some((d) => d.id === activeId);
+    // Collapsed by default; auto-open the category holding the active drop.
+    const open = hasActive;
+    const linksHTML = items
+      .map((d) => {
         const act = d.id === activeId ? " active" : "";
-        dropsHTML +=
+        return (
           `<a class="nav-drop${act}" href="drop.html?id=${d.id}">` +
-          `<span class="dnum">#${d.id}</span><span class="dtitle">${d.title}</span></a>`;
-      });
+          `<span class="dnum">#${d.id}</span><span class="dtitle">${d.title}</span></a>`
+        );
+      })
+      .join("");
+    dropsHTML +=
+      `<div class="nav-group${open ? " open" : ""}">` +
+      `<button class="nav-cat" type="button" aria-expanded="${open}">` +
+      `<span class="cat-arrow">▸</span><span class="cat-label">${c}</span>` +
+      `<span class="cat-count">${items.length}</span></button>` +
+      `<div class="nav-cat-drops"><div class="nav-cat-inner">${linksHTML}</div></div>` +
+      `</div>`;
   });
 
   const dropsActive = onHome || onDrop ? " active" : "";
@@ -63,6 +73,15 @@
       <div class="side-spacer"></div>
       <div class="side-foot">© 2026 TEZ Creations</div>
     </nav>`;
+
+  /* ---- Collapsible category sections (click a category to reveal its drops) ---- */
+  aside.querySelectorAll(".nav-cat").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const group = btn.parentElement;
+      const open = group.classList.toggle("open");
+      btn.setAttribute("aria-expanded", String(open));
+    });
+  });
 
   /* ---- Mobile: hamburger toggle + scrim ---- */
   const toggle = document.createElement("button");

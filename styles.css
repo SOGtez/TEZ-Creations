@@ -875,14 +875,81 @@ body.app-shell {
   padding-left: 4px;
 }
 
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .nav-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(143, 163, 148, 0.6);
-  padding: 12px 12px 5px;
+  color: rgba(143, 163, 148, 0.7);
+  padding: 9px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-cat:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.nav-cat .cat-arrow {
+  font-size: 9px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.nav-group.open .nav-cat .cat-arrow {
+  transform: rotate(90deg);
+  color: var(--accent);
+}
+
+.nav-cat .cat-count {
+  margin-left: auto;
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: rgba(143, 163, 148, 0.55);
+}
+
+.nav-cat-drops {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.nav-group.open .nav-cat-drops {
+  grid-template-rows: 1fr;
+}
+
+.nav-cat-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-bottom: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-cat-drops {
+    transition: none;
+  }
+  .nav-cat .cat-arrow {
+    transition: none;
+  }
 }
 
 .nav-drop {

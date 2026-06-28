@@ -30,7 +30,7 @@ const DROPS = [
     date: "2026-06-21",
     type: "tool",
     category: "Stream Tools",
-    image: "",
+    image: "gauntlet/cover.png",
     action: { kind: "use", url: "gauntlet/index.html" }
   },
   {
@@ -41,7 +41,7 @@ const DROPS = [
     date: "2026-06-14",
     type: "tool",
     category: "Stream Tools",
-    image: "",
+    image: "drops/003/cover.png",
     action: { kind: "use", url: "drops/003/index.html" }
   },
   {
