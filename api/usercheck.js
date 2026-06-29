@@ -1,41 +1,27 @@
-// Vercel serverless function — Twitch username availability checker.
-// Keeps the Client Secret server-side; Client-ID is public (same as subgoal).
-// Twitch /helix/users accepts up to 100 login names per request — we batch.
+// Vercel serverless — Twitch username checker for Handle Hunter.
 //
-// GET /api/usercheck?platform=twitch&usernames=a,b,c,...
-// Returns: { results: [ { username, available: bool } ] }
+// ⚠️ Twitch locked the TRUE "is this registerable?" check (the GraphQL
+// `isUsernameAvailable` query) behind a Kasada / integrity bot-wall, so it can't
+// be called from a server. That means a banned / held / reserved name can't be
+// detected as such from here. What we CAN do reliably:
+//   • TAKEN  — an active Twitch account exists (public GQL `userResultByLogin`)
+//   • BLOCKED — Twitch's own rules forbid it (under 4 chars / bad pattern)
+//   • OPEN   — no active account (likely free, but Twitch still reserves/holds
+//              many short names, so the UI tells users to verify before relying)
 //
-// Env (Vercel → Settings → Environment Variables):
-//   TWITCH_CLIENT_SECRET  — app secret from dev.twitch.tv/console/apps
-//
-// The Client-ID is the same one used by subgoal (safe to expose in JS).
+// GET /api/usercheck?platform=twitch&usernames=a&usernames=b...
+//   → { results:[ { username, status, available } ], note }
+//   status: 'taken' | 'open' | 'blocked'
 
-const CLIENT_ID = 'i5n7ykd3ns3n0fxgbith466dnj51fc';
+// Twitch's public web Client-ID (same one twitch.tv uses; safe, no secret needed).
+const GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 
-// In-memory app token cache (lives for the duration of the serverless instance)
-let appToken = null;
-let appTokenExpiry = 0;
-
-async function getAppToken(secret) {
-  const now = Date.now();
-  // Refresh 5 min before expiry
-  if (appToken && now < appTokenExpiry - 300000) return appToken;
-
-  const r = await fetch('https://id.twitch.tv/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: secret,
-      grant_type: 'client_credentials',
-    }),
-  });
-  if (!r.ok) throw new Error('Failed to get Twitch app token: ' + r.status);
-  const d = await r.json();
-  appToken = d.access_token;
-  // expires_in is in seconds
-  appTokenExpiry = now + (d.expires_in || 3600) * 1000;
-  return appToken;
+// Twitch won't let you register a NEW name under 4 chars, over 25, or with
+// anything outside [a-z0-9_]. Those can never be claimed → flag them.
+function ruleBlocked(login) {
+  if (login.length < 4 || login.length > 25) return true;
+  if (!/^[a-z0-9_]+$/.test(login)) return true;
+  return false;
 }
 
 export default async function handler(req, res) {
@@ -45,69 +31,60 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
-  const secret = process.env.TWITCH_CLIENT_SECRET;
-  if (!secret) { res.status(503).json({ error: 'TWITCH_CLIENT_SECRET not configured on server.' }); return; }
-
   const platform = (req.query.platform || '').toLowerCase();
   if (platform !== 'twitch') {
     res.status(400).json({ error: 'Only platform=twitch is supported right now.' });
     return;
   }
 
-  // usernames can arrive as a comma string (?usernames=a,b,c) OR as repeated
-  // params (?usernames=a&usernames=b) — Vercel gives the latter as an array.
-  // Handle both. (The Handle Hunter page sends the repeated-param form.)
+  // usernames arrive as repeated params (?usernames=a&usernames=b) → array on
+  // Vercel — or as a comma string. Handle both.
   const rawParam = req.query.usernames;
-  const rawList = Array.isArray(rawParam)
-    ? rawParam
-    : String(rawParam || '').split(',');
-  if (!rawList.length) { res.status(400).json({ results: [] }); return; }
-
-  // Parse, lowercase, dedupe, strip invalid chars, cap at 100
+  const rawList = Array.isArray(rawParam) ? rawParam : String(rawParam || '').split(',');
   const logins = [...new Set(
     rawList
       .map(u => String(u).trim().toLowerCase().replace(/[^a-z0-9_]/g, ''))
       .filter(u => u.length >= 1 && u.length <= 25)
   )].slice(0, 100);
 
-  if (logins.length === 0) { res.status(400).json({ error: 'No valid usernames supplied.' }); return; }
+  if (logins.length === 0) { res.status(400).json({ results: [] }); return; }
 
   try {
-    const token = await getAppToken(secret);
+    // One batched GQL request, aliased per login. __typename is "User" when an
+    // active account exists, "UserDoesNotExist" when it doesn't.
+    const query = 'query{' +
+      logins.map((l, i) => `u${i}:userResultByLogin(login:"${l}"){__typename}`).join(' ') +
+      '}';
 
-    // Twitch /helix/users: usernames that EXIST come back in data[].
-    // Anything absent from the response is available.
-    const url = 'https://api.twitch.tv/helix/users?' +
-      logins.map(l => 'login=' + encodeURIComponent(l)).join('&');
-
-    const r = await fetch(url, {
-      headers: {
-        Authorization: 'Bearer ' + token,
-        'Client-Id': CLIENT_ID,
-      },
+    const r = await fetch('https://gql.twitch.tv/gql', {
+      method: 'POST',
+      headers: { 'Client-Id': GQL_CLIENT_ID, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
     });
 
     if (!r.ok) {
-      // 429 = rate limited; pass it through so the client can back off
-      if (r.status === 429) {
-        const retryAfter = r.headers.get('Ratelimit-Reset') || '';
-        res.status(429).json({ error: 'Rate limited by Twitch.', retryAfter });
-        return;
-      }
-      throw new Error('Twitch API error: ' + r.status);
+      if (r.status === 429) { res.status(429).json({ error: 'Rate limited by Twitch.' }); return; }
+      throw new Error('Twitch GQL error: ' + r.status);
     }
 
-    const d = await r.json();
-    const takenSet = new Set((d.data || []).map(u => u.login.toLowerCase()));
+    const j = await r.json();
+    const data = (j && j.data) || {};
 
-    const results = logins.map(login => ({
-      username: login,
-      available: !takenSet.has(login),
-    }));
+    const results = logins.map((login, i) => {
+      const node = data['u' + i];
+      const exists = node && node.__typename === 'User';
+      let status;
+      if (exists) status = 'taken';
+      else if (ruleBlocked(login)) status = 'blocked';   // can never be registered
+      else status = 'open';                              // no active account
+      return { username: login, status, available: status === 'open' };
+    });
 
-    // Short cache — results can change but no need to hammer
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-    res.status(200).json({ results });
+    res.status(200).json({
+      results,
+      note: 'open = no active Twitch account. Twitch still reserves/holds many short names, so verify before relying on it.',
+    });
   } catch (err) {
     console.error('usercheck', err);
     res.status(502).json({ error: 'Could not reach Twitch — try again.' });

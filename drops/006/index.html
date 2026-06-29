@@ -249,18 +249,24 @@ h1{
   font-family:var(--font-mono);font-size:14px;font-weight:700;
   transition:all .15s;
 }
-.result-pill.available{
+.result-pill.open{
   border-color:rgba(43,212,106,0.3);background:rgba(43,212,106,0.05);
   color:var(--accent-bright);
 }
 .result-pill.taken{
   color:var(--muted-dim);opacity:.55;
 }
+.result-pill.blocked{
+  color:#d6a86a;border-color:rgba(214,168,106,0.2);background:rgba(214,168,106,0.04);opacity:.8;
+}
 .result-pill .status-dot{
   width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-left:8px;
 }
-.result-pill.available .status-dot{background:var(--accent-bright);box-shadow:0 0 8px rgba(74,222,128,0.6)}
+.result-pill.open .status-dot{background:var(--accent-bright);box-shadow:0 0 8px rgba(74,222,128,0.6)}
 .result-pill.taken .status-dot{background:rgba(255,255,255,0.12)}
+.result-pill.blocked .status-dot{background:#d6a86a}
+.result-pill .go{margin-left:8px;color:var(--accent-bright);text-decoration:none;font-weight:700;flex-shrink:0}
+.result-pill .go:hover{text-decoration:underline}
 .result-pill.checking{
   color:var(--muted);
   animation:pulse-row 1.2s ease-in-out infinite;
@@ -332,8 +338,9 @@ body.fade-in{animation:page-fade .8s ease both}
     </div>
     <h1>Handle<br>Hunter</h1>
     <p class="lede">
-      Drop in a platform and a length — we generate <span class="accent">rare, meaningful</span> username candidates
-      and check availability live. Short handles are out there. Find yours.
+      Pick a platform and a length — we <span class="accent">generate fresh names on the spot</span>
+      and check which ones have no Twitch account yet. Heads up: Twitch reserves and holds
+      a lot of short names, so “open” means unclaimed — tap the ↗ to verify before you grab it.
     </p>
   </div>
 
@@ -389,8 +396,8 @@ body.fade-in{animation:page-fade .8s ease both}
         <button class="filter-chip" data-filter="leetspeak" title="Leet substitutions (3 → e, 0 → o...)">
           <span class="dot"></span>L33t mode
         </button>
-        <button class="filter-chip" data-filter="combos" title="Pronounceable combos when words run out">
-          <span class="dot"></span>Combos fallback
+        <button class="filter-chip active" data-filter="combos" title="Generate fresh made-up names on the spot">
+          <span class="dot"></span>Made-up names
         </button>
       </div>
 
@@ -429,7 +436,7 @@ body.fade-in{animation:page-fade .8s ease both}
       </div>
       <div class="results-actions">
         <button class="btn-ghost" id="copyAvailBtn" style="display:none">
-          Copy available ↗
+          Copy open ↗
         </button>
         <button class="btn-ghost" id="copyAllBtn" style="display:none">
           Copy all results
@@ -519,83 +526,70 @@ function applyLeet(word){
   return word.replace(/a/g,'4').replace(/e/g,'3').replace(/i/g,'1').replace(/o/g,'0').replace(/s/g,'5');
 }
 
-// Pronounceable consonant-vowel combo generator
-function genCombos(len, count){
-  const C=['b','c','d','f','g','h','j','k','l','m','n','p','r','s','t','v','w','x','z'];
-  const V=['a','e','i','o','u'];
-  const CC=['bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sk','sl','sn','sp','st','tr'];
-  const results=new Set();
-  let attempts=0;
-  while(results.size<count && attempts<count*20){
-    attempts++;
-    let w='';
-    while(w.length<len){
-      const r=Math.random();
-      if(w.length===0 && len>=4 && r<0.35){
-        const cc=CC[Math.floor(Math.random()*CC.length)];
-        if(w.length+cc.length<=len) w+=cc;
-        else w+=C[Math.floor(Math.random()*C.length)];
-      } else if(w.length%2===0){
-        w+=C[Math.floor(Math.random()*C.length)];
-      } else {
-        w+=V[Math.floor(Math.random()*V.length)];
-      }
+// ── On-the-spot name generation ──────────────────────────────
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// crude guard so we never generate/suggest names Twitch would reject outright
+const BAD = /(nigg|n1gg|fagg|f4gg|retard|rape|nazi|hitler|kkk|cunt|spic|chink|kike|tranny|slut|whore)/i;
+
+// Procedurally build a pronounceable name of EXACT length — fresh every call,
+// effectively infinite. This is the "generate on the spot" engine.
+function genName(len){
+  const ONSET=['b','c','d','f','g','h','j','k','l','m','n','p','r','s','t','v','w','z',
+    'bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sk','sl','sn','sp','st','sw','tr','sh','ch','th','kr','zr','vy'];
+  const VOW=['a','e','i','o','u','y','ae','ai','ea','ee','io','oo','ou'];
+  const CODA=['b','d','f','g','k','l','m','n','p','r','s','t','x','z',
+    'ck','ft','lk','lt','mp','nd','ng','nk','nt','rk','rt','sh','sk','st','th'];
+  for(let tries=0;tries<60;tries++){
+    let w='', guard=0;
+    while(w.length<len && guard++<24){
+      const rem=len-w.length;
+      if(rem===1){ w+=pick(['a','e','o','i','u','x','z','n','r','k','t']); break; }
+      let syl=pick(ONSET)+pick(VOW);
+      if(rem>=3 && Math.random()<0.45) syl+=pick(CODA);
+      if(syl.length<=rem) w+=syl;
     }
-    if(w.length===len) results.add(w);
+    if(w.length===len && /[aeiouy]/.test(w) && !BAD.test(w)) return w;
   }
-  return [...results];
+  // strict fallback: alternate consonant/vowel to exact length
+  const C=['b','c','d','f','g','k','l','m','n','p','r','s','t','v','z'], V=['a','e','i','o','u'];
+  let w=''; for(let i=0;i<len;i++) w+=(i%2?pick(V):pick(C));
+  return w;
 }
 
-function generateCandidates(len, filters){
-  const bank=WORDS[len]||WORDS[5];
-  const useWords=filters.has('words');
-  const useAnimals=filters.has('animals');
-  const useNature=filters.has('nature');
-  const useLeet=filters.has('leetspeak');
-  const useCombos=filters.has('combos');
+// Build a FRESH batch of candidates each run. Procedural names are the core
+// (infinite, never repeat); real words are mixed in for "meaning" when those
+// filters are on. `seen` carries across runs so each hunt yields NEW names.
+function generateCandidates(len, filters, count, seen){
+  const used = seen || new Set();
+  const out = [];
+  const bank = WORDS[len] || {};
 
-  const seen=new Set();
-  let pool=[];
+  // meaning pool from the selected word filters, sampled fresh each run
+  let wordPool = [];
+  if(filters.has('words'))   wordPool = wordPool.concat(bank.words || []);
+  if(filters.has('animals')) wordPool = wordPool.concat(bank.animals || []);
+  if(filters.has('nature'))  wordPool = wordPool.concat(bank.nature || []);
+  wordPool = shuffle([...new Set(wordPool)].filter(w => w.length === len && !BAD.test(w)));
+  let wi = 0;
+  const nextWord = () => { while(wi < wordPool.length){ const w = wordPool[wi++]; if(!used.has(w)){ used.add(w); return w; } } return null; };
 
-  // Priority 1: meaningful words
-  if(useWords){ for(const w of (bank.words||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'word'})}}
-  if(useAnimals){ for(const w of (bank.animals||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'animal'})}}
-  if(useNature){ for(const w of (bank.nature||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'nature'})}}
+  const genOn = filters.has('combos');   // procedural "made-up names" on/off
+  const nextGen = () => { if(!genOn) return null; for(let t=0;t<60;t++){ const w = genName(len); if(w && w.length === len && !used.has(w)){ used.add(w); return w; } } return null; };
 
-  // Priority 2: leet variants of the above
-  if(useLeet){
-    const base=[...pool].map(x=>x.w);
-    for(const w of base){
-      const l=applyLeet(w);
-      if(l!==w && !seen.has(l) && l.length===len){seen.add(l);pool.push({w:l,tier:'leet'});}
+  // ~55% generated / 45% real words (whichever is available)
+  let dead = 0;
+  while(out.length < count && dead < 8){
+    const preferGen = Math.random() < 0.55;
+    const w = preferGen ? (nextGen() || nextWord()) : (nextWord() || nextGen());
+    if(!w){ dead++; continue; }
+    dead = 0;
+    out.push(w);
+    if(filters.has('leetspeak') && out.length < count){
+      const l = applyLeet(w);
+      if(l !== w && l.length === len && !used.has(l)){ used.add(l); out.push(l); }
     }
-  }
-
-  // Shuffle within same-tier groups to avoid alphabetical bias
-  pool = shuffleByTier(pool);
-
-  // Priority 3: combos as fallback if pool is small
-  if(useCombos && pool.length<40){
-    const need=Math.max(0,60-pool.length);
-    const combos=genCombos(len,need);
-    for(const w of combos) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'combo'});}
-  }
-
-  return pool;
-}
-
-function shuffleByTier(arr){
-  const tiers={word:[],animal:[],nature:[],leet:[],combo:[]};
-  for(const x of arr)(tiers[x.tier]||tiers.word).push(x.w);
-  // Shuffle each tier
-  for(const k in tiers) tiers[k]=tiers[k].sort(()=>Math.random()-.5);
-  // Interleave: word first, then animal+nature, then leet, then combo
-  const out=[];
-  const order=['word','animal','nature','leet','combo'];
-  let maxLen=0;
-  for(const k of order) maxLen=Math.max(maxLen,tiers[k].length);
-  for(let i=0;i<maxLen;i++){
-    for(const k of order){if(tiers[k][i]!==undefined)out.push({w:tiers[k][i],tier:k});}
   }
   return out;
 }
@@ -606,8 +600,9 @@ const state={
   length:5,
   filters:new Set(['words','animals','nature','combos']),
   running:false,
-  results:[],   // {username, available}
+  results:[],   // {username, status, available}
   aborted:false,
+  seen:new Set(),  // names shown across runs → each hunt yields fresh candidates
 };
 
 // ── §9 DOM refs ──────────────────────────────────────────────
@@ -656,14 +651,15 @@ document.getElementById('filtersRow').addEventListener('click',e=>{
 
 // Copy buttons
 copyAvailBtn.addEventListener('click',()=>{
-  const avail=state.results.filter(r=>r.available).map(r=>r.username);
-  navigator.clipboard.writeText(avail.join('\n')).then(()=>{
+  const open=state.results.filter(r=>r.status==='open').map(r=>r.username);
+  navigator.clipboard.writeText(open.join('\n')).then(()=>{
     copyAvailBtn.textContent='Copied ✓';
-    setTimeout(()=>copyAvailBtn.textContent='Copy available ↗',1800);
+    setTimeout(()=>copyAvailBtn.textContent='Copy open ↗',1800);
   });
 });
 copyAllBtn.addEventListener('click',()=>{
-  const all=state.results.map(r=>(r.available?'✓ ':'✗ ')+r.username);
+  const sym={open:'○ ',taken:'✗ ',blocked:'⊘ '};
+  const all=state.results.map(r=>(sym[r.status]||'')+r.username);
   navigator.clipboard.writeText(all.join('\n')).then(()=>{
     copyAllBtn.textContent='Copied ✓';
     setTimeout(()=>copyAllBtn.textContent='Copy all results',1800);
@@ -686,15 +682,15 @@ async function startHunt(){
   copyAvailBtn.style.display='none';
   copyAllBtn.style.display='none';
 
-  const candidates=generateCandidates(state.length,state.filters);
+  const candidates=generateCandidates(state.length,state.filters,200,state.seen);
   if(!candidates.length){
-    setError('No candidates generated — try turning on more filters.');
+    setError('No candidates generated — turn on “Made-up names” or a word filter.');
     return;
   }
 
   // Twitch batch size: 100 per request (the API max)
   // We'll check up to 200 candidates (2 batches)
-  const toCheck=candidates.slice(0,200).map(c=>c.w);
+  const toCheck=candidates.slice(0,200);
   const total=toCheck.length;
 
   // Show progress
@@ -763,9 +759,16 @@ async function startHunt(){
     for(const result of batchResults){
       const pill=pillMap[result.username];
       if(pill){
-        pill.className='result-pill '+(result.available?'available':'taken');
-        const dot=pill.querySelector('.status-dot');
-        if(dot) dot.className='status-dot';
+        const status=result.status||(result.available?'open':'taken');
+        pill.className='result-pill '+status;
+        if(status==='open'){
+          // open = no active account → link out to verify on Twitch
+          pill.innerHTML='<span>'+result.username+'</span>'+
+            '<a class="go" href="https://www.twitch.tv/'+result.username+'" target="_blank" rel="noopener" title="Open on Twitch to verify">↗</a>';
+        } else {
+          const dot=pill.querySelector('.status-dot');
+          if(dot) dot.className='status-dot';
+        }
       }
       state.results.push(result);
     }
@@ -782,7 +785,9 @@ async function startHunt(){
   goBtn.disabled=false;
   stopBtn.style.display='none';
 
-  const availCount=state.results.filter(r=>r.available).length;
+  const openCount=state.results.filter(r=>r.status==='open').length;
+  const takenCount=state.results.filter(r=>r.status==='taken').length;
+  const blockedCount=state.results.filter(r=>r.status==='blocked').length;
   const checkedCount=state.results.length;
 
   if(state.aborted){
@@ -792,13 +797,13 @@ async function startHunt(){
     progressFill.style.width='100%';
     progressLabel.textContent='Done';
     progressCount.textContent=`${checkedCount} checked`;
-    progressStatus.textContent=`Found ${availCount} available handle${availCount!==1?'s':''}.`;
+    progressStatus.textContent=`Found ${openCount} open. “Open” = no active account — Twitch reserves some names, so verify the ↗ link before relying on it.`;
   }
 
   // Update results header
-  resultsTitle.textContent=availCount>0?`${availCount} available handle${availCount!==1?'s':''}`:'No available handles found';
-  resultsMeta.textContent=`${checkedCount} checked · ${state.length}-char · ${state.platform}`;
-  if(availCount>0) copyAvailBtn.style.display='inline-flex';
+  resultsTitle.textContent=openCount>0?`${openCount} open handle${openCount!==1?'s':''}`:'No open handles found';
+  resultsMeta.textContent=`${checkedCount} checked · ${takenCount} taken`+(blockedCount?` · ${blockedCount} can’t register`:'')+` · ${state.length}-char`;
+  if(openCount>0) copyAvailBtn.style.display='inline-flex';
   if(checkedCount>0) copyAllBtn.style.display='inline-flex';
 
   // Sort: available first
@@ -807,25 +812,22 @@ async function startHunt(){
 
 function sortResults(){
   const pills=[...resultsGrid.querySelectorAll('.result-pill')];
-  const avail=pills.filter(p=>p.classList.contains('available'));
+  const open=pills.filter(p=>p.classList.contains('open'));
+  const blocked=pills.filter(p=>p.classList.contains('blocked'));
   const taken=pills.filter(p=>p.classList.contains('taken'));
 
   resultsGrid.innerHTML='';
-
-  if(avail.length){
+  const group=(label,arr)=>{
+    if(!arr.length) return;
     const d=document.createElement('div');
     d.className='divider';
-    d.textContent='Available';
+    d.textContent=label+' · '+arr.length;
     resultsGrid.appendChild(d);
-    for(const p of avail) resultsGrid.appendChild(p);
-  }
-  if(taken.length){
-    const d=document.createElement('div');
-    d.className='divider';
-    d.textContent='Taken';
-    resultsGrid.appendChild(d);
-    for(const p of taken) resultsGrid.appendChild(p);
-  }
+    for(const p of arr) resultsGrid.appendChild(p);
+  };
+  group('Open — verify on Twitch',open);
+  group('Can’t register (Twitch rules)',blocked);
+  group('Taken',taken);
 }
 
 function makePill(username, status){
