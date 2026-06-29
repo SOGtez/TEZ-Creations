@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- clean-URL shim -->
+<script>(function(){var p=location.pathname.replace(/index\.html$/,"");if(p.charAt(p.length-1)!=="/")p+="/";var b=document.createElement("base");b.href=location.origin+p;document.head.insertBefore(b,document.head.firstChild);})();</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Hunt rare, short Twitch usernames by character count. TEZ Creations generates meaningful candidates and checks availability live." />
+<title>Handle Hunter — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<style>
+/* ── §1 Tokens ── */
+:root{
+  --bg:#050806; --bg-2:#0a0f0b;
+  --text:#eaf2ec; --muted:#8fa394;
+  --accent:#2bd46a; --accent-bright:#4ade80; --accent-deep:#16a34a;
+  --accent-glow:rgba(43,212,106,0.16);
+  --danger:#f78a8a;
+  --card-fill:rgba(255,255,255,0.025);
+  --input-fill:rgba(255,255,255,0.03);
+  --hair:rgba(255,255,255,0.07);
+  --hair-input:rgba(255,255,255,0.1);
+  --grid-line:rgba(120,200,150,0.06);
+  --muted-dim:rgba(143,163,148,0.7);
+  --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'Space Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;min-height:100vh;position:relative;overflow-x:hidden;
+}
+
+/* ── §3 Signature bg ── */
+.grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-grid{
+  position:absolute;inset:-25%;
+  background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+  background-size:64px 64px;
+  transform:perspective(1200px) scale(1.08);transform-origin:center center;
+  animation:grid-drift 28s linear infinite;
+  -webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 32%,#000 0%,transparent 78%);
+  mask-image:radial-gradient(ellipse 75% 70% at 50% 32%,#000 0%,transparent 78%);
+}
+@keyframes grid-drift{from{background-position:0 0}to{background-position:0 512px}}
+.glow{
+  position:fixed;z-index:0;pointer-events:none;
+  width:62vw;height:62vw;left:50%;top:-18%;transform:translateX(-50%);
+  background:radial-gradient(circle,var(--accent-glow) 0%,transparent 62%);
+  filter:blur(40px);animation:breathe 8s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{opacity:.7;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.08)}}
+.grain{
+  position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 100% at 50% 50%,transparent 55%,rgba(0,0,0,0.55));
+}
+
+/* ── Chrome ── */
+.site-head{
+  position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+  padding:clamp(20px,4vw,40px) clamp(24px,6vw,96px);
+}
+.wordmark{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--text);text-decoration:none}
+.wordmark .star{color:var(--accent-bright)}
+.back-link{font-family:var(--font-sans);font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--text)}
+
+/* ── Layout ── */
+.wrap{position:relative;z-index:3;max-width:880px;margin:0 auto;padding:8px clamp(24px,6vw,96px) 90px}
+
+/* ── Hero ── */
+.hero{padding-top:clamp(14px,4vw,40px)}
+.eyebrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dropnum{font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--accent-bright)}
+.type-tag{
+  font-family:var(--font-sans);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;
+  color:var(--muted);background:var(--card-fill);border:1px solid var(--hair);border-radius:999px;
+  padding:7px 14px;backdrop-filter:blur(8px);
+}
+.fresh{
+  font-family:var(--font-sans);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;
+  color:#04160b;background:var(--accent-bright);border-radius:999px;padding:6px 13px;
+  box-shadow:0 0 14px rgba(74,222,128,0.45);
+}
+h1{
+  font-family:var(--font-display);font-weight:700;font-size:clamp(48px,11vw,96px);
+  line-height:1.02;letter-spacing:-.02em;margin:20px 0 0;
+  text-shadow:0 0 70px rgba(43,212,106,0.12);
+  background:linear-gradient(178deg,#fff 0%,#9fe8bd 125%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.lede{color:var(--muted);font-size:16px;max-width:52ch;margin-top:18px;line-height:1.6}
+.lede .accent{font-style:italic;color:var(--accent-bright)}
+
+/* ── Card ── */
+.card{
+  background:var(--card-fill);border:1px solid var(--hair);
+  border-radius:16px;overflow:hidden;backdrop-filter:blur(8px);
+}
+.card-body{padding:28px 28px 32px}
+
+/* ── Controls card ── */
+.controls-card{margin-top:40px}
+.section-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;
+  color:var(--muted);margin-bottom:10px;
+}
+
+/* Platform picker */
+.platform-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.platform-btn{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font-sans);font-size:13px;font-weight:600;
+  color:var(--muted);background:var(--input-fill);
+  border:1px solid var(--hair-input);border-radius:10px;
+  padding:10px 16px;cursor:pointer;transition:all .18s;
+}
+.platform-btn svg{width:16px;height:16px;flex-shrink:0}
+.platform-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.18)}
+.platform-btn.active{
+  color:var(--accent-bright);border-color:rgba(43,212,106,0.45);
+  background:rgba(43,212,106,0.06);
+  box-shadow:0 0 16px rgba(43,212,106,0.12);
+}
+.platform-btn .badge{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+  padding:2px 6px;border-radius:999px;background:rgba(43,212,106,0.18);color:var(--accent-bright);
+}
+
+/* Length picker */
+.length-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.len-btn{
+  font-family:var(--font-mono);font-weight:700;font-size:14px;
+  color:var(--muted);background:var(--input-fill);
+  border:1px solid var(--hair-input);border-radius:10px;
+  padding:10px 18px;cursor:pointer;transition:all .18s;min-width:52px;text-align:center;
+}
+.len-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.18)}
+.len-btn.active{
+  color:var(--accent-bright);border-color:rgba(43,212,106,0.45);
+  background:rgba(43,212,106,0.06);
+  box-shadow:0 0 14px rgba(43,212,106,0.1);
+}
+
+/* Filters row */
+.filters-row{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.filter-chip{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-sans);font-size:12px;font-weight:500;
+  color:var(--muted);background:var(--input-fill);
+  border:1px solid var(--hair-input);border-radius:999px;
+  padding:7px 14px;cursor:pointer;transition:all .18s;
+}
+.filter-chip:hover{color:var(--text);border-color:rgba(255,255,255,0.18)}
+.filter-chip.active{
+  color:var(--accent-bright);border-color:rgba(43,212,106,0.4);
+  background:rgba(43,212,106,0.05);
+}
+.filter-chip .dot{
+  width:7px;height:7px;border-radius:50%;background:var(--hair-input);
+  transition:background .18s;flex-shrink:0;
+}
+.filter-chip.active .dot{background:var(--accent-bright)}
+
+/* Go button */
+.btn-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:-.01em;
+  color:#04160b;background:linear-gradient(180deg,var(--accent-bright) 0%,var(--accent-deep) 100%);
+  border:none;border-radius:14px;padding:15px 32px;cursor:pointer;
+  box-shadow:0 0 0 1px rgba(43,212,106,0.3),0 4px 18px rgba(43,212,106,0.25),inset 0 1px 0 rgba(255,255,255,0.25),inset 0 -1px 0 rgba(0,0,0,0.18);
+  transition:transform .15s,box-shadow .15s;
+}
+.btn-primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 0 0 1px rgba(43,212,106,0.5),0 8px 28px rgba(43,212,106,0.38),inset 0 1px 0 rgba(255,255,255,0.28),inset 0 -1px 0 rgba(0,0,0,0.18);
+}
+.btn-primary:active:not(:disabled){transform:translateY(0);box-shadow:0 0 0 1px rgba(43,212,106,0.2),inset 0 2px 6px rgba(0,0,0,0.2)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-primary .arrow{transition:transform .18s}
+.btn-primary:hover:not(:disabled) .arrow{transform:translateX(3px)}
+
+/* Stop button */
+.btn-stop{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-display);font-weight:700;font-size:14px;
+  color:var(--danger);background:rgba(247,138,138,0.08);
+  border:1px solid rgba(247,138,138,0.25);border-radius:14px;
+  padding:13px 24px;cursor:pointer;transition:all .18s;
+}
+.btn-stop:hover{background:rgba(247,138,138,0.14);border-color:rgba(247,138,138,0.4)}
+
+/* Ghost / copy button */
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-sans);font-weight:600;font-size:13px;
+  color:var(--muted);background:transparent;
+  border:1px solid var(--hair-input);border-radius:10px;
+  padding:9px 16px;cursor:pointer;transition:all .18s;
+}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+/* ── Progress ── */
+.progress-section{margin-top:32px;display:none}
+.progress-section.visible{display:block}
+.progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-label{font-size:13px;color:var(--muted)}
+.progress-count{font-family:var(--font-mono);font-size:13px;color:var(--accent-bright)}
+.progress-track{
+  height:4px;background:var(--input-fill);border-radius:999px;overflow:hidden;
+  border:1px solid var(--hair);
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent-deep),var(--accent-bright));
+  border-radius:999px;transition:width .3s ease;width:0%;
+  box-shadow:0 0 10px rgba(74,222,128,0.4);
+}
+.progress-status{font-size:12px;color:var(--muted-dim);margin-top:7px;min-height:18px}
+
+/* ── Results ── */
+.results-section{margin-top:36px;display:none}
+.results-section.visible{display:block}
+.results-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+}
+.results-title{
+  font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--text);
+}
+.results-meta{font-size:13px;color:var(--muted)}
+.results-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Results grid */
+.results-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;
+}
+.result-pill{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--card-fill);border:1px solid var(--hair);
+  border-radius:12px;padding:12px 14px;
+  font-family:var(--font-mono);font-size:14px;font-weight:700;
+  transition:all .15s;
+}
+.result-pill.available{
+  border-color:rgba(43,212,106,0.3);background:rgba(43,212,106,0.05);
+  color:var(--accent-bright);
+}
+.result-pill.taken{
+  color:var(--muted-dim);opacity:.55;
+}
+.result-pill .status-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-left:8px;
+}
+.result-pill.available .status-dot{background:var(--accent-bright);box-shadow:0 0 8px rgba(74,222,128,0.6)}
+.result-pill.taken .status-dot{background:rgba(255,255,255,0.12)}
+.result-pill.checking{
+  color:var(--muted);
+  animation:pulse-row 1.2s ease-in-out infinite;
+}
+@keyframes pulse-row{0%,100%{opacity:.5}50%{opacity:.9}}
+
+/* Dividers */
+.divider{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;
+  color:var(--muted-dim);margin:20px 0 12px;grid-column:1/-1;
+  display:flex;align-items:center;gap:10px;
+}
+.divider::after{content:"";flex:1;height:1px;background:var(--hair)}
+
+/* Empty / error states */
+.state-box{
+  padding:32px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6;
+}
+.state-box .emoji{font-size:32px;margin-bottom:12px}
+.err-msg{
+  display:none;font-size:13px;color:var(--danger);margin-top:12px;
+}
+.err-msg.show{display:block}
+
+/* Page fade */
+body.fade-in{animation:page-fade .8s ease both}
+@keyframes page-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Footer */
+.site-foot{
+  position:relative;z-index:3;text-align:center;
+  padding:32px clamp(24px,6vw,96px);
+  font-size:13px;color:rgba(143,163,148,0.55);
+}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .progress-fill{transition:none}
+}
+
+/* Mobile */
+@media(max-width:600px){
+  .results-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  h1{font-size:clamp(40px,16vw,64px)}
+}
+</style>
+</head>
+<body class="fade-in">
+
+<!-- Signature background -->
+<div class="grid-wrap"><div class="bg-grid" id="bgGrid"></div></div>
+<div class="glow"></div>
+<div class="grain"></div>
+
+<header class="site-head">
+  <a class="wordmark" href="/home">TEZ<span class="star">✦</span></a>
+  <a class="back-link" href="/home">← All drops</a>
+</header>
+
+<main class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="eyebrow">
+      <span class="dropnum">#006</span>
+      <span class="type-tag">App</span>
+      <span class="fresh">New</span>
+    </div>
+    <h1>Handle<br>Hunter</h1>
+    <p class="lede">
+      Drop in a platform and a length — we generate <span class="accent">rare, meaningful</span> username candidates
+      and check availability live. Short handles are out there. Find yours.
+    </p>
+  </div>
+
+  <!-- Controls -->
+  <div class="card controls-card">
+    <div class="card-body">
+
+      <!-- Platform -->
+      <p class="section-label">Platform</p>
+      <div class="platform-grid" id="platformGrid">
+        <button class="platform-btn active" data-platform="twitch">
+          <!-- Twitch glitch icon -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+          Twitch
+          <span class="badge">Live</span>
+        </button>
+        <!-- Future platforms (disabled, shown as coming soon) -->
+        <button class="platform-btn" data-platform="github" disabled style="opacity:.4;cursor:not-allowed" title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+          <span class="badge" style="background:rgba(255,255,255,0.07);color:var(--muted)">Soon</span>
+        </button>
+        <button class="platform-btn" data-platform="reddit" disabled style="opacity:.4;cursor:not-allowed" title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+          Reddit
+          <span class="badge" style="background:rgba(255,255,255,0.07);color:var(--muted)">Soon</span>
+        </button>
+      </div>
+
+      <!-- Length -->
+      <p class="section-label">Username length</p>
+      <div class="length-row" id="lengthRow">
+        <button class="len-btn" data-len="3">3</button>
+        <button class="len-btn" data-len="4">4</button>
+        <button class="len-btn active" data-len="5">5</button>
+        <button class="len-btn" data-len="6">6</button>
+        <button class="len-btn" data-len="7">7</button>
+        <button class="len-btn" data-len="8">8</button>
+      </div>
+
+      <!-- Filters -->
+      <p class="section-label">Style filters</p>
+      <div class="filters-row" id="filtersRow">
+        <button class="filter-chip active" data-filter="words" title="Real words (fox, dusk, void...)">
+          <span class="dot"></span>Real words
+        </button>
+        <button class="filter-chip active" data-filter="animals" title="Animal names">
+          <span class="dot"></span>Animals
+        </button>
+        <button class="filter-chip active" data-filter="nature" title="Nature words (fog, arc, vale...)">
+          <span class="dot"></span>Nature
+        </button>
+        <button class="filter-chip" data-filter="leetspeak" title="Leet substitutions (3 → e, 0 → o...)">
+          <span class="dot"></span>L33t mode
+        </button>
+        <button class="filter-chip" data-filter="combos" title="Pronounceable combos when words run out">
+          <span class="dot"></span>Combos fallback
+        </button>
+      </div>
+
+      <!-- CTA row -->
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <button class="btn-primary" id="goBtn">
+          Hunt handles <span class="arrow">→</span>
+        </button>
+        <button class="btn-stop" id="stopBtn" style="display:none">
+          ■ Stop
+        </button>
+        <span class="err-msg" id="errMsg"></span>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section" id="progressSection">
+        <div class="progress-meta">
+          <span class="progress-label" id="progressLabel">Scanning…</span>
+          <span class="progress-count" id="progressCount">0 / 0</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status" id="progressStatus"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="resultsTitle">Available handles</div>
+        <div class="results-meta" id="resultsMeta"></div>
+      </div>
+      <div class="results-actions">
+        <button class="btn-ghost" id="copyAvailBtn" style="display:none">
+          Copy available ↗
+        </button>
+        <button class="btn-ghost" id="copyAllBtn" style="display:none">
+          Copy all results
+        </button>
+      </div>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+
+</main>
+
+<footer class="site-foot">TEZ Creations</footer>
+
+<script>
+// ── §6 Cursor warp ──────────────────────────────────────────
+(function(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const grid = document.getElementById('bgGrid');
+  if(!grid) return;
+  let cx=0,cy=0,tx=0,ty=0,ticking=false;
+  document.addEventListener('mousemove',e=>{
+    tx=(e.clientX/innerWidth)*2-1;
+    ty=(e.clientY/innerHeight)*2-1;
+    if(!ticking){ticking=true;requestAnimationFrame(tick)}
+  });
+  function tick(){
+    ticking=false;
+    cx+=(tx-cx)*0.06; cy+=(ty-cy)*0.06;
+    grid.style.transform=`perspective(1200px) rotateX(${-cy*1.6}deg) rotateY(${cx*1.6}deg) translate(${-cx*8}px,${-cy*8}px) scale(1.08)`;
+    if(Math.abs(tx-cx)>0.001||Math.abs(ty-cy)>0.001){ticking=true;requestAnimationFrame(tick)}
+  }
+
+  // Mobile gyro
+  if(typeof DeviceOrientationEvent!=='undefined'){
+    let g0=null,b0=null;
+    const addGyro=()=>{
+      window.addEventListener('deviceorientation',e=>{
+        if(g0===null){g0=e.gamma||0;b0=e.beta||0;return}
+        tx=Math.max(-1,Math.min(1,((e.gamma||0)-g0)/18));
+        ty=Math.max(-1.6,Math.min(1.6,((e.beta||0)-b0)/18));
+        if(!ticking){ticking=true;requestAnimationFrame(tick)}
+      });
+    };
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      document.addEventListener('click',()=>DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')addGyro()}).catch(()=>{}),{once:true});
+    } else { addGyro(); }
+  }
+})();
+
+// ── §7 Username generation ───────────────────────────────────
+// ─── Word banks ─────────────────────────────────────────────
+const WORDS = {
+  3: {
+    words:['ace','age','air','arc','ash','axe','bay','bit','bog','bow','caw','cob','cod','cog','col','cop','cot','cub','cup','cut','dab','dam','den','dew','din','dip','doe','dog','dot','dub','dug','dun','duo','ear','eel','ego','elk','elm','emu','era','eve','ewe','eye','fan','fat','fig','fin','fit','fix','fly','fog','fox','fry','fun','fur','gag','gap','gig','gnu','gum','gut','guy','gym','hag','ham','hay','hex','hog','hop','hue','hug','hum','ion','ivy','jab','jag','jam','jar','jaw','jay','jet','jig','job','jot','joy','jug','jut','keg','ken','kin','kit','lag','lap','law','lay','lea','lid','lip','log','lug','lux','maw','mob','mod','mop','mow','mud','mug','nab','nap','nib','nil','nip','nod','nun','oaf','oak','oar','odd','ode','ohm','oil','old','olm','opt','orb','ore','owe','owl','pan','paw','pea','peg','pen','pit','pod','pot','pox','pub','pun','pup','pus','ram','ran','rap','rat','raw','ray','rip','rob','rod','rot','row','rub','rue','rug','rum','rut','rye','sac','sag','sat','sax','say','set','sew','shy','sin','sip','sir','sob','sod','son','sow','soy','spa','spy','sub','sum','sun','sup','tab','tag','tan','tap','tar','tax','tin','tip','tog','top','toy','tri','tub','tug','tun','tup','two','urn','van','vat','vim','vow','wax','web','wee','wig','wit','woe','won','woo','yak','yam','yap','yaw','yew','yin','yip','you','zap','zen','zig','zip','zoo'],
+    animals:['ape','asp','auk','bat','bee','boa','bug','cat','cod','cow','cub','cur','doe','dog','eel','elk','emu','ewe','fly','fox','gnu','hog','jay','koi','owl','pig','ram','rat','yak'],
+    nature:['arc','ash','bay','bog','dew','din','dry','dun','ear','fog','fur','gap','hay','hue','ice','ivy','lea','log','maw','mud','oak','oil','orb','ore','ray','rot','rue','rut','rye','sky','spa','sun','tar','tin','urn','wax','web']
+  },
+  4: {
+    words:['able','acid','aged','also','area','army','auto','back','bald','band','bare','bark','barn','base','bath','bead','beam','beat','been','bell','belt','bend','best','bide','bile','bind','bird','bite','blot','blur','bone','born','brow','bulk','bull','burg','burn','burp','cave','cell','chat','chin','chip','chop','clam','clap','claw','clay','clip','clod','clog','clot','clue','coal','coat','coil','cold','colt','comb','come','cone','cook','cool','cope','cord','core','cork','corn','cost','cozy','crag','cram','craw','crew','crop','crow','crud','cuff','cult','curl','damp','dank','dark','dart','data','dawn','dead','deal','dean','dear','deer','deep','deft','demo','dent','desk','dial','dice','dike','dill','dime','dine','dire','dirt','disk','dive','dock','doll','dome','dope','dorm','dose','dote','dove','down','drag','draw','drip','drop','drug','drum','dune','dung','dusk','dust','dyed','each','earn','ease','east','edge','emit','epic','even','evil','exam','fade','fake','fall','fame','fare','farm','fast','fate','fawn','feed','feel','feet','fell','fern','fern','file','fill','film','find','fine','fire','firm','fish','fist','flaw','flea','fled','flex','flip','flit','flog','flop','flow','foam','fold','folk','fond','font','fool','fore','fork','form','fort','foul','fowl','fray','free','frog','from','fuel','full','fume','fund','fuse','gale','gall','gash','gaze','gear','gild','gilt','give','glad','glee','glib','glob','glow','glue','glum','gnaw','goal','goat','gold','golf','gong','good','goon','gory','grab','grub','gulf','gull','gulp','guru','gust','hack','hail','hall','halt','hang','hard','hare','hark','harm','harp','haze','head','heal','heap','hear','heat','helm','hemp','herb','herd','hide','high','hill','hint','hist','hive','hoar','hone','hood','hoof','hook','hope','horn','host','hull','hump','hung','hunk','hunt','hush','husk','icon','idle','inch','iris','isle','itch','jade','jest','jolt','jump','just','keen','kelp','kept','kern','keys','kite','knob','knot','lack','lace','lake','lame','lamp','land','lane','lark','last','lava','lawn','lead','leaf','lean','leap','lend','lens','lest','lime','lingo','lion','loft','long','loom','loon','lore','lost','lush','lynx','mace','made','malt','mane','mare','mark','mars','mast','maze','mead','meat','mesh','mink','mire','mist','moat','mole','molt','moon','moor','mope','more','moss','moth','mule','murk','musk','myth','nail','nape','neat','need','nest','newt','nigh','node','noon','norm','numb','opal','orca','oven','owls','oxen','pace','pack','page','pale','palm','pant','park','part','pave','peat','peel','peer','pelt','perk','pest','pick','pike','pile','pine','pipe','plus','poke','pole','poll','pond','pool','pore','pose','post','pour','pout','prow','prune','pull','pump','punt','pure','purr','push','putt','rage','raid','rail','rain','rake','ramp','rang','rank','rant','rapt','reap','reel','rely','rend','rent','rest','rice','rich','ride','riff','rind','ring','rink','riot','risk','rite','road','roar','rock','roll','roof','room','root','rope','rose','rout','rove','ruin','rule','rune','rush','rust','ruts','sage','sail','sake','sale','sane','sang','sank','sash','seal','seam','sear','sect','seed','seek','seep','seer','self','semi','send','shed','shin','ship','shoe','shot','shun','silt','silk','sing','slab','slag','slap','slew','slim','slip','slog','slot','slow','slum','slug','smog','snap','snob','snow','soak','soar','sock','soil','sold','sole','song','soot','sort','soul','span','spar','spat','spec','sped','spin','spit','spot','spud','spur','stab','stag','stem','step','stew','stir','stop','stub','stun','sulk','sunk','swap','swat','swim','swum','sync','tail','tall','tame','taut','teal','team','tear','teen','tell','tend','tent','term','text','than','that','them','then','they','thin','this','thorn','tide','tier','till','tilt','time','toad','told','toll','tomb','tome','tone','tong','tool','tore','torn','torr','toss','tour','town','tram','trap','tray','trek','trim','trio','trip','trod','trot','true','tuck','tuft','tump','tung','turf','turn','tusk','twin','vale','vane','vast','veil','vein','vent','verb','vest','vibe','vine','vise','void','volt','vole','vrow','wade','wage','wake','walk','wall','wand','wane','ward','warp','wart','wary','wave','weld','well','welt','went','were','whet','whim','whip','wick','wide','wild','will','wilt','wind','wine','wing','wise','wish','wisp','wist','woes','wolf','wood','wool','word','work','worm','wren','yore','zero','zone','zoom'],
+    animals:['bear','bird','boar','bull','carp','clam','colt','crab','crow','deer','dove','duck','fawn','fawn','frog','gull','hare','hawk','ibex','kite','lark','lion','lynx','mole','moth','mule','newt','orca','oryx','pika','pony','puma','rook','seal','slug','swan','toad','vole','wasp','wolf','wren'],
+    nature:['bark','cave','crag','damp','dusk','dust','dune','fern','foam','gale','gust','haze','hemp','hill','hive','iris','isle','jade','kelp','lake','lava','leaf','lime','loam','loft','loom','mire','mist','moat','moor','moss','murk','musk','opal','peat','pine','pond','reef','rime','rock','rose','rune','rust','sage','sand','silk','silt','soil','snow','soot','vale','vine','void','warp']
+  },
+  5: {
+    words:['abyss','agile','algae','ambit','amble','amber','ample','angel','antic','anvil','aorta','arced','ardor','argon','argot','arise','aroma','ashen','askew','atoll','atone','attic','azure','basil','batch','bayou','black','blade','blaze','bleak','bleed','blend','blink','bliss','bloom','bloop','blown','bluff','blunt','blurb','blush','boast','boggy','bongo','bonus','borax','botch','brace','braid','brash','brave','brawn','braze','briar','brine','briny','broil','brook','brood','broth','brown','brunt','brush','brute','bugle','bulge','bunch','burnt','burly','butte','byway','cabal','camel','candy','cargo','carve','catch','catnap','cause','cedar','chafe','chalk','champ','chant','charm','chasm','cheek','chess','chief','chive','chord','chore','chose','civic','civil','clamp','clank','clash','clasp','cleft','cleft','cling','cloak','clone','close','cloth','cloud','clout','clove','clunk','cobra','comet','comic','comma','conch','coral','comet','couch','could','count','covet','crack','craft','crave','crawl','crazy','crest','crimp','crisp','croak','crone','cross','crowd','crumb','crush','crust','crypt','curve','cutie','cycle','cyber','dally','dandy','datum','daunt','dealt','debut','decoy','delta','depth','derby','devil','dingo','disco','ditch','diver','dizzy','dodge','dogma','dowel','draft','drape','drawl','drawn','drear','dregs','dress','dried','drift','drill','drive','droop','drove','drown','druid','drunk','drupe','duchy','dunce','early','earth','ebony','eclat','edged','eerie','egret','eight','ember','emote','empty','endow','enemy','enjoy','epoch','erect','ergot','error','essay','ether','ethos','evade','event','every','evict','exact','exert','exile','exist','extra','fable','facet','faint','fairy','faith','falco','fancy','fatal','fauna','feast','femur','fence','feral','fetch','fever','fiber','ficus','field','fiend','fifth','fifty','finch','fjord','fixed','fjord','flank','flare','flash','flask','flaunt','fleet','flesh','flick','flier','fling','flint','float','flock','flood','floor','flour','fluke','flume','flunk','flush','flute','focal','foray','forge','foyer','frail','frame','frank','fraud','freak','freed','fresh','frost','froth','frown','froze','frugal','fungi','funky','funny','furry','fused','fuzzy','gavel','gauze','gecko','gemstone','ghost','girth','given','gland','glare','glass','glaze','gleam','glean','glide','glint','gloam','globe','gloom','gloss','glove','glyph','gnash','gnome','gorge','gourd','grace','grade','grail','grain','grand','grant','grape','grasp','graze','greed','greet','grief','grind','gripe','groan','groin','groom','grove','growl','gruff','grunge','guise','gulch','gusto','gypsy','habit','havoc','harsh','haste','haven','hedge','helix','heady','heart','heave','hence','heron','hertz','hilft','hinge','hippo','hoard','hobby','holly','honey','honor','hornet','hound','hover','hurtle','hyena','hatch','hydra','icing','ideal','imply','inane','inert','infer','inlet','innate','inter','inter','intro','inure','ionic','irony','ivory','jaunt','joust','joule','karma','kelpy','knack','knave','knife','knoll','known','kudos','lance','larva','laser','latch','latch','lathe','leach','leafy','leapt','ledge','leech','lemma','lemur','letch','level','lifer','lilac','limit','liner','lingo','liver','llama','loath','lodge','login','loose','lotus','lucid','lupus','lurch','lusty','lyric','macho','magic','magma','magnet','mango','manor','maple','march','marsh','maxim','meant','melon','merge','metro','minty','mirage','mirth','model','mogul','moray','mossy','mound','moult','mount','mourn','mouth','mulch','murky','music','musty','myrrh','naval','nectar','nerve','niche','night','nifty','nimble','noble','noise','notch','novel','nymph','oasis','ocean','octet','olive','onset','opera','optic','orbit','orchid','other','otter','ought','ounce','ouzel','oxide','ozone','panda','panel','panic','parse','party','paste','patch','patio','patsy','patty','pause','peach','petal','penal','perch','perky','phase','pilot','pinch','pitch','pixel','pixel','pixel','pivot','pixie','pizza','plain','plait','plane','plank','plasm','pleat','plexus','plumb','plume','plump','plunk','plush','poker','polar','poppy','posse','pouch','power','preen','press','prick','pride','prime','print','prism','privy','probe','prong','proof','prose','proto','proud','prove','prowl','prude','prune','psalm','punch','purge','pygmy','quail','qualm','quest','queue','query','quill','quirk','quota','rabbi','radar','raven','rawer','realm','rearm','rebus','relic','repel','resin','retch','rhino','rhyme','rider','ridge','rivet','rivet','rivet','rivet','rogue','roman','roost','rouge','rough','route','rower','royal','runic','rusty','sacred','scalp','scant','scarf','scene','scorn','scout','scram','scrub','seize','servo','shade','shaft','shake','shale','shame','shank','shark','sheen','sheer','shelf','shell','shift','shine','shoal','shore','shout','shrew','shrub','shuck','shunt','sidle','siege','sieve','sigma','sixth','sixty','skiff','skimp','skull','skunk','slack','slant','sleet','sleek','slick','slide','slime','sling','slink','sloth','smear','smelt','smile','smirk','smite','smock','smote','snail','snare','sneak','sneer','snide','snipe','snort','sober','solar','sonar','sonic','sorry','spark','spawn','spear','speck','speed','spend','spew','spill','spine','spite','splat','split','spoke','spook','spore','sport','spout','spray','sprig','spunk','squab','squat','squid','stack','staff','stain','stale','stalk','stall','stand','stank','stark','stash','state','stead','steal','steel','steep','steer','stern','still','sting','stink','stomp','stone','stood','stool','stood','story','stout','stove','strap','straw','stray','strip','strut','stuck','stuff','stump','stung','stunt','sugar','suite','sumac','sunny','super','surge','swamp','swash','swear','sweep','sweet','swell','swept','swift','swirl','synth','talon','taper','taunt','tawny','teeth','tempo','tepid','terse','that','theft','there','thick','think','thong','thorn','those','throb','throw','thrum','thud','thyme','tiara','tiger','tidal','tithe','tonic','tooth','topaz','totem','toxic','trace','trail','train','trait','tramp','trawl','tread','treat','trend','tribe','trill','tripe','trite','troll','trope','troth','trove','truce','truly','trump','tryst','tuber','tuber','tumor','tuner','twist','tycoon','ulcer','ultra','umbra','umber','under','undid','undue','unify','until','unwed','upper','upset','usher','usurp','utter','vague','valor','valve','vapor','vaunt','verge','verve','vigil','viola','viper','vixen','vocal','vodka','vogue','voile','voter','vouch','vowel','vying','waltz','weird','west','weave','whelk','whirl','whole','wrath','wring','wrist','wrote','xenon','yacht','yearn','yodel','young','youth','zeal','zingy','zoeae','zonal','zooid'],
+    animals:['bison','bream','crane','eagle','egret','finch','gecko','goose','heron','hippo','hyena','kiwis','koala','lapwing','lemur','llama','moose','moufl','otter','panda','quail','raven','rhino','sable','snail','squid','stoat','stork','tapir','tiger','vixen','whale','zebra'],
+    nature:['algae','amber','abyss','atoll','bayou','blaze','bluff','brine','brook','butte','cedar','chasm','cliff','comet','coral','crest','crypt','delta','ember','flora','fjord','frost','fungi','gorge','grove','gulch','haven','hedge','holly','hyena','inlet','ivory','kelpy','knoll','kudos','lance','lilac','lotus','magma','maple','marsh','maple','mulch','myrrh','nectar','oasis','ocean','olive','ozone','peach','petal','pitch','pixel','plumb','plume','polar','poppy','prism','prune','quill','raven','realm','resin','ridge','rivet','roost','rouge','runic','shade','shaft','shale','sheen','shoal','slate','snare','spark','spore','spine','stain','stone','straw','surge','swamp','talon','thorn','tiger','topaz','totem','trace','trail','trove','tuber','umbra','umber','vapor','verge','viola','viper','waltz','weave','whale','xenon','yearn'],
+  },
+  6: {
+    words:['ablaze','absurd','aerial','affirm','agency','alcove','allure','amends','anchor','antler','arched','arctic','ardent','arduous','ashore','asking','asleep','aspect','astral','astute','attain','attest','august','aurora','avatar','avenge','avocet','awhile','babble','badger','bamboo','bandit','barren','beacon','bedlam','belfry','benign','biotic','bishop','blight','bounty','broken','buckle','bumbly','bundle','burrow','canopy','casket','cavern','cellar','chapel','chrome','cipher','cobalt','cobble','colter','combat','comet','condor','cordon','coyote','cradle','creaky','crispy','craggy','cryptic','darken','daydream','debris','defcon','desert','devour','dingle','divine','donkey','dorsal','dragon','dreamy','drench','dreich','driven','drystone','dungeon','earthy','edgier','effect','effigy','eldest','embark','emblem','embrace','empire','enable','encode','endure','enigma','entice','errant','escape','evolve','excuse','exhale','exotic','expiry','export','extent','fallow','family','famine','fanged','feline','ferret','fester','fetter','fierce','fissure','flinch','floral','florid','fluent','flying','frenzy','fringe','frozen','fulcrum','furtive','gaffer','galley','gallop','gambit','garnet','garnet','gentry','gibbet','gibbon','gilded','girder','gladly','glassy','glazed','gloomy','goblin','godlike','gondola','gorilla','gothic','gourmet','gravel','greedy','grisly','grotto','grouse','growler','gryphon','gypsum','halcyon','hamper','harden','heresy','hermit','heroic','hobbit','holler','honest','hornet','howler','hunger','hunter','hurdle','hustle','hybrid','ignore','impose','imprint','incite','indent','infuse','inhale','insane','insect','inside','intent','invade','invoke','ireful','jacket','jackal','jargon','jasper','jagged','juggle','jumble','jungle','juniper','kaizen','keeper','kennel','kernel','keynote','kindle','kitten','kodiak','labyrinth','lagoon','lament','lance','lapwing','latent','launch','lawful','leaden','legend','length','lethal','lintel','liquor','lizard','loosen','louder','lumine','lunacy','mantle','marble','marrow','mayhem','medley','menace','mentor','meteor','misfit','mobile','modest','molten','monkey','monsoon','mortal','mortar','mystic','napkin','narrow','nature','nebula','newbie','nether','nihil','nimbus','normal','notice','nought','nudge','nymph','oblique','obtain','occult','odyssey','offset','omit','onager','ordeal','orphan','osprey','outlaw','outrun','pacify','pardon','parrot','patrol','payoff','pennon','pester','petrel','pillar','pinion','pirate','plague','planet','plover','plunge','portly','pounce','proton','python','quiver','radish','rampart','ramrod','ransom','raptor','rasping','ravage','ravine','rawness','rebel','recipe','recoil','reduce','reedy','reflex','regime','refuge','relish','remote','renown','reside','resist','retort','reveal','revile','revive','robust','rogues','rotten','runoff','rustle','sabine','saddle','savage','scheme','scorch','sector','seminal','serene','shadow','shroud','signal','silver','simile','simmer','simplex','siphon','sketch','sleuth','slight','sludge','snakey','solemn','sophia','sorcery','sphinx','spirit','spleen','spoken','sprawl','spring','sprout','steady','steely','stench','stride','strife','strike','stroll','strong','subdue','sublet','subtle','sudden','summit','sunlit','sunken','sunset','supply','surreal','swathe','swerve','symbol','tartan','techno','tendon','tensile','tentacle','terrace','thatch','thorny','thrust','thatch','thicket','timber','toggle','tomcat','trance','travel','treble','troika','trophy','trowel','truant','turbine','turmoil','turret','tussle','twitch','tyrant','unruly','upland','uproar','uproot','valiant','valley','varmint','vassal','velvet','vendor','venom','vertex','vessel','vestal','vexing','vibrant','virile','visage','vision','vodka','volley','vortex','voyage','warden','warmth','warpath','whisky','wicked','wisdom','wizard','wonder','wyvern','yonder','zealot','zenith','zigzag','zither'],
+    animals:['badger','condor','coyote','donkey','dragon','falcon','ferret','gibbon','gorilla','hornet','iguana','jackal','jaguar','kodiak','lizard','monkey','osprey','parrot','petrel','plover','python','raptor','salmon','thrush','toucan','walrus','weasel','wombat'],
+    nature:['ablaze','alcove','antler','arctic','aurora','cavern','cobalt','cobble','cordon','cradle','debris','desert','divine','dorsal','earthy','fallow','feline','fissure','floral','frozen','garnet','gloomy','gravel','grotto','grouse','halcyon','ignite','jungle','lagoon','launch','legend','luster','mantle','marble','meteor','molten','monsoon','mystic','nebula','nimbus','odyssey','ordeal','osprey','portly','ravine','refuge','remote','robust','serene','shadow','shroud','silver','solemn','sphinx','spiral','spring','sprout','steely','stroll','summit','sunlit','tartan','timber','trance','turret','valley','velvet','vortex','voyage','warden','wonder','zenith'],
+  },
+  7: {
+    words:['abandon','abysmal','acclaim','account','achieve','acrobat','adamant','adverse','alchemy','ancient','angular','antique','archway','armored','arrange','assault','assured','asunder','attempt','attract','audible','auroral','balance','banquet','bashful','bathing','bedrock','berserk','blossom','bolster','bravely','bravery','breaker','bromine','cadence','captain','captive','capture','careful','careful','cascade','catalog','central','chamber','charged','charmed','chimera','cinders','circuit','citizen','clarity','classic','cleared','coastal','comrade','conduit','conquer','content','contour','control','convert','corpses','crusade','crystal','current','damaged','dashing','dawning','decadent','declare','defense','defiant','degreed','devoted','devoted','diamond','distant','disturb','divided','dragged','drifter','dropout','enhance','dynamic','elegant','endemic','engaged','endless','evening','evolved','exhaust','expanse','extreme','fertile','finding','flutter','focused','follows','foreign','forever','forward','frantic','freedom','furious','gallant','garland','general','genesis','gifted','glacier','glowing','godlike','granite','gratify','gloomed','guardian','genuine','hallmark','habitat','harness','harvest','haunted','hawkish','heritage','honored','horizon','hostile','howling','ignited','illicit','impulse','incline','insight','inspire','intense','interim','invoke','iterate','jacinth','journey','kingdom','knightly','knowing','lamprey','landing','lantern','lawless','learned','lecture','leonine','liaison','liberty','lineage','lobster','loyalty','lurking','maestro','martial','marvel','maximum','majestic','meaning','mediant','meditate','mercury','midline','migrate','militia','mindful','mineral','miracle','mission','monarch','monster','mounted','movable','mystery','nominal','notched','nothing','nucleus','obscure','offbeat','onwards','optimal','ordered','outcast','outlast','outpost','outrage','overrun','overbold','overture','pacifist','panther','paragon','passage','pattern','payload','pendant','phantom','pilgrim','pioneer','pitstop','plagued','plastic','poising','prankster','presage','present','prestige','prevent','primary','proceed','prodigy','protect','prophet','provoke','prowling','pursuit','quicken','rampage','rampant','ranging','rapture','ravenous','recluse','recruit','redline','refined','remnant','renewal','renown','resolve','restful','rhythm','rolling','romping','roughly','rugged','rundown','rustic','rushing','sapient','savage','scarred','scatter','scenery','schemer','scholar','scouted','seize','serpent','sharpen','shelter','shimmer','silence','sincere','sinuous','skilled','skyline','skyrocket','slaying','sleeper','slender','society','solstice','sorcery','soprano','soaring','species','spirit','stellar','steward','storied','storied','striker','striving','sundown','support','supreme','surging','suspense','sustain','swallow','swarthy','symbols','talisman','tangent','thunder','tighten','torrent','towered','tracked','trader','tremors','topmost','triaged','triumph','turbine','twisted','tyranny','unbound','uncanny','unearth','unknown','unleash','unravel','unusual','upwards','vagrant','valiant','variety','venture','verdant','vibrant','victory','village','vintage','violent','volcano','vulture','warband','warfare','warlord','warmest','warrior','watched','watcher','weighty','whisper','winding','winsome','wyvern'],
+    animals:['cheetah','dolphin','emperor','goblin','griffin','hamster','lobster','panther','penguin','platypus','sparrow','vulture','warthog','wyvern'],
+    nature:['alchemy','ancient','aurora','blossom','breaker','cadence','cascade','chimera','cinders','circuit','clarity','coastal','crystal','diamond','drifter','evening','expanse','fertile','flutter','freedom','gallant','garland','glacier','granite','guardian','habitat','harvest','haunted','horizon','ignited','insight','intense','journey','lantern','liberty','loyalty','maestro','marvel','maximum','mercury','mineral','miracle','monarch','mystery','optimal','outcast','overture','paragon','phantom','pioneer','presage','prankster','prodigy','rapture','recluse','renewal','resolve','rhythm','rustic','sapient','scarred','serpent','shimmer','silence','sincere','skyline','solstice','species','stellar','sundown','supreme','sustain','talisman','thunder','torrent','triumph','turbine','unbound','unearth','unleash','venture','verdant','vibrant','victory','vintage','volcano','warband','warrior','whisper','winding'],
+  },
+  8: {
+    words:['absolute','abstract','achieve','acoustic','adequate','adherent','adjacent','admirably','adorable','advanced','affinity','afforded','agitated','alighted','alliance','altitude','ambition','amenable','amethyst','ancestry','animated','antimatter','aperture','arcadian','archival','armchair','arsonist','artifact','ascended','asserting','astonish','attached','attacker','attuning','audacity','awaiting','balanced','bastion','bedlam','believed','blighted','blockade','bloodshot','blossom','bolstered','boldness','bothered','boundary','brethren','brightest','bristled','brokered','buckwheat','calamity','calypso','campaign','captained','cardinal','cartridge','cauldron','cavalier','centered','champion','charcoal','charting','charting','chromatic','cinnabar','citadel','clearing','cohesion','cohesive','collapse','commence','commerce','comprise','concealed','conflict','conquest','contrast','corridor','courting','covenant','crashing','creation','cresting','criminal','crossfire','culminate','cybernaut','darkening','daylight','deadlock','decisive','declared','deepwater','defender','defiantly','describe','deserved','designed','devoted','dominant','downfall','drifting','drifting','dropship','duskfall','duskward','dynamism','eastward','elevated','emerald','emission','emperor','endeavor','enormous','enthrall','epidemic','epitome','eruption','evasion','eventual','evolving','exorcist','expedite','explored','exponent','extremism','exultant','fathomed','ferocity','firestorm','flagship','flourish','flywheel','forecast','forensic','fracture','fragment','freedom','frequent','frontier','frosting','fullness','furthest','futurist','alchemy','galactic','galloped','gargoyle','garrison','gathered','glasnost','gradient','gripping','grizzled','guardian','guidance','gunsmith','hallowed','hardware','harmonic','haunting','headlong','heartfelt','heritage','heroism','highland','holdout','homefront','ignition','imperium','imploded','imposter','incursion','inherent','initiate','insolent','integral','iron','isolated','ironclad','kingship','labyrinth','launched','laureate','lawgiver','lawmaker','lemondrop','lethargy','lifelong','lightened','lockstep','longtime','luminance','magnitude','manifold','maritime','marksman','masterful','measured','medieval','mentor','metallic','midstride','midnight','militant','monolith','monument','mounting','murmured','mystical','namesake','navigate','nebulous','nemesis','nominate','northward','obsidian','obtained','occupied','offensive','offshoot','olympian','onlooker','onwards','operated','ordained','overcome','overheat','overrule','passaged','pathways','patriot','patronage','peaceful','peculiar','pendulum','persuade','pervasive','phantom','platform','platoon','plumbing','plunging','praetor','precision','premiere','proposal','pristine','programs','promoted','prospect','prowling','pursuing','quickfire','rainfall','reclaimed','reformed','regained','relapsed','relative','remnants','repaired','resolute','resonant','reveling','righteous','riverside','ricochet','ringside','rollback','rooftops','rooftops','roundtable','rumbling','sabotage','saluting','sapping','security','serrated','setbacks','shielded','shipment','shortage','skylight','slipping','snapshot','snowfall','soarings','solarized','solitude','sovereign','spectrum','spellbind','spitfire','squadron','stardust','steeping','stormward','strategy','strength','strikeout','surmount','survival','swelling','symphony','systemic','thousand','timeline','titanium','together','torchlit','traveled','trending','tropical','twilight','ultimate','underway','unhinged','universe','unstable','uprising','vagabond','vanished','velocity','vengeance','vestibule','viewport','visionary','volcanic','watchers','wellknown','westward','wetlands','wildfire','workshop','warcraft','wisteria','yeomanry','yourself','zeppelin'],
+    animals:['albacore','anaconda','antelope','aardvark','chipmunk','flamingo','mongoose','porpoise','scorpion','seahorse','stingray','tortoise'],
+    nature:['absolute','altitude','amethyst','ancestor','aperture','arcadian','artifact','aurora','cauldron','cinnabar','citadel','clearing','cresting','darkening','duskfall','emerald','eruption','ferocity','firestorm','fracture','frontier','galactic','glacial','gradient','guardian','hallowed','heritage','highland','ignition','labyrinth','luminance','magnitude','metallic','midnight','monolith','mystical','nebulous','northern','obsidian','olympian','pendulum','plumbing','rainfall','resolute','resonant','riverside','snowfall','solitude','spectrum','stardust','strength','survival','symphony','titanium','twilight','universe','volcanic','wildfire','wisteria','zeppelin'],
+  }
+};
+
+// Leet substitutions
+function applyLeet(word){
+  return word.replace(/a/g,'4').replace(/e/g,'3').replace(/i/g,'1').replace(/o/g,'0').replace(/s/g,'5');
+}
+
+// Pronounceable consonant-vowel combo generator
+function genCombos(len, count){
+  const C=['b','c','d','f','g','h','j','k','l','m','n','p','r','s','t','v','w','x','z'];
+  const V=['a','e','i','o','u'];
+  const CC=['bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sk','sl','sn','sp','st','tr'];
+  const results=new Set();
+  let attempts=0;
+  while(results.size<count && attempts<count*20){
+    attempts++;
+    let w='';
+    while(w.length<len){
+      const r=Math.random();
+      if(w.length===0 && len>=4 && r<0.35){
+        const cc=CC[Math.floor(Math.random()*CC.length)];
+        if(w.length+cc.length<=len) w+=cc;
+        else w+=C[Math.floor(Math.random()*C.length)];
+      } else if(w.length%2===0){
+        w+=C[Math.floor(Math.random()*C.length)];
+      } else {
+        w+=V[Math.floor(Math.random()*V.length)];
+      }
+    }
+    if(w.length===len) results.add(w);
+  }
+  return [...results];
+}
+
+function generateCandidates(len, filters){
+  const bank=WORDS[len]||WORDS[5];
+  const useWords=filters.has('words');
+  const useAnimals=filters.has('animals');
+  const useNature=filters.has('nature');
+  const useLeet=filters.has('leetspeak');
+  const useCombos=filters.has('combos');
+
+  const seen=new Set();
+  let pool=[];
+
+  // Priority 1: meaningful words
+  if(useWords){ for(const w of (bank.words||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'word'})}}
+  if(useAnimals){ for(const w of (bank.animals||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'animal'})}}
+  if(useNature){ for(const w of (bank.nature||[])) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'nature'})}}
+
+  // Priority 2: leet variants of the above
+  if(useLeet){
+    const base=[...pool].map(x=>x.w);
+    for(const w of base){
+      const l=applyLeet(w);
+      if(l!==w && !seen.has(l) && l.length===len){seen.add(l);pool.push({w:l,tier:'leet'});}
+    }
+  }
+
+  // Shuffle within same-tier groups to avoid alphabetical bias
+  pool = shuffleByTier(pool);
+
+  // Priority 3: combos as fallback if pool is small
+  if(useCombos && pool.length<40){
+    const need=Math.max(0,60-pool.length);
+    const combos=genCombos(len,need);
+    for(const w of combos) if(!seen.has(w)){seen.add(w);pool.push({w,tier:'combo'});}
+  }
+
+  return pool;
+}
+
+function shuffleByTier(arr){
+  const tiers={word:[],animal:[],nature:[],leet:[],combo:[]};
+  for(const x of arr)(tiers[x.tier]||tiers.word).push(x.w);
+  // Shuffle each tier
+  for(const k in tiers) tiers[k]=tiers[k].sort(()=>Math.random()-.5);
+  // Interleave: word first, then animal+nature, then leet, then combo
+  const out=[];
+  const order=['word','animal','nature','leet','combo'];
+  let maxLen=0;
+  for(const k of order) maxLen=Math.max(maxLen,tiers[k].length);
+  for(let i=0;i<maxLen;i++){
+    for(const k of order){if(tiers[k][i]!==undefined)out.push({w:tiers[k][i],tier:k});}
+  }
+  return out;
+}
+
+// ── §8 UI state ──────────────────────────────────────────────
+const state={
+  platform:'twitch',
+  length:5,
+  filters:new Set(['words','animals','nature','combos']),
+  running:false,
+  results:[],   // {username, available}
+  aborted:false,
+};
+
+// ── §9 DOM refs ──────────────────────────────────────────────
+const goBtn=document.getElementById('goBtn');
+const stopBtn=document.getElementById('stopBtn');
+const errMsg=document.getElementById('errMsg');
+const progressSection=document.getElementById('progressSection');
+const progressLabel=document.getElementById('progressLabel');
+const progressCount=document.getElementById('progressCount');
+const progressFill=document.getElementById('progressFill');
+const progressStatus=document.getElementById('progressStatus');
+const resultsSection=document.getElementById('resultsSection');
+const resultsGrid=document.getElementById('resultsGrid');
+const resultsTitle=document.getElementById('resultsTitle');
+const resultsMeta=document.getElementById('resultsMeta');
+const copyAvailBtn=document.getElementById('copyAvailBtn');
+const copyAllBtn=document.getElementById('copyAllBtn');
+
+// Platform picker
+document.getElementById('platformGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('.platform-btn');
+  if(!btn || btn.disabled) return;
+  document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.platform=btn.dataset.platform;
+});
+
+// Length picker
+document.getElementById('lengthRow').addEventListener('click',e=>{
+  const btn=e.target.closest('.len-btn');
+  if(!btn) return;
+  document.querySelectorAll('.len-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.length=parseInt(btn.dataset.len,10);
+});
+
+// Filter chips
+document.getElementById('filtersRow').addEventListener('click',e=>{
+  const chip=e.target.closest('.filter-chip');
+  if(!chip) return;
+  const f=chip.dataset.filter;
+  if(state.filters.has(f)) state.filters.delete(f);
+  else state.filters.add(f);
+  chip.classList.toggle('active',state.filters.has(f));
+});
+
+// Copy buttons
+copyAvailBtn.addEventListener('click',()=>{
+  const avail=state.results.filter(r=>r.available).map(r=>r.username);
+  navigator.clipboard.writeText(avail.join('\n')).then(()=>{
+    copyAvailBtn.textContent='Copied ✓';
+    setTimeout(()=>copyAvailBtn.textContent='Copy available ↗',1800);
+  });
+});
+copyAllBtn.addEventListener('click',()=>{
+  const all=state.results.map(r=>(r.available?'✓ ':'✗ ')+r.username);
+  navigator.clipboard.writeText(all.join('\n')).then(()=>{
+    copyAllBtn.textContent='Copied ✓';
+    setTimeout(()=>copyAllBtn.textContent='Copy all results',1800);
+  });
+});
+
+// Stop
+stopBtn.addEventListener('click',()=>{ state.aborted=true; });
+
+// Go
+goBtn.addEventListener('click',startHunt);
+
+async function startHunt(){
+  if(state.running) return;
+  setError('');
+  state.aborted=false;
+  state.results=[];
+  resultsGrid.innerHTML='';
+  resultsSection.classList.remove('visible');
+  copyAvailBtn.style.display='none';
+  copyAllBtn.style.display='none';
+
+  const candidates=generateCandidates(state.length,state.filters);
+  if(!candidates.length){
+    setError('No candidates generated — try turning on more filters.');
+    return;
+  }
+
+  // Twitch batch size: 100 per request (the API max)
+  // We'll check up to 200 candidates (2 batches)
+  const toCheck=candidates.slice(0,200).map(c=>c.w);
+  const total=toCheck.length;
+
+  // Show progress
+  state.running=true;
+  goBtn.disabled=true;
+  stopBtn.style.display='inline-flex';
+  progressSection.classList.add('visible');
+  setProgress(0,total,'Generating candidates…');
+
+  // Batch check
+  const BATCH=100; // Twitch allows 100 per call
+  let done=0;
+
+  for(let i=0;i<toCheck.length;i+=BATCH){
+    if(state.aborted) break;
+
+    const batch=toCheck.slice(i,i+BATCH);
+    setProgress(done,total,`Checking ${batch[0]} … ${batch[batch.length-1]}`);
+
+    // Add "checking" pills for this batch
+    const pillMap={};
+    for(const u of batch){
+      const pill=makePill(u,'checking');
+      pillMap[u]=pill;
+      resultsGrid.appendChild(pill);
+    }
+    if(i===0) resultsSection.classList.add('visible');
+
+    let batchResults=null;
+    let retries=0;
+    while(retries<3 && !state.aborted){
+      try{
+        const qs=batch.map(u=>`usernames=${encodeURIComponent(u)}`).join('&');
+        const r=await fetch(`/api/usercheck?platform=${state.platform}&${qs}`);
+        if(r.status===429){
+          const reset=parseInt(r.headers.get('Ratelimit-Reset')||'0',10);
+          const wait=Math.max(1000,(reset*1000-Date.now())||3000);
+          setProgress(done,total,`Rate limited — waiting ${Math.ceil(wait/1000)}s…`);
+          await sleep(wait);
+          retries++;
+          continue;
+        }
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const d=await r.json();
+        batchResults=d.results||[];
+        break;
+      } catch(e){
+        retries++;
+        if(retries>=3){
+          setError('Connection error — check your network and try again.');
+          break;
+        }
+        await sleep(1200);
+      }
+    }
+
+    if(!batchResults){
+      // Mark unchecked pills as error state
+      for(const u of batch){
+        if(pillMap[u]) pillMap[u].className='result-pill taken';
+      }
+      break;
+    }
+
+    // Update pills with real results
+    for(const result of batchResults){
+      const pill=pillMap[result.username];
+      if(pill){
+        pill.className='result-pill '+(result.available?'available':'taken');
+        const dot=pill.querySelector('.status-dot');
+        if(dot) dot.className='status-dot';
+      }
+      state.results.push(result);
+    }
+
+    done+=batch.length;
+    setProgress(done,total);
+
+    // Small breathing gap between batches (not strictly required for Twitch but polite)
+    if(i+BATCH<toCheck.length && !state.aborted) await sleep(200);
+  }
+
+  // Done
+  state.running=false;
+  goBtn.disabled=false;
+  stopBtn.style.display='none';
+
+  const availCount=state.results.filter(r=>r.available).length;
+  const checkedCount=state.results.length;
+
+  if(state.aborted){
+    setProgress(done,total,'Stopped.');
+    progressLabel.textContent='Stopped early';
+  } else {
+    progressFill.style.width='100%';
+    progressLabel.textContent='Done';
+    progressCount.textContent=`${checkedCount} checked`;
+    progressStatus.textContent=`Found ${availCount} available handle${availCount!==1?'s':''}.`;
+  }
+
+  // Update results header
+  resultsTitle.textContent=availCount>0?`${availCount} available handle${availCount!==1?'s':''}`:'No available handles found';
+  resultsMeta.textContent=`${checkedCount} checked · ${state.length}-char · ${state.platform}`;
+  if(availCount>0) copyAvailBtn.style.display='inline-flex';
+  if(checkedCount>0) copyAllBtn.style.display='inline-flex';
+
+  // Sort: available first
+  sortResults();
+}
+
+function sortResults(){
+  const pills=[...resultsGrid.querySelectorAll('.result-pill')];
+  const avail=pills.filter(p=>p.classList.contains('available'));
+  const taken=pills.filter(p=>p.classList.contains('taken'));
+
+  resultsGrid.innerHTML='';
+
+  if(avail.length){
+    const d=document.createElement('div');
+    d.className='divider';
+    d.textContent='Available';
+    resultsGrid.appendChild(d);
+    for(const p of avail) resultsGrid.appendChild(p);
+  }
+  if(taken.length){
+    const d=document.createElement('div');
+    d.className='divider';
+    d.textContent='Taken';
+    resultsGrid.appendChild(d);
+    for(const p of taken) resultsGrid.appendChild(p);
+  }
+}
+
+function makePill(username, status){
+  const div=document.createElement('div');
+  div.className=`result-pill ${status}`;
+  div.dataset.username=username;
+  div.innerHTML=`<span>${username}</span><span class="status-dot"></span>`;
+  return div;
+}
+
+function setProgress(done,total,status=''){
+  const pct=total>0?Math.round((done/total)*100):0;
+  progressFill.style.width=pct+'%';
+  progressCount.textContent=`${done} / ${total}`;
+  if(status) progressStatus.textContent=status;
+  else progressStatus.textContent='';
+  progressLabel.textContent='Scanning…';
+}
+
+function setError(msg){
+  errMsg.textContent=msg;
+  errMsg.classList.toggle('show',!!msg);
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+</script>
+</body>
+</html>

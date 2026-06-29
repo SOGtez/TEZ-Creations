@@ -12,6 +12,17 @@
 */
 const DROPS = [
   {
+    id: "006",
+    title: "Handle Hunter",
+    description:
+      "Hunt rare, short usernames by character count. Pick a platform and a length, choose your style filters (real words, animals, nature, l33t, combos), and we generate meaningful candidates and check availability live against Twitch. Copy the open ones and go claim them.",
+    date: "2026-06-29",
+    type: "tool",
+    category: "Apps",
+    image: "",
+    action: { kind: "use", url: "drops/006/index.html" }
+  },
+  {
     id: "005",
     title: "Ghosted",
     description:
