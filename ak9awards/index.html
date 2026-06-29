@@ -215,7 +215,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
 let TOK = sessionStorage.getItem('ak9_tok') || '';
 let USER = null; try { USER = JSON.parse(sessionStorage.getItem('ak9_user') || 'null'); } catch (_) {}
 let BALLOT = null;          // { settings, awards }
-let ME = null;             // status from /api/ak9-me
+let ME = null;             // status from /api/ak9?route=me
 let selection = {};        // awardId -> nomineeId
 let deadlineMs = null, countTimer = null;
 
@@ -348,7 +348,7 @@ function updateProgress() {
 }
 async function submitVote() {
   const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
-  const r = await api('/api/ak9-vote', { method: 'POST', body: { choices: selection } });
+  const r = await api('/api/ak9?route=vote', { method: 'POST', body: { choices: selection } });
   if (r.ok) { toast('Your ballot is in 🏆'); ME.hasVoted = true; ME.choices = Object.assign({}, selection); renderVoted(); return; }
   const err = r.json.error || 'Could not submit — try again.';
   if (err === 'already_voted') { toast('You’ve already voted.', true); ME.hasVoted = true; boot(); return; }
@@ -415,7 +415,7 @@ function renderClosed() {
 /* ---------- status load + routing ---------- */
 async function loadMe() {
   if (!TOK) { ME = null; return; }
-  const r = await api('/api/ak9-me');
+  const r = await api('/api/ak9?route=me');
   if (r.status === 401) { logout(); return; }
   if (r.ok) ME = r.json; else ME = null;
 }
@@ -462,7 +462,7 @@ async function handleReturn() {
 
   view.innerHTML = '<div class="spin"></div>';
   const role = st.role === 'broadcaster' ? 'broadcaster' : 'voter';
-  const r = await api('/api/ak9-auth', { method: 'POST', body: { code, redirect_uri: REDIRECT, role } });
+  const r = await api('/api/ak9?route=auth', { method: 'POST', body: { code, redirect_uri: REDIRECT, role } });
   if (!r.ok) { toast(r.json.error || 'Login failed — try again.', true); return; }
 
   if (role === 'broadcaster') { location.replace('/ak9awards/admin'); return; }
@@ -509,7 +509,7 @@ async function init() {
   await handleReturn();
   // public ballot (always)
   try {
-    const b = await api('/api/ak9-ballot');
+    const b = await api('/api/ak9?route=ballot');
     if (b.ok) BALLOT = b.json;
     else if (b.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
     else BALLOT = { settings: {}, awards: [] };

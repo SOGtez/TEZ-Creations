@@ -183,7 +183,7 @@ const twitchBtn = (label, role) => '<button class="btn" type="button" onclick="a
 /* ---------- load ---------- */
 async function load() {
   if (!TOK) { gateMsg('Admin sign-in', 'Log in with the Twitch account that has admin access.', twitchBtn('Log in with Twitch')); return; }
-  const r = await api('/api/ak9-admin');
+  const r = await api('/api/ak9?route=admin');
   if (r.status === 401) { gateMsg('Session expired', 'Please log in again.', twitchBtn('Log in with Twitch')); return; }
   if (r.status === 403) { gateMsg('Not an admin account', 'This Twitch account isn’t on the AK9 admin list. Ask an owner to add you.', '<button class="btn ghost" onclick="ak9Logout()" style="margin-top:6px">Switch account</button>'); return; }
   if (!r.ok) { gateMsg('Couldn’t load', esc(r.json.error || 'Try again in a moment.'), twitchBtn('Retry')); return; }
@@ -314,7 +314,7 @@ window.ak9SaveAward = async function (btn, id) {
   };
   if (!award.title) { toast('Award needs a title.', true); return; }
   btn.disabled = true;
-  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'save_award', award } });
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'save_award', award } });
   btn.disabled = false;
   if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
   toast('Award saved'); await reload();
@@ -322,7 +322,7 @@ window.ak9SaveAward = async function (btn, id) {
 window.ak9DeleteAward = async function (id, title) {
   if (!id) { toast('Remove the unsaved award by reloading.'); return; }
   if (!confirm('Delete “' + title + '”? This cannot be undone.')) return;
-  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'delete_award', id } });
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'delete_award', id } });
   if (!r.ok) { toast(r.json.error || 'Delete failed.', true); return; }
   toast('Award deleted'); await reload();
 };
@@ -359,7 +359,7 @@ window.ak9SaveSettings = async function (btn) {
   const body = { action: 'save_settings', month_label: $('#s-month').value.trim(),
     voting_open: $('#s-open').checked, deadline: dl ? new Date(dl).toISOString() : null };
   btn.disabled = true;
-  const r = await api('/api/ak9-admin', { method: 'POST', body });
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body });
   btn.disabled = false;
   if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
   toast('Settings saved'); await reload();
@@ -368,19 +368,19 @@ window.ak9ClearDeadline = function () { $('#s-deadline').value = ''; toast('Dead
 window.ak9ResetVotes = async function () {
   if (!confirm('Delete ALL votes? This cannot be undone.')) return;
   if (!confirm('Really reset? Every voter will be able to vote again.')) return;
-  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'reset_votes', confirm: true } });
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'reset_votes', confirm: true } });
   if (!r.ok) { toast(r.json.error || 'Reset failed.', true); return; }
   toast('All votes cleared'); await reload();
 };
 window.ak9ResetVoter = async function (uid, login) {
   if (!uid) { toast('Can’t reset — missing voter id.', true); return; }
   if (!confirm('Reset @' + login + '’s vote? They’ll be able to vote again.')) return;
-  const r = await api('/api/ak9-admin', { method: 'POST', body: { action: 'reset_voter', twitch_user_id: uid } });
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'reset_voter', twitch_user_id: uid } });
   if (!r.ok) { toast(r.json.error || 'Reset failed.', true); return; }
   toast('@' + login + ' can vote again'); await reload();
 };
 
-async function reload() { const r = await api('/api/ak9-admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } }
+async function reload() { const r = await api('/api/ak9?route=admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } }
 
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
