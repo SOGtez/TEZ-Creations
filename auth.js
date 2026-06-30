@@ -13,71 +13,77 @@
      logged in it resolves true (the paywall takes over from there); if
      not, the panel re-appears with that reason. They can still exit.
 
-   ⚠️ Accounts are stored in localStorage for now — this is the UI/UX
-   layer only. When the real backend lands, swap the two functions
-   marked `BACKEND HOOK` for calls to /api/auth and nothing else changes.
-   Do NOT treat localStorage passwords as secure; real hashing happens
-   server-side later.
+   Accounts are real now: this talks to /api/auth (Supabase + scrypt hashing
+   server-side). We keep only a signed session token + a cached public profile
+   in localStorage; the server is the source of truth and revalidates on load.
    ============================================================ */
 (function () {
   "use strict";
 
-  var USERS_KEY = "tez_users";       // { email: { name, email, pass } }
-  var CURRENT_KEY = "tez_user";      // current logged-in email (persists)
+  var TOKEN_KEY = "tez_token";       // signed session token (HMAC, 30d)
+  var USER_KEY = "tez_user";         // cached public profile {id,name,email,pro}
   var DISMISS_KEY = "tez_auth_seen"; // session flag: don't re-nag after dismiss
+  var API = "/api/auth";
 
-  /* ---------- tiny store helpers ---------- */
-  function readUsers() {
-    try { return JSON.parse(localStorage.getItem(USERS_KEY) || "{}"); }
-    catch (e) { return {}; }
-  }
-  function writeUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
   function norm(email) { return String(email || "").trim().toLowerCase(); }
 
-  /* Placeholder obfuscation — NOT real security. Replaced by server hashing. */
-  function weakHash(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) { h = (h << 5) - h + s.charCodeAt(i); h |= 0; }
-    return "h" + (h >>> 0).toString(36);
-  }
-
-  /* ---------- account model (BACKEND HOOK points) ---------- */
-  // BACKEND HOOK: replace with `await fetch('/api/auth?route=signup', …)`
-  function signUp(name, email, pass) {
-    email = norm(email);
-    if (!name || name.trim().length < 2) return { error: "Enter your name." };
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
-    if (!pass || pass.length < 6) return { error: "Password must be at least 6 characters." };
-    var users = readUsers();
-    if (users[email]) return { error: "An account with that email already exists. Log in instead." };
-    users[email] = { name: name.trim(), email: email, pass: weakHash(pass) };
-    writeUsers(users);
-    return { user: { name: users[email].name, email: email } };
-  }
-
-  // BACKEND HOOK: replace with `await fetch('/api/auth?route=login', …)`
-  function logIn(email, pass) {
-    email = norm(email);
-    var users = readUsers();
-    var rec = users[email];
-    if (!rec || rec.pass !== weakHash(pass || "")) return { error: "Wrong email or password." };
-    return { user: { name: rec.name, email: email } };
-  }
-
-  /* ---------- session ---------- */
+  /* ---------- session store (cached; the server is the source of truth) ---------- */
+  function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
   function currentUser() {
-    var email = localStorage.getItem(CURRENT_KEY);
-    if (!email) return null;
-    var rec = readUsers()[email];
-    return rec ? { name: rec.name, email: email } : null;
+    if (!getToken()) return null;
+    try { return JSON.parse(localStorage.getItem(USER_KEY) || "null"); }
+    catch (e) { return null; }
   }
-  function setCurrent(email) { localStorage.setItem(CURRENT_KEY, email); }
+  function setSession(token, user) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+  function clearSession() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  }
 
   var listeners = [];
   function emitChange() {
     var u = currentUser();
     renderChip(u);
     listeners.forEach(function (cb) { try { cb(u); } catch (e) {} });
+  }
+
+  /* ---------- API ---------- */
+  function api(route, opts) {
+    opts = opts || {};
+    var headers = {};
+    if (opts.body) headers["Content-Type"] = "application/json";
+    if (opts.auth) { var t = getToken(); if (t) headers.Authorization = "Bearer " + t; }
+    return fetch(API + "?route=" + route, {
+      method: opts.method || "POST",
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        return { ok: r.ok, status: r.status, data: j };
+      });
+    });
+  }
+
+  // signUp / logIn return a Promise resolving to { user } or { error }.
+  function signUp(name, email, pass) {
+    if (!name || name.trim().length < 2) return Promise.resolve({ error: "Enter your name." });
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(norm(email))) return Promise.resolve({ error: "Enter a valid email." });
+    if (!pass || pass.length < 6) return Promise.resolve({ error: "Password must be at least 6 characters." });
+    return api("signup", { body: { name: name.trim(), email: norm(email), password: pass } }).then(onAuth);
+  }
+  function logIn(email, pass) {
+    if (!norm(email) || !pass) return Promise.resolve({ error: "Enter your email and password." });
+    return api("login", { body: { email: norm(email), password: pass } }).then(onAuth);
+  }
+  function onAuth(res) {
+    if (!res.ok || !res.data || !res.data.token) {
+      return { error: (res.data && res.data.error) || "Something went wrong. Try again." };
+    }
+    setSession(res.data.token, res.data.user);
+    return { user: res.data.user };
   }
 
   /* ---------- DOM: the modal ---------- */
@@ -185,17 +191,31 @@
     }
   }
 
+  var busy = false;
+  function setBusy(b) {
+    busy = b;
+    if (!submitBtn) return;
+    submitBtn.disabled = b;
+    submitBtn.textContent = b ? "Working…" : (mode === "signup" ? "Create account" : "Log in");
+  }
+
   function onSubmit(e) {
     e.preventDefault();
+    if (busy) return;
     var name = fields[0].value;
     var email = fields[1].value;
     var pass = fields[2].value;
-    var res = mode === "signup" ? signUp(name, email, pass) : logIn(email, pass);
-    if (res.error) { showErr(res.error); return; }
-    setCurrent(res.user.email);
-    emitChange();
-    close(false);
-    if (pendingResolve) { pendingResolve(true); pendingResolve = null; }
+    setBusy(true);
+    (mode === "signup" ? signUp(name, email, pass) : logIn(email, pass)).then(function (res) {
+      setBusy(false);
+      if (res.error) { showErr(res.error); return; }
+      emitChange();
+      close(false);
+      if (pendingResolve) { pendingResolve(true); pendingResolve = null; }
+    }).catch(function () {
+      setBusy(false);
+      showErr("Couldn't reach the server. Try again.");
+    });
   }
 
   /* ---------- open / close ---------- */
@@ -245,7 +265,7 @@
       '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + '</span>' +
       '<button class="auth-logout" type="button">Log out</button>';
     chip.querySelector(".auth-logout").addEventListener("click", function () {
-      localStorage.removeItem(CURRENT_KEY);
+      clearSession();
       emitChange();
     });
   }
@@ -260,7 +280,7 @@
     isLoggedIn: function () { return !!currentUser(); },
     currentUser: currentUser,
     open: open,
-    logout: function () { localStorage.removeItem(CURRENT_KEY); emitChange(); },
+    logout: function () { clearSession(); emitChange(); },
     onChange: function (cb) { if (typeof cb === "function") listeners.push(cb); },
     // Gate a premium action. Resolves true if logged in (now or after they
     // sign up), false if they dismiss. The paywall layer chains off `true`.
@@ -276,7 +296,20 @@
   /* ---------- boot ---------- */
   function boot() {
     var user = currentUser();
-    renderChip(user);
+    renderChip(user); // optimistic from cache so the chip shows instantly
+    // Revalidate the token with the server; refresh the cached profile or sign out.
+    if (user) {
+      api("me", { method: "GET", auth: true }).then(function (res) {
+        if (res.ok && res.data && res.data.user) {
+          setSession(getToken(), res.data.user);
+          emitChange();
+        } else if (res.status === 401) {
+          clearSession();
+          emitChange();
+        }
+        // other errors (offline/500): keep the optimistic session
+      }).catch(function () { /* offline — keep cached session */ });
+    }
     // Auto-greet on the catalog: only if logged out and not dismissed this session.
     if (!user && !sessionStorage.getItem(DISMISS_KEY) && document.body.hasAttribute("data-auth-greet")) {
       setTimeout(function () { if (!currentUser()) open({ mode: "signup" }); }, 700);

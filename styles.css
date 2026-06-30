@@ -1339,6 +1339,7 @@ body.app-shell {
 .auth-err.show { height: auto; min-height: 18px; opacity: 1; }
 
 .auth-submit { width: 100%; justify-content: center; margin-top: 4px; }
+.auth-submit:disabled { opacity: 0.65; cursor: default; }
 
 .auth-switch { font-size: 13.5px; color: var(--muted); text-align: center; margin-top: 16px; }
 .auth-switch button {
