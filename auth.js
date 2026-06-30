@@ -286,6 +286,7 @@
   window.TezAuth = {
     isLoggedIn: function () { return !!currentUser(); },
     currentUser: currentUser,
+    token: getToken, // signed session token, for authenticated calls elsewhere
     open: open,
     logout: function () { clearSession(); emitChange(); },
     onChange: function (cb) { if (typeof cb === "function") listeners.push(cb); },
