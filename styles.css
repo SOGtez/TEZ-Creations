@@ -1257,7 +1257,7 @@ body.app-shell {
   background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
   box-shadow: 0 4px 14px var(--accent-glow);
   transform: translateX(0);
-  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 0;
 }
 .auth-tabs.is-login .auth-tab-slider { transform: translateX(100%); }
@@ -1281,18 +1281,18 @@ body.app-shell {
 .auth-form { display: flex; flex-direction: column; }
 .auth-field { display: flex; flex-direction: column; gap: 7px; text-align: left; margin-bottom: 14px; }
 /* Name field collapses/expands so the panel resizes smoothly and the field
-   fades + slides in when switching to Sign up. grid-template-rows 1fr->0fr is
-   the reliable height-collapse (max-height fails on flex items). */
+   fades + slides in when switching to Sign up. Height is driven in px by
+   auth.js (setNameOpen) so collapse and expand are perfectly symmetric —
+   a fixed max-height would let expand finish early (looks too fast). */
 .auth-field.js-name {
   display: block;
   overflow: hidden;
   min-height: 0; /* let this flex item shrink below content so it can collapse */
-  max-height: 200px;
   margin-bottom: 14px;
-  transition: max-height 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.32s ease,
-    margin-bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease,
+    margin-bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .auth-field.js-name .auth-field-inner {
   display: flex;
@@ -1300,7 +1300,6 @@ body.app-shell {
   gap: 7px;
 }
 .auth-field.js-name.collapsed {
-  max-height: 0;
   margin-bottom: 0;
   opacity: 0;
   transform: translateY(-6px);

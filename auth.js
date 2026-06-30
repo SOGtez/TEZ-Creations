@@ -83,6 +83,26 @@
   /* ---------- DOM: the modal ---------- */
   var overlay, card, errEl, form, tabs, tabsEl, fields, submitBtn, reasonEl, switchEl;
   var mode = "signup"; // 'signup' | 'login'
+  var firstSet = true; // first setMode after open shouldn't animate the Name field
+
+  // Drive the Name field's height in px so collapse and expand are symmetric.
+  function setNameOpen(field, open, instant) {
+    clearTimeout(field._collapseT);
+    if (open) {
+      field.classList.remove("collapsed");
+      if (instant) { field.style.height = "auto"; return; }
+      field.style.height = "0px";
+      void field.offsetHeight; // reflow so the transition has a start value
+      field.style.height = field.scrollHeight + "px";
+      field._collapseT = setTimeout(function () { field.style.height = "auto"; }, 540);
+    } else {
+      if (instant) { field.classList.add("collapsed"); field.style.height = "0px"; return; }
+      field.style.height = field.scrollHeight + "px"; // pin current height
+      void field.offsetHeight;
+      field.classList.add("collapsed");
+      field.style.height = "0px";
+    }
+  }
 
   function buildModal() {
     if (overlay) return;
@@ -145,7 +165,8 @@
     tabs.forEach(function (t) { t.classList.toggle("is-active", t.getAttribute("data-mode") === m); });
     tabsEl.classList.toggle("is-login", m === "login"); // glide the pill
     var nameField = overlay.querySelector(".js-name");
-    nameField.classList.toggle("collapsed", m !== "signup"); // smooth resize + fade
+    setNameOpen(nameField, m === "signup", firstSet); // smooth resize + fade
+    firstSet = false;
     submitBtn.textContent = m === "signup" ? "Create account" : "Log in";
     fields[2].setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
     switchEl.innerHTML = m === "signup"
@@ -183,6 +204,7 @@
   function open(opts) {
     opts = opts || {};
     buildModal();
+    firstSet = true; // open in the target mode without animating the Name field
     setMode(opts.mode || "signup");
     fields[0].value = fields[1].value = fields[2].value = "";
     if (opts.reason) { reasonEl.textContent = opts.reason; reasonEl.hidden = false; }
