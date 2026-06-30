@@ -70,7 +70,17 @@ function verifyToken(token) {
   return p;
 }
 
-const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email, pro: !!row.pro });
+// Friendly public id, e.g. "TEZ-7F3K2". Crockford-ish alphabet: no 0/1/I/L/O/U
+// so it's easy to read aloud and can't be confused.
+const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ';
+function genCode() {
+  const bytes = crypto.randomBytes(5);
+  let s = '';
+  for (let i = 0; i < 5; i++) s += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+  return 'TEZ-' + s;
+}
+
+const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email, code: row.code || null, pro: !!row.pro });
 const issue = (row) => ({ token: signToken({ uid: row.id, exp: Date.now() + TOKEN_TTL_MS }), user: publicUser(row) });
 
 const norm = (e) => String(e || '').trim().toLowerCase();
@@ -116,13 +126,24 @@ async function signup(req, res) {
   if (!EMAIL_RE.test(email)) { res.status(400).json({ error: 'Enter a valid email.' }); return; }
   if (pass.length < 6) { res.status(400).json({ error: 'Password must be at least 6 characters.' }); return; }
 
-  const ins = await sb('POST', 'tez_users', {
-    body: { email, name, pass_hash: hashPassword(pass) },
-    prefer: 'return=representation',
-  });
-  if (ins.status === 409) { res.status(409).json({ error: 'An account with that email already exists. Log in instead.' }); return; }
-  if (!ins.ok || !ins.json || !ins.json[0]) { res.status(502).json({ error: 'Could not create your account. Try again.' }); return; }
-  res.status(200).json(issue(ins.json[0]));
+  const pass_hash = hashPassword(pass);
+  // Insert with a generated code. A 409 is either the email (real "taken") or a
+  // rare code collision — disambiguate by checking the email, and regenerate the
+  // code on collision.
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const ins = await sb('POST', 'tez_users', {
+      body: { email, name, pass_hash, code: genCode() },
+      prefer: 'return=representation',
+    });
+    if (ins.ok && ins.json && ins.json[0]) { res.status(200).json(issue(ins.json[0])); return; }
+    if (ins.status === 409) {
+      const ex = await sb('GET', 'tez_users?email=eq.' + encodeURIComponent(email) + '&select=id&limit=1');
+      if (ex.json && ex.json[0]) { res.status(409).json({ error: 'An account with that email already exists. Log in instead.' }); return; }
+      continue; // code collision → try a new code
+    }
+    break; // unexpected error
+  }
+  res.status(502).json({ error: 'Could not create your account. Try again.' });
 }
 
 async function login(req, res) {
@@ -131,7 +152,7 @@ async function login(req, res) {
   const email = norm(b.email);
   const pass = String(b.password || '');
   const q = await sb('GET', 'tez_users?email=eq.' + encodeURIComponent(email) +
-    '&select=id,name,email,pass_hash,pro&limit=1');
+    '&select=id,name,email,pass_hash,code,pro&limit=1');
   const row = q.json && q.json[0];
   // Same generic message whether the email is unknown or the password is wrong.
   if (!row || !verifyPassword(pass, row.pass_hash)) {
@@ -144,7 +165,7 @@ async function login(req, res) {
 async function me(req, res) {
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
-  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,pro&limit=1');
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro&limit=1');
   const row = q.json && q.json[0];
   if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
   res.status(200).json({ user: publicUser(row) });

@@ -1393,7 +1393,15 @@ body.app-shell {
   font-size: 13px;
   color: var(--text);
 }
+.auth-chip .auth-chip-meta { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
 .auth-chip .auth-chip-name { font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth-chip .auth-chip-code {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--accent-bright);
+  opacity: 0.85;
+}
 .auth-chip .auth-chip-avatar {
   width: 26px;
   height: 26px;

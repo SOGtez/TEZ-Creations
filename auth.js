@@ -262,7 +262,10 @@
     var initial = (user.name || user.email).trim().charAt(0).toUpperCase();
     chip.innerHTML =
       '<span class="auth-chip-avatar">' + initial + '</span>' +
-      '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + '</span>' +
+      '<span class="auth-chip-meta">' +
+        '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + '</span>' +
+        (user.code ? '<span class="auth-chip-code">' + escapeHtml(user.code) + '</span>' : '') +
+      '</span>' +
       '<button class="auth-logout" type="button">Log out</button>';
     chip.querySelector(".auth-logout").addEventListener("click", function () {
       clearSession();
