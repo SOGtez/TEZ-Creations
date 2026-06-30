@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="page app-shell fade-in">
+<body class="page app-shell fade-in" data-auth-greet>
   <div class="grid-wrap"><div class="grid"></div></div>
   <div class="grain"></div>
 
@@ -27,6 +27,7 @@
 
   <script src="drops.js"></script>
   <script src="sidebar.js"></script>
+  <script src="auth.js"></script>
   <script>
     /* Soft gate: bounce to the front door if they haven't entered the password */
     if (!sessionStorage.getItem("tez_access")) {
