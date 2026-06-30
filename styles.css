@@ -1164,6 +1164,12 @@ body.app-shell {
    Auth panel — sign up / log in modal (auth.js)
    Matches the site tokens; appears over the drops catalog.
    ============================================================ */
+/* Freeze the living background while the modal is open. The overlay's
+   backdrop-filter must re-blur the whole screen every frame the grid drifts;
+   pausing it makes the blurred backdrop static (cached) so typing isn't laggy. */
+body.auth-open .grid,
+body.auth-open .glow { animation-play-state: paused; }
+
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -1172,9 +1178,9 @@ body.app-shell {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(3, 6, 4, 0.62);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  background: rgba(3, 6, 4, 0.72);
+  backdrop-filter: blur(9px) saturate(115%);
+  -webkit-backdrop-filter: blur(9px) saturate(115%);
   opacity: 0;
   transition: opacity 0.35s ease;
 }

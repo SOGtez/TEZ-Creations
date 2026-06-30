@@ -18,6 +18,7 @@
 // HMAC-signed tokens (30 days). The DB never stores a plaintext password.
 
 import crypto from 'node:crypto';
+import dns from 'node:dns';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -86,6 +87,22 @@ const issue = (row) => ({ token: signToken({ uid: row.id, exp: Date.now() + TOKE
 const norm = (e) => String(e || '').trim().toLowerCase();
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+// Does this email's domain actually exist and accept mail? Catches typos and
+// made-up domains (e.g. "@gmial.con"). It does NOT prove the specific mailbox
+// exists or that the user owns it — that needs a confirmation-link flow.
+async function emailDomainDeliverable(email) {
+  const domain = (email.split('@')[1] || '').trim();
+  if (!domain) return false;
+  try {
+    const mx = await dns.promises.resolveMx(domain);
+    if (mx && mx.some((r) => r.exchange)) return true;
+  } catch (_) { /* no MX — fall through to A-record check (RFC 5321 fallback) */ }
+  try {
+    const a = await dns.promises.resolve(domain); // A records
+    return Array.isArray(a) && a.length > 0;
+  } catch (_) { return false; }
+}
+
 function readBody(req) {
   let b = req.body;
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch (_) { b = {}; } }
@@ -125,6 +142,10 @@ async function signup(req, res) {
   if (name.length < 2) { res.status(400).json({ error: 'Enter your name.' }); return; }
   if (!EMAIL_RE.test(email)) { res.status(400).json({ error: 'Enter a valid email.' }); return; }
   if (pass.length < 6) { res.status(400).json({ error: 'Password must be at least 6 characters.' }); return; }
+  if (!(await emailDomainDeliverable(email))) {
+    res.status(400).json({ error: "That email domain doesn't exist — check for a typo." });
+    return;
+  }
 
   const pass_hash = hashPassword(pass);
   // Insert with a generated code. A 409 is either the email (real "taken") or a

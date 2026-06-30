@@ -230,6 +230,7 @@
     if (opts.reason) { reasonEl.textContent = opts.reason; reasonEl.hidden = false; }
     else { reasonEl.hidden = true; }
     overlay.hidden = false;
+    document.body.classList.add("auth-open"); // pause bg animation → smooth typing
     // next frame so the CSS transition runs
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
@@ -247,7 +248,10 @@
       sessionStorage.setItem(DISMISS_KEY, "1");
       if (pendingResolve) { pendingResolve(false); pendingResolve = null; }
     }
-    setTimeout(function () { if (overlay) overlay.hidden = true; }, 380);
+    setTimeout(function () {
+      if (overlay) overlay.hidden = true;
+      document.body.classList.remove("auth-open"); // resume bg animation
+    }, 380);
   }
 
   /* ---------- account chip ---------- */
