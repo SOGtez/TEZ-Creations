@@ -1238,15 +1238,32 @@ body.app-shell {
 .auth-reason[hidden] { display: none; }
 
 .auth-tabs {
+  position: relative;
   display: flex;
-  gap: 4px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   padding: 4px;
   margin-bottom: 22px;
 }
+/* The green pill that glides between the two tabs */
+.auth-tab-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%);
+  box-shadow: 0 4px 14px var(--accent-glow);
+  transform: translateX(0);
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+.auth-tabs.is-login .auth-tab-slider { transform: translateX(100%); }
 .auth-tab {
+  position: relative;
+  z-index: 1;
   flex: 1;
   font-family: var(--font-sans);
   font-weight: 600;
@@ -1257,13 +1274,38 @@ body.app-shell {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.25s ease, background 0.25s ease;
+  transition: color 0.3s ease;
 }
-.auth-tab.is-active { color: #04160b; background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent-deep) 100%); }
+.auth-tab.is-active { color: #04160b; }
 
-.auth-form { display: flex; flex-direction: column; gap: 14px; }
-.auth-field { display: flex; flex-direction: column; gap: 7px; text-align: left; }
-.auth-field.hide { display: none; }
+.auth-form { display: flex; flex-direction: column; }
+.auth-field { display: flex; flex-direction: column; gap: 7px; text-align: left; margin-bottom: 14px; }
+/* Name field collapses/expands so the panel resizes smoothly and the field
+   fades + slides in when switching to Sign up. grid-template-rows 1fr->0fr is
+   the reliable height-collapse (max-height fails on flex items). */
+.auth-field.js-name {
+  display: block;
+  overflow: hidden;
+  min-height: 0; /* let this flex item shrink below content so it can collapse */
+  max-height: 200px;
+  margin-bottom: 14px;
+  transition: max-height 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.32s ease,
+    margin-bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.auth-field.js-name .auth-field-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.auth-field.js-name.collapsed {
+  max-height: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
 .auth-field > span {
   font-size: 11px;
   font-weight: 600;
@@ -1383,4 +1425,5 @@ body.app-shell {
   .auth-card { transform: none; }
   .auth-card.shake { animation: none; }
   .auth-close:hover { transform: none; }
+  .auth-tab-slider, .auth-field.js-name { transition: none; }
 }

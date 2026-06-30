@@ -81,7 +81,7 @@
   }
 
   /* ---------- DOM: the modal ---------- */
-  var overlay, card, errEl, form, tabs, fields, submitBtn, reasonEl, switchEl;
+  var overlay, card, errEl, form, tabs, tabsEl, fields, submitBtn, reasonEl, switchEl;
   var mode = "signup"; // 'signup' | 'login'
 
   function buildModal() {
@@ -95,12 +95,13 @@
         '<div class="auth-brand">TEZ<span>✦</span></div>' +
         '<p class="auth-reason" hidden></p>' +
         '<div class="auth-tabs">' +
+          '<span class="auth-tab-slider" aria-hidden="true"></span>' +
           '<button type="button" class="auth-tab is-active" data-mode="signup">Sign up</button>' +
           '<button type="button" class="auth-tab" data-mode="login">Log in</button>' +
         '</div>' +
         '<form class="auth-form" novalidate>' +
-          '<label class="auth-field js-name"><span>Name</span>' +
-            '<input class="auth-input" type="text" autocomplete="name" placeholder="What should we call you?"></label>' +
+          '<label class="auth-field js-name"><div class="auth-field-inner"><span>Name</span>' +
+            '<input class="auth-input" type="text" autocomplete="name" placeholder="What should we call you?"></div></label>' +
           '<label class="auth-field"><span>Email</span>' +
             '<input class="auth-input" type="email" autocomplete="email" placeholder="you@email.com"></label>' +
           '<label class="auth-field"><span>Password</span>' +
@@ -117,6 +118,7 @@
     errEl = overlay.querySelector(".auth-err");
     form = overlay.querySelector(".auth-form");
     tabs = overlay.querySelectorAll(".auth-tab");
+    tabsEl = overlay.querySelector(".auth-tabs");
     fields = overlay.querySelectorAll(".auth-input");
     submitBtn = overlay.querySelector(".auth-submit");
     reasonEl = overlay.querySelector(".auth-reason");
@@ -141,8 +143,9 @@
   function setMode(m) {
     mode = m;
     tabs.forEach(function (t) { t.classList.toggle("is-active", t.getAttribute("data-mode") === m); });
+    tabsEl.classList.toggle("is-login", m === "login"); // glide the pill
     var nameField = overlay.querySelector(".js-name");
-    nameField.classList.toggle("hide", m !== "signup");
+    nameField.classList.toggle("collapsed", m !== "signup"); // smooth resize + fade
     submitBtn.textContent = m === "signup" ? "Create account" : "Log in";
     fields[2].setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
     switchEl.innerHTML = m === "signup"
