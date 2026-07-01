@@ -18,6 +18,11 @@ body.auth-open .grid,
 body.auth-open .bg-grid,
 body.auth-open .glow { animation-play-state: paused; }
 
+/* Lock the page behind any open overlay: no background scroll, no interaction.
+   Closing removes .auth-open and restores scrolling. */
+body.auth-open { overflow: hidden; }
+html:has(body.auth-open) { overflow: hidden; }
+
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -332,11 +337,13 @@ body.auth-open .glow { animation-play-state: paused; }
   background: rgba(3, 6, 4, 0.72);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   opacity: 0; transition: opacity 0.32s ease;
+  overflow-y: auto; /* tall card scrolls within the overlay, not the page */
 }
 .pro-overlay.show { opacity: 1; }
 .pro-overlay[hidden] { display: none; }
 .pro-card {
   position: relative; width: 100%; max-width: 380px;
+  max-height: calc(100vh - 48px); overflow-y: auto;
   background: var(--bg-2, #0a0f0b);
   border: 1px solid rgba(43, 212, 106, 0.35);
   border-radius: 18px; padding: 32px 28px 26px;
