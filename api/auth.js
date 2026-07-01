@@ -96,8 +96,24 @@ const publicUser = (row) => {
     pro: TIER_RANK[tier] >= TIER_RANK.pro, // true for pro AND exclusive
     exclusive: tier === 'exclusive',
     created_at: row.created_at || null,
+    pro_until: row.pro_until || null,
   };
 };
+
+// Time-limited grants: once pro_until passes, revert the account to free. We do it
+// lazily on login / session-refresh and self-heal the DB. A NULL pro_until = permanent.
+function isExpiredGrant(row) {
+  return row.pro_until && Date.now() > Date.parse(row.pro_until);
+}
+async function applyExpiry(row) {
+  if (!row || !isExpiredGrant(row)) return row;
+  row.tier = 'free';
+  row.pro_until = null;
+  try {
+    await sb('PATCH', 'tez_users?id=eq.' + encodeURIComponent(row.id), { body: { tier: 'free', pro_until: null } });
+  } catch (_) { /* best-effort; the in-memory downgrade still applies this request */ }
+  return row;
+}
 const issue = (row) => ({ token: signToken({ uid: row.id, exp: Date.now() + TOKEN_TTL_MS }), user: publicUser(row) });
 
 const norm = (e) => String(e || '').trim().toLowerCase();
@@ -191,22 +207,24 @@ async function login(req, res) {
   const email = norm(b.email);
   const pass = String(b.password || '');
   const q = await sb('GET', 'tez_users?email=eq.' + encodeURIComponent(email) +
-    '&select=id,name,email,pass_hash,code,pro,tier&limit=1');
+    '&select=id,name,email,pass_hash,code,pro,tier,pro_until&limit=1');
   const row = q.json && q.json[0];
   // Same generic message whether the email is unknown or the password is wrong.
   if (!row || !verifyPassword(pass, row.pass_hash)) {
     res.status(401).json({ error: 'Wrong email or password.' });
     return;
   }
+  await applyExpiry(row);
   res.status(200).json(issue(row));
 }
 
 async function me(req, res) {
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
-  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier,created_at&limit=1');
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier,created_at,pro_until&limit=1');
   const row = q.json && q.json[0];
   if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
+  await applyExpiry(row);
   res.status(200).json({ user: publicUser(row) });
 }
 

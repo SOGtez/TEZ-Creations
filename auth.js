@@ -459,9 +459,14 @@
     pf.tier.textContent = tierLabel;
     pf.email.textContent = user.email || "";
     pf.code.textContent = user.code || "—";
+    var until = "";
+    if (user.pro_until) {
+      try { until = new Date(user.pro_until).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+      catch (e) { until = ""; }
+    }
     pf.plan.innerHTML = tier === "free"
       ? 'Free · <button type="button" class="pr-upgrade">Go Pro →</button>'
-      : (tier === "exclusive" ? "Exclusive" : "Pro");
+      : (tier === "exclusive" ? "Exclusive" : ("Pro" + (until ? " · until " + until : "")));
     pf.since.textContent = fmtSince(user.created_at);
     pf.nameInput.value = user.name || "";
     pf.cur.value = ""; pf.newpw.value = "";
