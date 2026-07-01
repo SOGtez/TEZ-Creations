@@ -1456,6 +1456,7 @@ body.auth-open .glow { animation-play-state: paused; }
   opacity: 0; transition: opacity 0.32s ease;
 }
 .pro-overlay.show { opacity: 1; }
+.pro-overlay[hidden] { display: none; }
 .pro-card {
   position: relative; width: 100%; max-width: 380px;
   background: var(--bg-2, #0a0f0b);
@@ -1551,6 +1552,7 @@ body.auth-open .glow { animation-play-state: paused; }
   opacity: 0; transition: opacity 0.32s ease;
 }
 .profile-overlay.show { opacity: 1; }
+.profile-overlay[hidden] { display: none; }
 .profile-card {
   position: relative; width: 100%; max-width: 420px;
   max-height: calc(100vh - 48px); overflow-y: auto;
