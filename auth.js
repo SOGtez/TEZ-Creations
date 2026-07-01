@@ -265,13 +265,15 @@
     }
     var initial = (user.name || user.email).trim().charAt(0).toUpperCase();
     var tier = user.tier || "free";
-    var tierBadge = tier !== "free"
-      ? '<span class="auth-chip-tier ' + tier + '">' + (tier === "exclusive" ? "EXCLUSIVE" : "PRO") + '</span>'
-      : "";
+    var tierLabel = tier === "exclusive" ? "EXCLUSIVE" : (tier === "pro" ? "PRO" : "FREE");
+    var tierBadge = '<span class="auth-chip-tier ' + tier + '">' + tierLabel + '</span>';
     chip.innerHTML =
       '<span class="auth-chip-avatar">' + initial + '</span>' +
       '<span class="auth-chip-meta">' +
-        '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + tierBadge + '</span>' +
+        '<span class="auth-chip-nameRow">' +
+          '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + '</span>' +
+          tierBadge +
+        '</span>' +
         (user.code ? '<span class="auth-chip-code">' + escapeHtml(user.code) + '</span>' : '') +
       '</span>' +
       '<button class="auth-logout" type="button">Log out</button>';

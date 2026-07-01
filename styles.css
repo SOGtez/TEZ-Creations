@@ -1389,7 +1389,7 @@ body.auth-open .glow { animation-play-state: paused; }
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 7px 8px 7px 14px;
+  padding: 7px 8px 7px 16px;
   background: rgba(12, 18, 13, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
@@ -1400,7 +1400,8 @@ body.auth-open .glow { animation-play-state: paused; }
   color: var(--text);
 }
 .auth-chip .auth-chip-meta { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
-.auth-chip .auth-chip-name { font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth-chip .auth-chip-nameRow { display: flex; align-items: center; gap: 6px; }
+.auth-chip .auth-chip-name { font-weight: 600; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .auth-chip .auth-chip-code {
   font-family: "Space Mono", ui-monospace, monospace;
   font-size: 10.5px;
@@ -1513,10 +1514,13 @@ body.auth-open .glow { animation-play-state: paused; }
 
 /* Tier badge on the account chip */
 .auth-chip-tier {
-  display: inline-block; margin-left: 7px;
+  display: inline-block; margin-left: 0; flex-shrink: 0;
   font-family: var(--font-sans, sans-serif);
   font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
   border-radius: 999px; padding: 2px 7px; vertical-align: middle;
+}
+.auth-chip-tier.free {
+  color: var(--muted, #8fa394); background: rgba(255, 255, 255, 0.07);
 }
 .auth-chip-tier.pro {
   color: #04160b; background: linear-gradient(180deg, #4ade80, #16a34a);
