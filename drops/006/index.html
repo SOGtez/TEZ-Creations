@@ -32,7 +32,8 @@
   --font-mono:'Space Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{min-height:100%}
+html{background:var(--bg)}
 body{
   background:var(--bg);color:var(--text);font-family:var(--font-sans);
   -webkit-font-smoothing:antialiased;min-height:100vh;position:relative;overflow-x:hidden;
@@ -46,8 +47,8 @@ body{
   background-size:64px 64px;
   transform:perspective(1200px) scale(1.08);transform-origin:center center;
   animation:grid-drift 28s linear infinite;
-  -webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 32%,#000 0%,transparent 78%);
-  mask-image:radial-gradient(ellipse 75% 70% at 50% 32%,#000 0%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 130% 100% at 50% 50%,#000 55%,transparent 92%);
+  mask-image:radial-gradient(ellipse 130% 100% at 50% 50%,#000 55%,transparent 92%);
 }
 @keyframes grid-drift{from{background-position:0 0}to{background-position:0 512px}}
 .glow{
@@ -401,7 +402,6 @@ body.fade-in{animation:page-fade .8s ease both}
 
 <header class="site-head">
   <a class="wordmark" href="/home">TEZ<span class="star">✦</span></a>
-  <a class="back-link" href="/home">← All drops</a>
 </header>
 
 <main class="wrap">

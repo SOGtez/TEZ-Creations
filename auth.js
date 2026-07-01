@@ -254,16 +254,35 @@
     }, 380);
   }
 
-  /* ---------- account chip ---------- */
-  var chip;
+  /* ---------- account chip + corner nav ---------- */
+  // A fixed top-right stack: the account chip (when logged in) sits on top, with a
+  // universal "All drops" back-to-catalog link beneath it. Injected on every page
+  // that loads auth.js, so the treatment is consistent site-wide.
+  var chip, cornerEl;
+  function ensureCorner() {
+    if (cornerEl) return;
+    cornerEl = document.createElement("div");
+    cornerEl.className = "tez-corner";
+    document.body.appendChild(cornerEl);
+    // "All drops" on every page EXCEPT the catalog itself (home), where it'd be circular.
+    var onCatalog = /^\/(home)?\/?$/.test(location.pathname) || document.body.hasAttribute("data-auth-greet");
+    if (!onCatalog) {
+      var link = document.createElement("a");
+      link.className = "tez-alldrops";
+      link.href = "/home";
+      link.innerHTML = '<span aria-hidden="true">←</span> All drops';
+      cornerEl.appendChild(link);
+    }
+  }
   function renderChip(user) {
+    ensureCorner();
     if (!user) { if (chip) { chip.remove(); chip = null; } return; }
     if (!chip) {
       chip = document.createElement("button");
       chip.type = "button";
       chip.className = "auth-chip";
       chip.addEventListener("click", openProfile);
-      document.body.appendChild(chip);
+      cornerEl.insertBefore(chip, cornerEl.firstChild); // chip on top, All drops below
     }
     var initial = (user.name || user.email).trim().charAt(0).toUpperCase();
     var tier = user.tier || "free";

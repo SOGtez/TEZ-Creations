@@ -228,12 +228,43 @@ body.auth-open .glow { animation-play-state: paused; }
   40%, 60% { transform: translateX(4px); }
 }
 
-/* Account chip (shown when logged in) */
-.auth-chip {
+/* Fixed top-right stack: account chip on top, universal "All drops" link below */
+.tez-corner {
   position: fixed;
   top: 20px;
   right: 22px;
   z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none; /* only the pills are interactive, not the gap */
+}
+.tez-corner > * { pointer-events: auto; }
+
+.tez-alldrops {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  background: rgba(12, 18, 13, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 15px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.tez-alldrops:hover { color: var(--text); background: rgba(12, 18, 13, 0.85); border-color: rgba(255, 255, 255, 0.16); }
+.tez-alldrops span { transition: transform 0.2s ease; }
+.tez-alldrops:hover span { transform: translateX(-3px); }
+
+/* Account chip (shown when logged in) */
+.auth-chip {
   display: inline-flex;
   align-items: center;
   gap: 9px;
