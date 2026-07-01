@@ -370,8 +370,11 @@ h1{
 .err-msg.show{display:block}
 
 /* Page fade */
+/* Opacity-only fade: animating a transform on <body> would make it the
+   containing block for position:fixed children (report bar, Pro panel),
+   breaking their viewport-fixed positioning. */
 body.fade-in{animation:page-fade .8s ease both}
-@keyframes page-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes page-fade{from{opacity:0}to{opacity:1}}
 
 /* Footer */
 .site-foot{
