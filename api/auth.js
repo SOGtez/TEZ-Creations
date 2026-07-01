@@ -81,7 +81,22 @@ function genCode() {
   return 'TEZ-' + s;
 }
 
-const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email, code: row.code || null, pro: !!row.pro });
+// Tiers, low → high. `tier` is the source of truth; fall back to the legacy `pro`
+// boolean for any row that predates the tier column.
+const TIER_RANK = { free: 0, pro: 1, exclusive: 2 };
+function tierOf(row) {
+  const t = row.tier || (row.pro ? 'pro' : 'free');
+  return TIER_RANK[t] === undefined ? 'free' : t;
+}
+const publicUser = (row) => {
+  const tier = tierOf(row);
+  return {
+    id: row.id, name: row.name, email: row.email, code: row.code || null,
+    tier,
+    pro: TIER_RANK[tier] >= TIER_RANK.pro, // true for pro AND exclusive
+    exclusive: tier === 'exclusive',
+  };
+};
 const issue = (row) => ({ token: signToken({ uid: row.id, exp: Date.now() + TOKEN_TTL_MS }), user: publicUser(row) });
 
 const norm = (e) => String(e || '').trim().toLowerCase();
@@ -173,7 +188,7 @@ async function login(req, res) {
   const email = norm(b.email);
   const pass = String(b.password || '');
   const q = await sb('GET', 'tez_users?email=eq.' + encodeURIComponent(email) +
-    '&select=id,name,email,pass_hash,code,pro&limit=1');
+    '&select=id,name,email,pass_hash,code,pro,tier&limit=1');
   const row = q.json && q.json[0];
   // Same generic message whether the email is unknown or the password is wrong.
   if (!row || !verifyPassword(pass, row.pass_hash)) {
@@ -186,7 +201,7 @@ async function login(req, res) {
 async function me(req, res) {
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
-  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro&limit=1');
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier&limit=1');
   const row = q.json && q.json[0];
   if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
   res.status(200).json({ user: publicUser(row) });

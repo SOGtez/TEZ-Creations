@@ -172,6 +172,23 @@ h1{
   transition:background .18s;flex-shrink:0;
 }
 .filter-chip.active .dot{background:var(--accent-bright)}
+.filter-chip.locked{opacity:.6;cursor:pointer}
+.filter-chip.locked .dot{background:var(--hair-input)}
+.filter-chip .lock{
+  margin-left:6px;font-family:var(--font-sans);font-size:8px;font-weight:700;
+  letter-spacing:.1em;color:#04160b;background:linear-gradient(180deg,#4ade80,#16a34a);
+  border-radius:999px;padding:2px 6px;
+}
+
+/* Free-tier hunt-size note under the CTA */
+.pro-note{
+  margin-top:14px;font-size:12px;color:var(--muted-dim);
+}
+.pro-note button{
+  font-family:var(--font-sans);font-size:12px;font-weight:600;
+  color:var(--accent-bright);background:none;border:none;cursor:pointer;padding:0;
+}
+.pro-note button:hover{text-decoration:underline}
 
 /* Go button */
 .btn-primary{
@@ -474,6 +491,10 @@ body.fade-in{animation:page-fade .8s ease both}
         <span class="err-msg" id="errMsg"></span>
       </div>
 
+      <p class="pro-note" id="proNote" style="display:none">
+        Free hunts check 40 names · <button type="button" id="proNoteBtn">Pro finds 200+ per run →</button>
+      </p>
+
       <!-- Progress -->
       <div class="progress-section" id="progressSection">
         <div class="progress-meta">
@@ -702,6 +723,32 @@ const reportCount=document.getElementById('reportCount');
 const reportSubmit=document.getElementById('reportSubmit');
 const reportClear=document.getElementById('reportClear');
 const toastEl=document.getElementById('toast');
+const proNote=document.getElementById('proNote');
+const proNoteBtn=document.getElementById('proNoteBtn');
+
+// ── Tier gating (free vs Pro/Exclusive) ─────────────────────
+const PRO_FILTERS=['animals','nature','leetspeak']; // locked for free users
+const FREE_HUNT=40, PRO_HUNT=200;                   // candidates checked per run
+function hunterIsPro(){ return !!(window.TezAuth && TezAuth.isPro && TezAuth.isPro()); }
+
+// Reflect the current tier in the UI: lock Pro-only filters, show the free note.
+function applyTierUI(){
+  const pro=hunterIsPro();
+  document.querySelectorAll('.filter-chip').forEach(chip=>{
+    const f=chip.dataset.filter;
+    if(!PRO_FILTERS.includes(f)) return;
+    let lock=chip.querySelector('.lock');
+    if(!pro){
+      chip.classList.add('locked');
+      if(state.filters.has(f)){ state.filters.delete(f); chip.classList.remove('active'); }
+      if(!lock){ lock=document.createElement('span'); lock.className='lock'; lock.textContent='PRO'; chip.appendChild(lock); }
+    } else {
+      chip.classList.remove('locked');
+      if(lock) lock.remove();
+    }
+  });
+  if(proNote) proNote.style.display = pro ? 'none' : '';
+}
 
 // Platform picker
 document.getElementById('platformGrid').addEventListener('click',e=>{
@@ -725,6 +772,10 @@ document.getElementById('lengthRow').addEventListener('click',e=>{
 document.getElementById('filtersRow').addEventListener('click',e=>{
   const chip=e.target.closest('.filter-chip');
   if(!chip) return;
+  if(chip.classList.contains('locked')){
+    if(window.TezAuth) TezAuth.requirePro('Unlock every style filter with Pro.');
+    return;
+  }
   const f=chip.dataset.filter;
   if(state.filters.has(f)) state.filters.delete(f);
   else state.filters.add(f);
@@ -740,6 +791,10 @@ copyAvailBtn.addEventListener('click',()=>{
   });
 });
 copyAllBtn.addEventListener('click',()=>{
+  if(!hunterIsPro()){
+    if(window.TezAuth) TezAuth.requirePro('Exporting all results is a Pro feature.');
+    return;
+  }
   const sym={open:'○ ',taken:'✗ ',blocked:'⊘ ',unclaimable:'⊘ '};
   const all=state.results.map(r=>(sym[r.status]||'')+r.username);
   navigator.clipboard.writeText(all.join('\n')).then(()=>{
@@ -774,6 +829,13 @@ stopBtn.addEventListener('click',()=>{ state.aborted=true; });
 // Go
 goBtn.addEventListener('click',startHunt);
 
+// Tier gating: react to login/logout/tier changes, and the "Pro finds 200+" link.
+if(proNoteBtn) proNoteBtn.addEventListener('click',()=>{
+  if(window.TezAuth) TezAuth.requirePro('Hunt 200+ names a run with Pro.');
+});
+if(window.TezAuth && TezAuth.onChange) TezAuth.onChange(applyTierUI);
+applyTierUI(); // set initial locks/note from cached tier (updates on revalidate)
+
 async function startHunt(){
   if(state.running) return;
   setError('');
@@ -786,15 +848,16 @@ async function startHunt(){
   copyAvailBtn.style.display='none';
   copyAllBtn.style.display='none';
 
-  const candidates=generateCandidates(state.length,state.filters,200,state.seen);
+  // Free tier checks fewer names per run; Pro/Exclusive get the full batch.
+  const cap=hunterIsPro()?PRO_HUNT:FREE_HUNT;
+  const candidates=generateCandidates(state.length,state.filters,cap,state.seen);
   if(!candidates.length){
     setError('No candidates generated — turn on “Made-up names” or a word filter.');
     return;
   }
 
-  // Twitch batch size: 100 per request (the API max)
-  // We'll check up to 200 candidates (2 batches)
-  const toCheck=candidates.slice(0,200);
+  // Twitch batch size: 100 per request (the API max).
+  const toCheck=candidates.slice(0,cap);
   const total=toCheck.length;
 
   // Show progress

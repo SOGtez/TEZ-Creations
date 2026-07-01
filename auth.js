@@ -264,10 +264,14 @@
       document.body.appendChild(chip);
     }
     var initial = (user.name || user.email).trim().charAt(0).toUpperCase();
+    var tier = user.tier || "free";
+    var tierBadge = tier !== "free"
+      ? '<span class="auth-chip-tier ' + tier + '">' + (tier === "exclusive" ? "EXCLUSIVE" : "PRO") + '</span>'
+      : "";
     chip.innerHTML =
       '<span class="auth-chip-avatar">' + initial + '</span>' +
       '<span class="auth-chip-meta">' +
-        '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + '</span>' +
+        '<span class="auth-chip-name">' + escapeHtml(user.name || user.email) + tierBadge + '</span>' +
         (user.code ? '<span class="auth-chip-code">' + escapeHtml(user.code) + '</span>' : '') +
       '</span>' +
       '<button class="auth-logout" type="button">Log out</button>';
@@ -282,23 +286,107 @@
     });
   }
 
+  /* ---------- tiers (free < pro < exclusive) ---------- */
+  function tierOf() { var u = currentUser(); return (u && u.tier) || "free"; }
+  function isPro() { var t = tierOf(); return t === "pro" || t === "exclusive"; }
+  function isExclusive() { return tierOf() === "exclusive"; }
+
+  function requireAuth(reason) {
+    return new Promise(function (resolve) {
+      if (currentUser()) { resolve(true); return; }
+      pendingResolve = resolve;
+      open({ mode: "signup", reason: reason || "Create a free account to continue." });
+    });
+  }
+
+  // Gate a Pro feature. Resolves true only if the user already has Pro/Exclusive.
+  // Otherwise it shows the right next step (sign up first, or the Pro upsell) and
+  // resolves false — the caller simply doesn't run the Pro action.
+  function requirePro(reason) {
+    if (isPro()) return Promise.resolve(true);
+    if (!currentUser()) {
+      return requireAuth(reason || "Create a free account first — then unlock Pro.")
+        .then(function (ok) {
+          if (!ok) return false;
+          if (isPro()) return true;
+          openPro(reason);
+          return false;
+        });
+    }
+    openPro(reason);
+    return Promise.resolve(false);
+  }
+
+  /* ---------- Pro upsell modal (universal across drops) ---------- */
+  var proOverlay;
+  function buildProModal() {
+    if (proOverlay) return;
+    proOverlay = document.createElement("div");
+    proOverlay.className = "pro-overlay";
+    proOverlay.hidden = true;
+    proOverlay.innerHTML =
+      '<div class="pro-card" role="dialog" aria-modal="true" aria-label="TEZ Pro">' +
+        '<button class="pro-close" aria-label="Close">×</button>' +
+        '<div class="pro-badge">PRO</div>' +
+        '<h2 class="pro-title">TEZ Pro</h2>' +
+        '<p class="pro-reason" hidden></p>' +
+        '<ul class="pro-feats">' +
+          '<li>Bigger Handle Hunter hunts — 200+ names a run</li>' +
+          '<li>Every style filter unlocked</li>' +
+          '<li>Save &amp; export your finds</li>' +
+          '<li>Premium features across every TEZ drop</li>' +
+        '</ul>' +
+        '<p class="pro-soon">Pro is launching soon.</p>' +
+        '<button type="button" class="btn btn-primary pro-cta">Notify me when it’s live</button>' +
+        '<p class="pro-excl">Want in now? <strong>Exclusive</strong> access is invite-only — reach out to get it.</p>' +
+      '</div>';
+    document.body.appendChild(proOverlay);
+    proOverlay.querySelector(".pro-close").addEventListener("click", closePro);
+    proOverlay.addEventListener("mousedown", function (e) { if (e.target === proOverlay) closePro(); });
+    proOverlay.querySelector(".pro-cta").addEventListener("click", function () {
+      // TODO: wire Stripe checkout here when Pro billing goes live.
+      closePro();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && proOverlay && !proOverlay.hidden) closePro();
+    });
+  }
+  function openPro(reason) {
+    buildProModal();
+    var r = proOverlay.querySelector(".pro-reason");
+    if (reason) { r.textContent = reason; r.hidden = false; } else { r.hidden = true; }
+    proOverlay.hidden = false;
+    document.body.classList.add("auth-open"); // pause bg animation → smooth
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { proOverlay.classList.add("show"); });
+    });
+  }
+  function closePro() {
+    if (!proOverlay) return;
+    proOverlay.classList.remove("show");
+    setTimeout(function () {
+      if (proOverlay) proOverlay.hidden = true;
+      document.body.classList.remove("auth-open");
+    }, 320);
+  }
+
   /* ---------- public API ---------- */
   window.TezAuth = {
     isLoggedIn: function () { return !!currentUser(); },
     currentUser: currentUser,
     token: getToken, // signed session token, for authenticated calls elsewhere
+    tier: tierOf,
+    isPro: isPro,
+    isExclusive: isExclusive,
     open: open,
+    openPro: openPro, // show the Pro upsell directly
     logout: function () { clearSession(); emitChange(); },
     onChange: function (cb) { if (typeof cb === "function") listeners.push(cb); },
-    // Gate a premium action. Resolves true if logged in (now or after they
-    // sign up), false if they dismiss. The paywall layer chains off `true`.
-    requireAuth: function (reason) {
-      return new Promise(function (resolve) {
-        if (currentUser()) { resolve(true); return; }
-        pendingResolve = resolve;
-        open({ mode: "signup", reason: reason || "Create a free account to continue." });
-      });
-    }
+    // Gate a sign-in-required action. Resolves true if logged in (now or after
+    // they sign up), false if they dismiss.
+    requireAuth: requireAuth,
+    // Gate a Pro action. Resolves true only if they already have Pro/Exclusive.
+    requirePro: requirePro,
   };
 
   /* ---------- boot ---------- */
