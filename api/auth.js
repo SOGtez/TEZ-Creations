@@ -206,8 +206,10 @@ async function login(req, res) {
   const b = readBody(req);
   const email = norm(b.email);
   const pass = String(b.password || '');
+  // select=* so this keeps working whether or not optional columns (e.g. pro_until)
+  // have been added yet — naming a missing column makes PostgREST reject the query.
   const q = await sb('GET', 'tez_users?email=eq.' + encodeURIComponent(email) +
-    '&select=id,name,email,pass_hash,code,pro,tier,pro_until&limit=1');
+    '&select=*&limit=1');
   const row = q.json && q.json[0];
   // Same generic message whether the email is unknown or the password is wrong.
   if (!row || !verifyPassword(pass, row.pass_hash)) {
@@ -221,7 +223,7 @@ async function login(req, res) {
 async function me(req, res) {
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
-  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier,created_at,pro_until&limit=1');
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=*&limit=1');
   const row = q.json && q.json[0];
   if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
   await applyExpiry(row);
