@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
-<!-- Global styles loaded first so this drop's own inline styles win on any tie;
-     we only need them for the shared sign-up / log-in modal (auth.js). -->
-<link rel="stylesheet" href="/styles.css" />
+<!-- Only the account/auth widget styles (chip + modals) — NOT the global sheet,
+     which would fight this drop's self-contained layout. -->
+<link rel="stylesheet" href="/auth.css" />
 <style>
 /* ── §1 Tokens ── */
 :root{
