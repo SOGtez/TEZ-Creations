@@ -95,6 +95,7 @@ const publicUser = (row) => {
     tier,
     pro: TIER_RANK[tier] >= TIER_RANK.pro, // true for pro AND exclusive
     exclusive: tier === 'exclusive',
+    created_at: row.created_at || null,
   };
 };
 const issue = (row) => ({ token: signToken({ uid: row.id, exp: Date.now() + TOKEN_TTL_MS }), user: publicUser(row) });
@@ -141,6 +142,8 @@ export default async function handler(req, res) {
     if (route === 'signup') return await signup(req, res);
     if (route === 'login') return await login(req, res);
     if (route === 'me') return await me(req, res);
+    if (route === 'update') return await updateProfile(req, res);
+    if (route === 'password') return await changePassword(req, res);
     res.status(404).json({ error: 'Unknown route.' });
   } catch (err) {
     console.error('auth', route, err && err.message);
@@ -201,8 +204,40 @@ async function login(req, res) {
 async function me(req, res) {
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
-  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier&limit=1');
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=id,name,email,code,pro,tier,created_at&limit=1');
   const row = q.json && q.json[0];
   if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
   res.status(200).json({ user: publicUser(row) });
+}
+
+// Update editable profile fields (currently just the display name).
+async function updateProfile(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const p = verifyToken(bearer(req) || readBody(req).token);
+  if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
+  const name = String(readBody(req).name || '').trim();
+  if (name.length < 2) { res.status(400).json({ error: 'Enter your name (2+ characters).' }); return; }
+  const upd = await sb('PATCH', 'tez_users?id=eq.' + encodeURIComponent(p.uid), {
+    body: { name }, prefer: 'return=representation',
+  });
+  if (upd.ok && upd.json && upd.json[0]) { res.status(200).json({ user: publicUser(upd.json[0]) }); return; }
+  res.status(500).json({ error: 'Could not save. Try again.' });
+}
+
+// Change password: verify the current one, then store a fresh scrypt hash.
+async function changePassword(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const p = verifyToken(bearer(req) || readBody(req).token);
+  if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
+  const b = readBody(req);
+  const current = String(b.current || '');
+  const next = String(b.next || '');
+  if (next.length < 6) { res.status(400).json({ error: 'New password must be at least 6 characters.' }); return; }
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=pass_hash&limit=1');
+  const row = q.json && q.json[0];
+  if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
+  if (!verifyPassword(current, row.pass_hash)) { res.status(401).json({ error: 'Current password is wrong.' }); return; }
+  const upd = await sb('PATCH', 'tez_users?id=eq.' + encodeURIComponent(p.uid), { body: { pass_hash: hashPassword(next) } });
+  if (upd.ok) { res.status(200).json({ ok: true }); return; }
+  res.status(500).json({ error: 'Could not update password. Try again.' });
 }

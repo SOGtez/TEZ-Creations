@@ -259,8 +259,10 @@
   function renderChip(user) {
     if (!user) { if (chip) { chip.remove(); chip = null; } return; }
     if (!chip) {
-      chip = document.createElement("div");
+      chip = document.createElement("button");
+      chip.type = "button";
       chip.className = "auth-chip";
+      chip.addEventListener("click", openProfile);
       document.body.appendChild(chip);
     }
     var initial = (user.name || user.email).trim().charAt(0).toUpperCase();
@@ -276,11 +278,7 @@
         '</span>' +
         (user.code ? '<span class="auth-chip-code">' + escapeHtml(user.code) + '</span>' : '') +
       '</span>' +
-      '<button class="auth-logout" type="button">Log out</button>';
-    chip.querySelector(".auth-logout").addEventListener("click", function () {
-      clearSession();
-      emitChange();
-    });
+      '<span class="auth-chip-caret" aria-hidden="true">⌄</span>';
   }
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -372,6 +370,157 @@
     }, 320);
   }
 
+  /* ---------- profile panel (opens when the account chip is clicked) ---------- */
+  var profileOverlay, pf = {};
+  function buildProfileModal() {
+    if (profileOverlay) return;
+    profileOverlay = document.createElement("div");
+    profileOverlay.className = "profile-overlay";
+    profileOverlay.hidden = true;
+    profileOverlay.innerHTML =
+      '<div class="profile-card" role="dialog" aria-modal="true" aria-label="Your profile">' +
+        '<button class="profile-close" aria-label="Close">×</button>' +
+        '<div class="profile-head">' +
+          '<span class="profile-avatar"></span>' +
+          '<div class="profile-id">' +
+            '<div class="profile-name-line"><span class="profile-name"></span><span class="profile-tier"></span></div>' +
+            '<div class="profile-email"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="profile-rows">' +
+          '<div class="profile-row"><span class="pr-k">Member code</span><span class="pr-v profile-code"></span></div>' +
+          '<div class="profile-row"><span class="pr-k">Plan</span><span class="pr-v profile-plan"></span></div>' +
+          '<div class="profile-row"><span class="pr-k">Member since</span><span class="pr-v profile-since"></span></div>' +
+        '</div>' +
+        '<div class="profile-sec">' +
+          '<p class="profile-sec-title">Settings</p>' +
+          '<label class="profile-field"><span>Display name</span>' +
+            '<div class="profile-inline">' +
+              '<input class="profile-input" id="pfName" type="text" autocomplete="name" maxlength="60">' +
+              '<button type="button" class="profile-save" id="pfNameSave">Save</button>' +
+            '</div>' +
+          '</label>' +
+          '<label class="profile-field"><span>Change password</span>' +
+            '<input class="profile-input" id="pfCur" type="password" autocomplete="current-password" placeholder="Current password">' +
+            '<input class="profile-input" id="pfNew" type="password" autocomplete="new-password" placeholder="New password (6+ characters)">' +
+            '<button type="button" class="profile-save wide" id="pfPassSave">Update password</button>' +
+          '</label>' +
+          '<p class="profile-msg" id="pfMsg"></p>' +
+        '</div>' +
+        '<button type="button" class="profile-logout" id="pfLogout">Log out</button>' +
+      '</div>';
+    document.body.appendChild(profileOverlay);
+
+    pf = {
+      avatar: profileOverlay.querySelector(".profile-avatar"),
+      name: profileOverlay.querySelector(".profile-name"),
+      tier: profileOverlay.querySelector(".profile-tier"),
+      email: profileOverlay.querySelector(".profile-email"),
+      code: profileOverlay.querySelector(".profile-code"),
+      plan: profileOverlay.querySelector(".profile-plan"),
+      since: profileOverlay.querySelector(".profile-since"),
+      nameInput: profileOverlay.querySelector("#pfName"),
+      nameSave: profileOverlay.querySelector("#pfNameSave"),
+      cur: profileOverlay.querySelector("#pfCur"),
+      newpw: profileOverlay.querySelector("#pfNew"),
+      passSave: profileOverlay.querySelector("#pfPassSave"),
+      msg: profileOverlay.querySelector("#pfMsg"),
+    };
+
+    profileOverlay.querySelector(".profile-close").addEventListener("click", closeProfile);
+    profileOverlay.addEventListener("mousedown", function (e) { if (e.target === profileOverlay) closeProfile(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && profileOverlay && !profileOverlay.hidden) closeProfile();
+    });
+    profileOverlay.querySelector("#pfLogout").addEventListener("click", function () {
+      closeProfile(); clearSession(); emitChange();
+    });
+    pf.nameSave.addEventListener("click", saveName);
+    pf.passSave.addEventListener("click", savePassword);
+    pf.plan.addEventListener("click", function (e) {
+      if (e.target && e.target.classList.contains("pr-upgrade")) {
+        closeProfile(); openPro("Upgrade to unlock Pro across every drop.");
+      }
+    });
+  }
+
+  function fmtSince(iso) {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString(undefined, { month: "short", year: "numeric" }); }
+    catch (e) { return "—"; }
+  }
+
+  function fillProfile(user) {
+    var tier = user.tier || "free";
+    var tierLabel = tier === "exclusive" ? "EXCLUSIVE" : (tier === "pro" ? "PRO" : "FREE");
+    pf.avatar.textContent = (user.name || user.email).trim().charAt(0).toUpperCase();
+    pf.name.textContent = user.name || user.email;
+    pf.tier.className = "profile-tier auth-chip-tier " + tier;
+    pf.tier.textContent = tierLabel;
+    pf.email.textContent = user.email || "";
+    pf.code.textContent = user.code || "—";
+    pf.plan.innerHTML = tier === "free"
+      ? 'Free · <button type="button" class="pr-upgrade">Go Pro →</button>'
+      : (tier === "exclusive" ? "Exclusive" : "Pro");
+    pf.since.textContent = fmtSince(user.created_at);
+    pf.nameInput.value = user.name || "";
+    pf.cur.value = ""; pf.newpw.value = "";
+    setProfileMsg("");
+  }
+
+  function openProfile() {
+    var user = currentUser();
+    if (!user) return;
+    buildProfileModal();
+    fillProfile(user);
+    profileOverlay.hidden = false;
+    document.body.classList.add("auth-open");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { profileOverlay.classList.add("show"); });
+    });
+  }
+  function closeProfile() {
+    if (!profileOverlay) return;
+    profileOverlay.classList.remove("show");
+    setTimeout(function () {
+      if (profileOverlay) profileOverlay.hidden = true;
+      document.body.classList.remove("auth-open");
+    }, 320);
+  }
+
+  function setProfileMsg(msg, ok) {
+    if (!pf.msg) return;
+    pf.msg.textContent = msg || "";
+    pf.msg.className = "profile-msg" + (msg ? (ok ? " ok" : " err") : "");
+  }
+
+  function saveName() {
+    var name = pf.nameInput.value.trim();
+    if (name.length < 2) { setProfileMsg("Enter your name (2+ characters).", false); return; }
+    pf.nameSave.disabled = true;
+    api("update", { body: { name: name }, auth: true }).then(function (res) {
+      pf.nameSave.disabled = false;
+      if (!res.ok || !res.data || !res.data.user) { setProfileMsg((res.data && res.data.error) || "Could not save.", false); return; }
+      setSession(getToken(), res.data.user);
+      emitChange();
+      fillProfile(res.data.user);
+      setProfileMsg("Name updated.", true);
+    }).catch(function () { pf.nameSave.disabled = false; setProfileMsg("Couldn't reach the server.", false); });
+  }
+
+  function savePassword() {
+    var cur = pf.cur.value, next = pf.newpw.value;
+    if (!cur) { setProfileMsg("Enter your current password.", false); return; }
+    if ((next || "").length < 6) { setProfileMsg("New password must be at least 6 characters.", false); return; }
+    pf.passSave.disabled = true;
+    api("password", { body: { current: cur, next: next }, auth: true }).then(function (res) {
+      pf.passSave.disabled = false;
+      if (!res.ok) { setProfileMsg((res.data && res.data.error) || "Could not update password.", false); return; }
+      pf.cur.value = ""; pf.newpw.value = "";
+      setProfileMsg("Password updated.", true);
+    }).catch(function () { pf.passSave.disabled = false; setProfileMsg("Couldn't reach the server.", false); });
+  }
+
   /* ---------- public API ---------- */
   window.TezAuth = {
     isLoggedIn: function () { return !!currentUser(); },
@@ -382,6 +531,7 @@
     isExclusive: isExclusive,
     open: open,
     openPro: openPro, // show the Pro upsell directly
+    openProfile: openProfile, // show the profile / settings panel
     logout: function () { clearSession(); emitChange(); },
     onChange: function (cb) { if (typeof cb === "function") listeners.push(cb); },
     // Gate a sign-in-required action. Resolves true if logged in (now or after
