@@ -97,6 +97,7 @@ const publicUser = (row) => {
     exclusive: tier === 'exclusive',
     created_at: row.created_at || null,
     pro_until: row.pro_until || null,
+    name_changed_at: row.name_changed_at || null,
   };
 };
 
@@ -230,15 +231,31 @@ async function me(req, res) {
   res.status(200).json({ user: publicUser(row) });
 }
 
-// Update editable profile fields (currently just the display name).
+// Update editable profile fields (display name), enforcing a 14-day rename cooldown.
+const NAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 async function updateProfile(req, res) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   const p = verifyToken(bearer(req) || readBody(req).token);
   if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
   const name = String(readBody(req).name || '').trim();
   if (name.length < 2) { res.status(400).json({ error: 'Enter your name (2+ characters).' }); return; }
+
+  // select=* so it works whether or not name_changed_at has been added yet.
+  const cur = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=*&limit=1');
+  const row = cur.json && cur.json[0];
+  if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
+
+  // No change → nothing to do (and no cooldown burned).
+  if (name === row.name) { res.status(200).json({ user: publicUser(row) }); return; }
+
+  if (row.name_changed_at && Date.now() - Date.parse(row.name_changed_at) < NAME_COOLDOWN_MS) {
+    const next = new Date(Date.parse(row.name_changed_at) + NAME_COOLDOWN_MS).toISOString();
+    res.status(429).json({ error: 'You can only change your display name once every 14 days.', nextChange: next });
+    return;
+  }
+
   const upd = await sb('PATCH', 'tez_users?id=eq.' + encodeURIComponent(p.uid), {
-    body: { name }, prefer: 'return=representation',
+    body: { name, name_changed_at: new Date().toISOString() }, prefer: 'return=representation',
   });
   if (upd.ok && upd.json && upd.json[0]) { res.status(200).json({ user: publicUser(upd.json[0]) }); return; }
   res.status(500).json({ error: 'Could not save. Try again.' });

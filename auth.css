@@ -513,14 +513,23 @@ html:has(body.auth-open) { overflow: hidden; }
 .profile-msg.ok { color: var(--accent-bright, #4ade80); }
 .profile-msg.err { color: var(--danger, #f78a8a); }
 
+/* Small helper line under the display-name field (rename cooldown) */
+.profile-hint { display: block; font-size: 11.5px; color: var(--muted-dim, rgba(143, 163, 148, 0.7)); margin-top: 6px; }
+
 .profile-logout {
   width: 100%; margin-top: 14px;
   font-family: var(--font-sans, sans-serif); font-weight: 600; font-size: 13px;
   color: var(--muted, #8fa394); background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;
-  padding: 12px; cursor: pointer; transition: color 0.2s, background 0.2s;
+  padding: 12px; cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.profile-logout:hover { color: var(--text, #eaf2ec); background: rgba(255, 255, 255, 0.08); }
+.profile-logout:hover {
+  color: #ff6b6b;
+  background: rgba(247, 90, 90, 0.1);
+  border-color: rgba(247, 90, 90, 0.5);
+  box-shadow: 0 0 18px rgba(247, 90, 90, 0.35);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .profile-overlay, .profile-card { transition: opacity 0.2s ease; }

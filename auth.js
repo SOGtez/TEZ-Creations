@@ -418,6 +418,7 @@
               '<input class="profile-input" id="pfName" type="text" autocomplete="name" maxlength="60">' +
               '<button type="button" class="profile-save" id="pfNameSave">Save</button>' +
             '</div>' +
+            '<span class="profile-hint" id="pfNameHint" hidden></span>' +
           '</label>' +
           '<label class="profile-field"><span>Change password</span>' +
             '<input class="profile-input" id="pfCur" type="password" autocomplete="current-password" placeholder="Current password">' +
@@ -440,6 +441,7 @@
       since: profileOverlay.querySelector(".profile-since"),
       nameInput: profileOverlay.querySelector("#pfName"),
       nameSave: profileOverlay.querySelector("#pfNameSave"),
+      nameHint: profileOverlay.querySelector("#pfNameHint"),
       cur: profileOverlay.querySelector("#pfCur"),
       newpw: profileOverlay.querySelector("#pfNew"),
       passSave: profileOverlay.querySelector("#pfPassSave"),
@@ -469,6 +471,12 @@
     catch (e) { return "—"; }
   }
 
+  var NAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // display name: once per 14 days
+  function fmtDay(v) {
+    try { return new Date(v).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+    catch (e) { return ""; }
+  }
+
   function fillProfile(user) {
     var tier = user.tier || "free";
     var tierLabel = tier === "exclusive" ? "EXCLUSIVE" : (tier === "pro" ? "PRO" : "FREE");
@@ -488,6 +496,18 @@
       : (tier === "exclusive" ? "Exclusive" : ("Pro" + (until ? " · until " + until : "")));
     pf.since.textContent = fmtSince(user.created_at);
     pf.nameInput.value = user.name || "";
+    // Display name can only change once every 14 days.
+    var locked = false, nextChange = null;
+    if (user.name_changed_at) {
+      var next = Date.parse(user.name_changed_at) + NAME_COOLDOWN_MS;
+      if (Date.now() < next) { locked = true; nextChange = next; }
+    }
+    pf.nameInput.disabled = locked;
+    pf.nameSave.disabled = locked;
+    pf.nameHint.hidden = false;
+    pf.nameHint.textContent = locked
+      ? "You can change your name again on " + fmtDay(nextChange) + "."
+      : "You can change your name once every 14 days.";
     pf.cur.value = ""; pf.newpw.value = "";
     setProfileMsg("");
   }
@@ -524,7 +544,14 @@
     pf.nameSave.disabled = true;
     api("update", { body: { name: name }, auth: true }).then(function (res) {
       pf.nameSave.disabled = false;
-      if (!res.ok || !res.data || !res.data.user) { setProfileMsg((res.data && res.data.error) || "Could not save.", false); return; }
+      if (!res.ok || !res.data || !res.data.user) {
+        var msg = (res.data && res.data.error) || "Could not save.";
+        if (res.data && res.data.nextChange) {
+          msg = "Name changes are limited to once every 14 days — you can rename again on " + fmtDay(res.data.nextChange) + ".";
+        }
+        setProfileMsg(msg, false);
+        return;
+      }
       setSession(getToken(), res.data.user);
       emitChange();
       fillProfile(res.data.user);
