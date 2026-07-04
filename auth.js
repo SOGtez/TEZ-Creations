@@ -347,18 +347,20 @@
     proOverlay.innerHTML =
       '<div class="pro-card" role="dialog" aria-modal="true" aria-label="TEZ Pro">' +
         '<button class="pro-close" aria-label="Close">×</button>' +
-        '<div class="pro-badge">PRO</div>' +
-        '<h2 class="pro-title">TEZ Pro</h2>' +
-        '<p class="pro-reason" hidden></p>' +
-        '<ul class="pro-feats">' +
-          '<li>Bigger Handle Hunter hunts — 200+ names a run</li>' +
-          '<li>Every style filter unlocked</li>' +
-          '<li>Save &amp; export your finds</li>' +
-          '<li>Premium features across every TEZ drop</li>' +
-        '</ul>' +
-        '<p class="pro-soon">Pro is launching soon.</p>' +
-        '<button type="button" class="btn btn-primary pro-cta">Notify me when it’s live</button>' +
-        '<p class="pro-excl">Want in now? <strong>Exclusive</strong> access is invite-only — reach out to get it.</p>' +
+        '<div class="pro-body">' + // fades as one unit during the panel morph
+          '<div class="pro-badge">PRO</div>' +
+          '<h2 class="pro-title">TEZ Pro</h2>' +
+          '<p class="pro-reason" hidden></p>' +
+          '<ul class="pro-feats">' +
+            '<li>Bigger Handle Hunter hunts — 200+ names a run</li>' +
+            '<li>Every style filter unlocked</li>' +
+            '<li>Save &amp; export your finds</li>' +
+            '<li>Premium features across every TEZ drop</li>' +
+          '</ul>' +
+          '<p class="pro-soon">Pro is launching soon.</p>' +
+          '<button type="button" class="btn btn-primary pro-cta">Notify me when it’s live</button>' +
+          '<p class="pro-excl">Want in now? <strong>Exclusive</strong> access is invite-only — reach out to get it.</p>' +
+        '</div>' +
       '</div>';
     document.body.appendChild(proOverlay);
     proOverlay.querySelector(".pro-close").addEventListener("click", closePro);
@@ -371,36 +373,115 @@
       if (e.key === "Escape" && proOverlay && !proOverlay.hidden) closePro();
     });
   }
+  // Panel morph timing: content fade, then the shell resizes, then content fade.
+  var FADE_MS = 190, MORPH_MS = 360;
+  var proMorphing = false; // ignore open/close requests while a morph is running
+
   function openPro(reason, fromProfile) {
+    if (proMorphing) return;
     buildProModal();
     var r = proOverlay.querySelector(".pro-reason");
     if (reason) { r.textContent = reason; r.hidden = false; } else { r.hidden = true; }
-    // From the profile panel: keep its backdrop up and morph card → card
-    // (same hand-off feel as the sign-up/log-in switch).
     proFromProfile = !!fromProfile && !!profileOverlay && !profileOverlay.hidden;
-    proOverlay.classList.toggle("stacked", proFromProfile);
-    if (proFromProfile) document.body.appendChild(proOverlay); // ensure it stacks above the profile overlay
-    proOverlay.hidden = false;
     document.body.classList.add("auth-open"); // pause bg animation → smooth
-    if (proFromProfile) {
-      profileOverlay.querySelector(".profile-card").classList.add("morphed");
+
+    if (!proFromProfile) {
+      // Standalone (e.g. a locked Pro filter): original fade/scale-in.
+      proOverlay.hidden = false;
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { proOverlay.classList.add("show"); });
+      });
+      return;
     }
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () { proOverlay.classList.add("show"); });
-    });
-  }
-  function closePro() {
-    if (!proOverlay) return;
-    proOverlay.classList.remove("show");
-    var backToProfile = proFromProfile;
-    proFromProfile = false;
-    if (backToProfile && profileOverlay && !profileOverlay.hidden) {
-      profileOverlay.querySelector(".profile-card").classList.remove("morphed"); // morph back in
-    }
+
+    // From the profile panel: the PANEL ITSELF morphs — profile content fades
+    // out, the card shell animates to the Pro card's size/border, then the Pro
+    // content fades in. The profile backdrop stays up the whole time.
+    proMorphing = true;
+    proOverlay.classList.add("stacked");
+    document.body.appendChild(proOverlay); // ensure it stacks above the profile overlay
+    var profCard = profileOverlay.querySelector(".profile-card");
+    var proCard = proOverlay.querySelector(".pro-card");
+
+    profCard.classList.add("content-hidden"); // 1. old content fades out
     setTimeout(function () {
-      if (proOverlay) { proOverlay.hidden = true; proOverlay.classList.remove("stacked"); }
-      if (!backToProfile) document.body.classList.remove("auth-open"); // profile still open beneath
-    }, 320);
+      var from = profCard.getBoundingClientRect();
+      var shell = getComputedStyle(profCard);
+      // Show the Pro overlay and measure the card's natural (target) size.
+      // Everything below runs before the browser paints, so nothing flickers.
+      proOverlay.hidden = false;
+      proOverlay.classList.add("show"); // .stacked = no backdrop, no fade
+      proCard.classList.add("content-hidden");
+      var toW = proCard.offsetWidth, toH = proCard.offsetHeight;
+      // 2. pin the Pro shell to the profile card's exact box, swap the cards
+      //    (identical rects → invisible), then animate to its own box.
+      proCard.classList.add("morphing");
+      proCard.style.transition = "none";
+      proCard.style.width = from.width + "px";
+      proCard.style.height = from.height + "px";
+      proCard.style.borderColor = shell.borderColor;
+      proCard.style.boxShadow = shell.boxShadow;
+      void proCard.offsetHeight; // commit the start box before enabling the transition
+      profCard.style.visibility = "hidden";
+      proCard.style.transition = "";
+      proCard.style.width = toW + "px";
+      proCard.style.height = toH + "px";
+      proCard.style.borderColor = "";
+      proCard.style.boxShadow = "";
+      setTimeout(function () {
+        proCard.classList.remove("content-hidden"); // 3. new content fades in
+        setTimeout(function () {
+          proCard.classList.remove("morphing");
+          proCard.style.width = ""; proCard.style.height = "";
+          proMorphing = false;
+        }, FADE_MS + 30);
+      }, MORPH_MS);
+    }, FADE_MS);
+  }
+
+  function closePro() {
+    if (!proOverlay || proMorphing) return;
+    if (!proFromProfile) {
+      proOverlay.classList.remove("show");
+      setTimeout(function () {
+        if (proOverlay) proOverlay.hidden = true;
+        document.body.classList.remove("auth-open");
+      }, 320);
+      return;
+    }
+    // Morph back: Pro content fades out, the shell resizes to the profile
+    // card's box, the cards swap, and the profile content fades back in.
+    proMorphing = true;
+    proFromProfile = false;
+    var profCard = profileOverlay.querySelector(".profile-card");
+    var proCard = proOverlay.querySelector(".pro-card");
+
+    proCard.classList.add("content-hidden"); // 1. Pro content fades out
+    setTimeout(function () {
+      var to = profCard.getBoundingClientRect(); // visibility:hidden keeps layout
+      var shell = getComputedStyle(profCard);
+      proCard.classList.add("morphing");
+      proCard.style.transition = "none";
+      proCard.style.width = proCard.offsetWidth + "px";
+      proCard.style.height = proCard.offsetHeight + "px";
+      void proCard.offsetHeight;
+      proCard.style.transition = "";
+      proCard.style.width = to.width + "px"; // 2. shell morphs back
+      proCard.style.height = to.height + "px";
+      proCard.style.borderColor = shell.borderColor;
+      proCard.style.boxShadow = shell.boxShadow;
+      setTimeout(function () {
+        profCard.style.visibility = ""; // identical rects → invisible swap
+        proOverlay.hidden = true;
+        proOverlay.classList.remove("show", "stacked");
+        proCard.classList.remove("morphing", "content-hidden");
+        proCard.style.width = ""; proCard.style.height = "";
+        proCard.style.borderColor = ""; proCard.style.boxShadow = "";
+        profCard.classList.remove("content-hidden"); // 3. profile content fades in
+        proMorphing = false;
+        // body keeps auth-open — the profile panel is open again
+      }, MORPH_MS);
+    }, FADE_MS);
   }
 
   /* ---------- profile panel (opens when the account chip is clicked) ---------- */
@@ -413,6 +494,7 @@
     profileOverlay.innerHTML =
       '<div class="profile-card" role="dialog" aria-modal="true" aria-label="Your profile">' +
         '<button class="profile-close" aria-label="Close">×</button>' +
+        '<div class="profile-body">' + // fades as one unit during the panel morph
         '<div class="profile-head">' +
           '<span class="profile-avatar"></span>' +
           '<div class="profile-id">' +
@@ -442,6 +524,7 @@
           '<p class="profile-msg" id="pfMsg"></p>' +
         '</div>' +
         '<button type="button" class="profile-logout" id="pfLogout">Log out</button>' +
+        '</div>' + // /.profile-body
       '</div>';
     document.body.appendChild(profileOverlay);
 
@@ -540,7 +623,7 @@
     });
   }
   function closeProfile() {
-    if (!profileOverlay) return;
+    if (!profileOverlay || proMorphing) return;
     profileOverlay.classList.remove("show");
     setTimeout(function () {
       if (profileOverlay) profileOverlay.hidden = true;

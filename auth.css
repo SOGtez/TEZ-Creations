@@ -335,11 +335,29 @@ html:has(body.auth-open) { overflow: hidden; }
 }
 .pro-overlay.show { opacity: 1; }
 .pro-overlay[hidden] { display: none; }
-/* Stacked over the profile panel: that overlay's backdrop stays up, so this
-   one goes transparent — the cards hand off in place (morph), no re-dim. */
+/* ---- Panel morph (profile ⇄ Pro) ----
+   Opened from the profile panel, the Pro panel doesn't fade in over a fresh
+   backdrop: the profile overlay's backdrop stays up, the old content fades
+   out, the card SHELL animates to the Pro card's size/border, then the new
+   content fades in (and the exact reverse on close). */
 .pro-overlay.stacked {
   background: transparent;
   backdrop-filter: none; -webkit-backdrop-filter: none;
+  transition: none; /* appears mid-morph, already "shown" */
+}
+/* Each card's content fades as one unit (the × stays, shared by both shells) */
+.pro-body, .profile-body { transition: opacity 0.19s ease; }
+.pro-card.content-hidden .pro-body,
+.profile-card.content-hidden .profile-body { opacity: 0; }
+/* The shell while it's morphing: JS drives width/height/border inline */
+.pro-card.morphing {
+  box-sizing: border-box;
+  max-width: none; max-height: none; overflow: hidden;
+  transform: none !important;
+  transition:
+    width 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.36s ease, box-shadow 0.36s ease;
 }
 .pro-card {
   position: relative; width: 100%; max-width: 380px;
@@ -418,7 +436,8 @@ html:has(body.auth-open) { overflow: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pro-overlay, .pro-card { transition: none; }
+  .pro-overlay, .pro-card, .pro-card.morphing,
+  .pro-body, .profile-body { transition: none; }
 }
 
 /* ============================================================
@@ -446,15 +465,9 @@ html:has(body.auth-open) { overflow: hidden; }
   border-radius: 18px; padding: 26px 26px 22px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
   transform: translateY(14px) scale(0.98);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .profile-overlay.show .profile-card { transform: translateY(0) scale(1); }
-/* Morphed away while the Pro panel sits on top (backdrop stays put) */
-.profile-overlay.show .profile-card.morphed {
-  opacity: 0;
-  transform: translateY(-10px) scale(0.96);
-  pointer-events: none;
-}
 .profile-close {
   position: absolute; top: 14px; right: 16px;
   background: none; border: none; color: var(--muted, #8fa394);
