@@ -445,8 +445,15 @@
         profCard.classList.remove("morphing");
         profCard.style.width = ""; profCard.style.height = "";
         profCard.style.borderColor = ""; profCard.style.boxShadow = "";
-        proCard.classList.remove("content-hidden"); // 3. new content fades in
-        setTimeout(function () { proMorphing = false; }, FADE_MS);
+        // The Pro overlay was display:none until this moment — transitions
+        // don't run on an element's first rendered frame, so removing
+        // content-hidden right away would POP the content in. Commit a frame
+        // at opacity 0 first, then start the fade.
+        void proCard.offsetHeight;
+        setTimeout(function () {
+          proCard.classList.remove("content-hidden"); // 3. new content fades in
+          setTimeout(function () { proMorphing = false; }, FADE_MS);
+        }, 30);
       }, MORPH_MS + 40); // small buffer so the shape transition has fully settled
     }, MORPH_DELAY);
   }
