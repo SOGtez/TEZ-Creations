@@ -376,7 +376,7 @@
   // Panel morph timing: content fade, then the shell resizes, then content fade.
   // Keep in sync with the .pro-body/.profile-body and .pro-card.morphing
   // durations in auth.css.
-  var FADE_MS = 220, MORPH_MS = 420;
+  var FADE_MS = 330, MORPH_MS = 630;
   var proMorphing = false; // ignore open/close requests while a morph is running
 
   function openPro(reason, fromProfile) {
@@ -434,7 +434,7 @@
       //    slight overlap reads as one fluid motion, not three steps)
       setTimeout(function () {
         proCard.classList.remove("content-hidden");
-      }, MORPH_MS - 140);
+      }, MORPH_MS - 210);
       setTimeout(function () {
         proCard.classList.remove("morphing");
         proCard.style.width = ""; proCard.style.height = "";
