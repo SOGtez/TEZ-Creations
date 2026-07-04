@@ -539,6 +539,31 @@ html:has(body.auth-open) { overflow: hidden; }
 .profile-save:hover:not(:disabled) { transform: translateY(-1px); }
 .profile-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Tier-testing switcher (allowlisted test accounts only) */
+.tier-switch { display: flex; gap: 6px; margin-bottom: 8px; }
+.tier-switch button {
+  flex: 1; font-family: var(--font-sans, sans-serif); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted, #8fa394); background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+  padding: 9px 0; cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.tier-switch button:hover:not(:disabled):not(.is-active) {
+  color: var(--text, #eaf2ec); border-color: rgba(255, 255, 255, 0.2);
+}
+.tier-switch button:disabled { opacity: 0.55; cursor: wait; }
+.tier-switch button.is-active {
+  color: #04160b; background: linear-gradient(180deg, var(--accent-bright, #4ade80), var(--accent-deep, #16a34a));
+  border-color: transparent; cursor: default;
+}
+.tier-switch button.is-active[data-tier="exclusive"] {
+  color: #1a1204; background: linear-gradient(180deg, #f5d67a, #d19a2a);
+}
+.tier-switch button.is-active[data-tier="free"] {
+  color: var(--text, #eaf2ec); background: rgba(255, 255, 255, 0.14);
+}
+
 .profile-msg { font-size: 13px; margin: 4px 0 0; min-height: 18px; }
 .profile-msg.ok { color: var(--accent-bright, #4ade80); }
 .profile-msg.err { color: var(--danger, #f78a8a); }

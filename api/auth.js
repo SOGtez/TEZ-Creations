@@ -88,6 +88,13 @@ function tierOf(row) {
   const t = row.tier || (row.pro ? 'pro' : 'free');
   return TIER_RANK[t] === undefined ? 'free' : t;
 }
+
+// Accounts allowed to switch their own tier at will (feature-testing only).
+// The check runs server-side against the authenticated user's member code —
+// add codes here if the owner grants the ability to another account.
+const TIER_TESTERS = ['TEZ-FGHXR'];
+const isTierTester = (row) => TIER_TESTERS.includes(row.code || '');
+
 const publicUser = (row) => {
   const tier = tierOf(row);
   return {
@@ -95,6 +102,7 @@ const publicUser = (row) => {
     tier,
     pro: TIER_RANK[tier] >= TIER_RANK.pro, // true for pro AND exclusive
     exclusive: tier === 'exclusive',
+    tierTester: isTierTester(row), // UI hint only — the tier route re-checks
     created_at: row.created_at || null,
     pro_until: row.pro_until || null,
     name_changed_at: row.name_changed_at || null,
@@ -161,6 +169,7 @@ export default async function handler(req, res) {
     if (route === 'me') return await me(req, res);
     if (route === 'update') return await updateProfile(req, res);
     if (route === 'password') return await changePassword(req, res);
+    if (route === 'tier') return await switchTier(req, res);
     res.status(404).json({ error: 'Unknown route.' });
   } catch (err) {
     console.error('auth', route, err && err.message);
@@ -259,6 +268,32 @@ async function updateProfile(req, res) {
   });
   if (upd.ok && upd.json && upd.json[0]) { res.status(200).json({ user: publicUser(upd.json[0]) }); return; }
   res.status(500).json({ error: 'Could not save. Try again.' });
+}
+
+// Tier switching — TIER_TESTERS accounts only (feature testing). The allowlist
+// is checked against the DB row of the AUTHENTICATED user, so hiding the UI is
+// not the protection; other accounts get a 403 no matter what they send.
+async function switchTier(req, res) {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  const p = verifyToken(bearer(req) || readBody(req).token);
+  if (!p) { res.status(401).json({ error: 'Not signed in.' }); return; }
+  const tier = String(readBody(req).tier || '').toLowerCase();
+  if (TIER_RANK[tier] === undefined) { res.status(400).json({ error: 'Unknown tier.' }); return; }
+
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=*&limit=1');
+  const row = q.json && q.json[0];
+  if (!row) { res.status(401).json({ error: 'Account not found.' }); return; }
+  if (!isTierTester(row)) { res.status(403).json({ error: 'This account cannot switch tiers.' }); return; }
+
+  const body = { tier };
+  // Clear any timed grant so applyExpiry can't revert the tier mid-test. Only
+  // touch the column if this row actually has it (migration may not have run).
+  if ('pro_until' in row && row.pro_until) body.pro_until = null;
+  const upd = await sb('PATCH', 'tez_users?id=eq.' + encodeURIComponent(p.uid), {
+    body, prefer: 'return=representation',
+  });
+  if (upd.ok && upd.json && upd.json[0]) { res.status(200).json({ user: publicUser(upd.json[0]) }); return; }
+  res.status(500).json({ error: 'Could not switch tier. Try again.' });
 }
 
 // Change password: verify the current one, then store a fresh scrypt hash.

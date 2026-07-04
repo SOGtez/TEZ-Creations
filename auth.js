@@ -531,6 +531,16 @@
           '<div class="profile-row"><span class="pr-k">Plan</span><span class="pr-v profile-plan"></span></div>' +
           '<div class="profile-row"><span class="pr-k">Member since</span><span class="pr-v profile-since"></span></div>' +
         '</div>' +
+        // Owner/tester-only: shown when the server marks the account tierTester
+        '<div class="profile-sec" id="pfTierSec" hidden>' +
+          '<p class="profile-sec-title">Tier testing</p>' +
+          '<div class="tier-switch" id="pfTierSwitch">' +
+            '<button type="button" data-tier="free">Free</button>' +
+            '<button type="button" data-tier="pro">Pro</button>' +
+            '<button type="button" data-tier="exclusive">Exclusive</button>' +
+          '</div>' +
+          '<span class="profile-hint">Testing only — switches this account between tiers so you can check gated features.</span>' +
+        '</div>' +
         '<div class="profile-sec">' +
           '<p class="profile-sec-title">Settings</p>' +
           '<label class="profile-field"><span>Display name</span>' +
@@ -567,6 +577,8 @@
       newpw: profileOverlay.querySelector("#pfNew"),
       passSave: profileOverlay.querySelector("#pfPassSave"),
       msg: profileOverlay.querySelector("#pfMsg"),
+      tierSec: profileOverlay.querySelector("#pfTierSec"),
+      tierSwitch: profileOverlay.querySelector("#pfTierSwitch"),
     };
 
     profileOverlay.querySelector(".profile-close").addEventListener("click", closeProfile);
@@ -581,6 +593,7 @@
     });
     pf.nameSave.addEventListener("click", saveName);
     pf.passSave.addEventListener("click", savePassword);
+    pf.tierSwitch.addEventListener("click", switchTestTier);
     pf.plan.addEventListener("click", function (e) {
       if (e.target && e.target.classList.contains("pr-upgrade")) {
         openPro("Upgrade to unlock Pro across every drop.", true); // morph, profile stays beneath
@@ -632,7 +645,38 @@
       ? "You can change your name again on " + fmtDay(nextChange) + "."
       : "You can change your name once every 14 days.";
     pf.cur.value = ""; pf.newpw.value = "";
+    // Tier switcher: server-flagged test accounts only (TEZ-FGHXR)
+    pf.tierSec.hidden = !user.tierTester;
+    if (user.tierTester) {
+      pf.tierSwitch.querySelectorAll("button").forEach(function (b) {
+        b.classList.toggle("is-active", b.dataset.tier === tier);
+        b.disabled = false;
+      });
+    }
     setProfileMsg("");
+  }
+
+  // Switch the (allowlisted) account's tier for feature testing. The server
+  // re-verifies the member code — this UI is just a convenience.
+  function switchTestTier(e) {
+    var btn = e.target && e.target.closest ? e.target.closest("button[data-tier]") : null;
+    if (!btn || btn.classList.contains("is-active")) return;
+    var buttons = pf.tierSwitch.querySelectorAll("button");
+    buttons.forEach(function (b) { b.disabled = true; });
+    api("tier", { body: { tier: btn.dataset.tier }, auth: true }).then(function (res) {
+      if (!res.ok || !res.data || !res.data.user) {
+        buttons.forEach(function (b) { b.disabled = false; });
+        setProfileMsg((res.data && res.data.error) || "Could not switch tier.", false);
+        return;
+      }
+      setSession(getToken(), res.data.user);
+      emitChange(); // chip badge + any onChange tier gates (e.g. Handle Hunter) update
+      fillProfile(res.data.user);
+      setProfileMsg("Now on " + res.data.user.tier.toUpperCase() + " — tier gates across the site now see this account as " + res.data.user.tier + ".", true);
+    }).catch(function () {
+      buttons.forEach(function (b) { b.disabled = false; });
+      setProfileMsg("Couldn't reach the server.", false);
+    });
   }
 
   function openProfile() {
