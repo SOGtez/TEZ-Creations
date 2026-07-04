@@ -374,7 +374,9 @@
     });
   }
   // Panel morph timing: content fade, then the shell resizes, then content fade.
-  var FADE_MS = 190, MORPH_MS = 360;
+  // Keep in sync with the .pro-body/.profile-body and .pro-card.morphing
+  // durations in auth.css.
+  var FADE_MS = 220, MORPH_MS = 420;
   var proMorphing = false; // ignore open/close requests while a morph is running
 
   function openPro(reason, fromProfile) {
@@ -428,14 +430,16 @@
       proCard.style.height = toH + "px";
       proCard.style.borderColor = "";
       proCard.style.boxShadow = "";
+      // 3. new content fades in while the shape is still settling (the
+      //    slight overlap reads as one fluid motion, not three steps)
       setTimeout(function () {
-        proCard.classList.remove("content-hidden"); // 3. new content fades in
-        setTimeout(function () {
-          proCard.classList.remove("morphing");
-          proCard.style.width = ""; proCard.style.height = "";
-          proMorphing = false;
-        }, FADE_MS + 30);
-      }, MORPH_MS);
+        proCard.classList.remove("content-hidden");
+      }, MORPH_MS - 140);
+      setTimeout(function () {
+        proCard.classList.remove("morphing");
+        proCard.style.width = ""; proCard.style.height = "";
+        proMorphing = false;
+      }, MORPH_MS + FADE_MS);
     }, FADE_MS);
   }
 
@@ -460,10 +464,13 @@
     setTimeout(function () {
       var to = profCard.getBoundingClientRect(); // visibility:hidden keeps layout
       var shell = getComputedStyle(profCard);
+      // Measure BEFORE .morphing lifts max-width (width:100% would snap the
+      // card to the full overlay width and pin that as the start size).
+      var startW = proCard.offsetWidth, startH = proCard.offsetHeight;
       proCard.classList.add("morphing");
       proCard.style.transition = "none";
-      proCard.style.width = proCard.offsetWidth + "px";
-      proCard.style.height = proCard.offsetHeight + "px";
+      proCard.style.width = startW + "px";
+      proCard.style.height = startH + "px";
       void proCard.offsetHeight;
       proCard.style.transition = "";
       proCard.style.width = to.width + "px"; // 2. shell morphs back
