@@ -338,6 +338,7 @@
 
   /* ---------- Pro upsell modal (universal across drops) ---------- */
   var proOverlay;
+  var proFromProfile = false; // Pro opened via the profile panel → close morphs back to it
   function buildProModal() {
     if (proOverlay) return;
     proOverlay = document.createElement("div");
@@ -370,12 +371,20 @@
       if (e.key === "Escape" && proOverlay && !proOverlay.hidden) closePro();
     });
   }
-  function openPro(reason) {
+  function openPro(reason, fromProfile) {
     buildProModal();
     var r = proOverlay.querySelector(".pro-reason");
     if (reason) { r.textContent = reason; r.hidden = false; } else { r.hidden = true; }
+    // From the profile panel: keep its backdrop up and morph card → card
+    // (same hand-off feel as the sign-up/log-in switch).
+    proFromProfile = !!fromProfile && !!profileOverlay && !profileOverlay.hidden;
+    proOverlay.classList.toggle("stacked", proFromProfile);
+    if (proFromProfile) document.body.appendChild(proOverlay); // ensure it stacks above the profile overlay
     proOverlay.hidden = false;
     document.body.classList.add("auth-open"); // pause bg animation → smooth
+    if (proFromProfile) {
+      profileOverlay.querySelector(".profile-card").classList.add("morphed");
+    }
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { proOverlay.classList.add("show"); });
     });
@@ -383,9 +392,14 @@
   function closePro() {
     if (!proOverlay) return;
     proOverlay.classList.remove("show");
+    var backToProfile = proFromProfile;
+    proFromProfile = false;
+    if (backToProfile && profileOverlay && !profileOverlay.hidden) {
+      profileOverlay.querySelector(".profile-card").classList.remove("morphed"); // morph back in
+    }
     setTimeout(function () {
-      if (proOverlay) proOverlay.hidden = true;
-      document.body.classList.remove("auth-open");
+      if (proOverlay) { proOverlay.hidden = true; proOverlay.classList.remove("stacked"); }
+      if (!backToProfile) document.body.classList.remove("auth-open"); // profile still open beneath
     }, 320);
   }
 
@@ -451,7 +465,9 @@
     profileOverlay.querySelector(".profile-close").addEventListener("click", closeProfile);
     profileOverlay.addEventListener("mousedown", function (e) { if (e.target === profileOverlay) closeProfile(); });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && profileOverlay && !profileOverlay.hidden) closeProfile();
+      if (e.key !== "Escape" || !profileOverlay || profileOverlay.hidden) return;
+      if (proOverlay && !proOverlay.hidden) return; // Pro panel is on top — its handler morphs back
+      closeProfile();
     });
     profileOverlay.querySelector("#pfLogout").addEventListener("click", function () {
       closeProfile(); clearSession(); emitChange();
@@ -460,7 +476,7 @@
     pf.passSave.addEventListener("click", savePassword);
     pf.plan.addEventListener("click", function (e) {
       if (e.target && e.target.classList.contains("pr-upgrade")) {
-        closeProfile(); openPro("Upgrade to unlock Pro across every drop.");
+        openPro("Upgrade to unlock Pro across every drop.", true); // morph, profile stays beneath
       }
     });
   }

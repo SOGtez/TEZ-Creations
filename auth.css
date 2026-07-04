@@ -335,6 +335,12 @@ html:has(body.auth-open) { overflow: hidden; }
 }
 .pro-overlay.show { opacity: 1; }
 .pro-overlay[hidden] { display: none; }
+/* Stacked over the profile panel: that overlay's backdrop stays up, so this
+   one goes transparent — the cards hand off in place (morph), no re-dim. */
+.pro-overlay.stacked {
+  background: transparent;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
 .pro-card {
   position: relative; width: 100%; max-width: 380px;
   max-height: calc(100vh - 48px); overflow-y: auto;
@@ -440,9 +446,15 @@ html:has(body.auth-open) { overflow: hidden; }
   border-radius: 18px; padding: 26px 26px 22px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
   transform: translateY(14px) scale(0.98);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease;
 }
 .profile-overlay.show .profile-card { transform: translateY(0) scale(1); }
+/* Morphed away while the Pro panel sits on top (backdrop stays put) */
+.profile-overlay.show .profile-card.morphed {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.96);
+  pointer-events: none;
+}
 .profile-close {
   position: absolute; top: 14px; right: 16px;
   background: none; border: none; color: var(--muted, #8fa394);
