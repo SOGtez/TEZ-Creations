@@ -345,8 +345,10 @@ html:has(body.auth-open) { overflow: hidden; }
   backdrop-filter: none; -webkit-backdrop-filter: none;
   transition: none; /* appears mid-morph, already "shown" */
 }
-/* Each card's content fades as one unit (the × stays, shared by both shells) */
-.pro-body, .profile-body { transition: opacity 0.33s ease; }
+/* Each card's content fades as one unit (the × stays, shared by both shells).
+   Timings match the sign-up/log-in panel's mode switch — the house standard
+   for panel-to-panel transitions: 0.4s content fade, 0.5s shape change. */
+.pro-body, .profile-body { transition: opacity 0.4s ease; }
 .pro-card.content-hidden .pro-body,
 .profile-card.content-hidden .profile-body { opacity: 0; }
 /* The shell while it's morphing: JS drives width/height/border inline */
@@ -356,9 +358,9 @@ html:has(body.auth-open) { overflow: hidden; }
   transform: none !important;
   will-change: width, height;
   transition:
-    width 0.63s cubic-bezier(0.16, 1, 0.3, 1),
-    height 0.63s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.63s ease, box-shadow 0.63s ease;
+    width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.5s ease, box-shadow 0.5s ease;
 }
 .pro-card {
   position: relative; width: 100%; max-width: 380px;
