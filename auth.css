@@ -351,8 +351,10 @@ html:has(body.auth-open) { overflow: hidden; }
 .pro-body, .profile-body { transition: opacity 0.4s ease; }
 .pro-card.content-hidden .pro-body,
 .profile-card.content-hidden .profile-body { opacity: 0; }
-/* The shell while it's morphing: JS drives width/height/border inline */
-.pro-card.morphing {
+/* The shell while it's morphing: JS drives width/height/border inline.
+   (Open morphs the PROFILE shell toward the Pro box; close morphs the Pro
+   shell back — the shells swap invisibly when their boxes match.) */
+.pro-card.morphing, .profile-card.morphing {
   box-sizing: border-box;
   max-width: none; max-height: none; overflow: hidden;
   transform: none !important;
@@ -439,7 +441,7 @@ html:has(body.auth-open) { overflow: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pro-overlay, .pro-card, .pro-card.morphing,
+  .pro-overlay, .pro-card, .pro-card.morphing, .profile-card.morphing,
   .pro-body, .profile-body { transition: none; }
 }
 

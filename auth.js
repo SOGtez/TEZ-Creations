@@ -399,8 +399,10 @@
       return;
     }
 
-    // From the profile panel: the PANEL ITSELF morphs — profile content fades
-    // out, the card shell animates to the Pro card's size/border, then the Pro
+    // From the profile panel: the PANEL ITSELF morphs — the shape change and
+    // the content fade run TOGETHER (like the sign-up/log-in switch). The
+    // profile card fades its content while its shell animates to the Pro
+    // card's box; when the boxes match, the shells swap invisibly and the Pro
     // content fades in. The profile backdrop stays up the whole time.
     proMorphing = true;
     proOverlay.classList.add("stacked");
@@ -408,42 +410,42 @@
     var profCard = profileOverlay.querySelector(".profile-card");
     var proCard = proOverlay.querySelector(".pro-card");
 
-    profCard.classList.add("content-hidden"); // 1. old content fades out
+    // Measure the Pro card's natural box without ever painting it. Adding
+    // "show" now (while display:none) also means no entrance transition can
+    // fire at the swap — it renders directly in its resting state.
+    proOverlay.style.visibility = "hidden";
+    proOverlay.hidden = false;
+    proOverlay.classList.add("show");
+    proCard.classList.add("content-hidden");
+    var toW = proCard.offsetWidth, toH = proCard.offsetHeight;
+    var proShell = getComputedStyle(proCard);
+    var toBorder = proShell.borderColor, toShadow = proShell.boxShadow;
+    proOverlay.hidden = true;
+    proOverlay.style.visibility = "";
+
+    // Fade the old content and morph the profile shell at the same time
+    var from = profCard.getBoundingClientRect();
+    profCard.classList.add("content-hidden", "morphing");
+    profCard.style.transition = "none";
+    profCard.style.width = from.width + "px";
+    profCard.style.height = from.height + "px";
+    void profCard.offsetHeight; // commit the start box before enabling the transition
+    profCard.style.transition = "";
+    profCard.style.width = toW + "px";
+    profCard.style.height = toH + "px";
+    profCard.style.borderColor = toBorder;
+    profCard.style.boxShadow = toShadow;
+
     setTimeout(function () {
-      var from = profCard.getBoundingClientRect();
-      var shell = getComputedStyle(profCard);
-      // Show the Pro overlay and measure the card's natural (target) size.
-      // Everything below runs before the browser paints, so nothing flickers.
+      // Shells now share the same box + border → invisible swap
       proOverlay.hidden = false;
-      proOverlay.classList.add("show"); // .stacked = no backdrop, no fade
-      proCard.classList.add("content-hidden");
-      var toW = proCard.offsetWidth, toH = proCard.offsetHeight;
-      // 2. pin the Pro shell to the profile card's exact box, swap the cards
-      //    (identical rects → invisible), then animate to its own box.
-      proCard.classList.add("morphing");
-      proCard.style.transition = "none";
-      proCard.style.width = from.width + "px";
-      proCard.style.height = from.height + "px";
-      proCard.style.borderColor = shell.borderColor;
-      proCard.style.boxShadow = shell.boxShadow;
-      void proCard.offsetHeight; // commit the start box before enabling the transition
       profCard.style.visibility = "hidden";
-      proCard.style.transition = "";
-      proCard.style.width = toW + "px";
-      proCard.style.height = toH + "px";
-      proCard.style.borderColor = "";
-      proCard.style.boxShadow = "";
-      // 3. new content fades in while the shape is still settling (the
-      //    slight overlap reads as one fluid motion, not three steps)
-      setTimeout(function () {
-        proCard.classList.remove("content-hidden");
-      }, MORPH_MS - 170);
-      setTimeout(function () {
-        proCard.classList.remove("morphing");
-        proCard.style.width = ""; proCard.style.height = "";
-        proMorphing = false;
-      }, MORPH_MS + FADE_MS);
-    }, FADE_MS);
+      profCard.classList.remove("morphing");
+      profCard.style.width = ""; profCard.style.height = "";
+      profCard.style.borderColor = ""; profCard.style.boxShadow = "";
+      proCard.classList.remove("content-hidden"); // new content fades in
+      setTimeout(function () { proMorphing = false; }, FADE_MS);
+    }, MORPH_MS + 40); // small buffer so the shape transition has fully settled
   }
 
   function closePro() {
@@ -456,42 +458,40 @@
       }, 320);
       return;
     }
-    // Morph back: Pro content fades out, the shell resizes to the profile
-    // card's box, the cards swap, and the profile content fades back in.
+    // Morph back: the Pro content fades out WHILE the shell resizes to the
+    // profile card's box; the cards swap, and the profile content fades in.
     proMorphing = true;
     proFromProfile = false;
     var profCard = profileOverlay.querySelector(".profile-card");
     var proCard = proOverlay.querySelector(".pro-card");
 
-    proCard.classList.add("content-hidden"); // 1. Pro content fades out
+    var to = profCard.getBoundingClientRect(); // visibility:hidden keeps layout
+    var shell = getComputedStyle(profCard);
+    // Measure BEFORE .morphing lifts max-width (width:100% would snap the
+    // card to the full overlay width and pin that as the start size).
+    var startW = proCard.offsetWidth, startH = proCard.offsetHeight;
+    proCard.classList.add("content-hidden", "morphing"); // fade + morph together
+    proCard.style.transition = "none";
+    proCard.style.width = startW + "px";
+    proCard.style.height = startH + "px";
+    void proCard.offsetHeight;
+    proCard.style.transition = "";
+    proCard.style.width = to.width + "px";
+    proCard.style.height = to.height + "px";
+    proCard.style.borderColor = shell.borderColor;
+    proCard.style.boxShadow = shell.boxShadow;
+
     setTimeout(function () {
-      var to = profCard.getBoundingClientRect(); // visibility:hidden keeps layout
-      var shell = getComputedStyle(profCard);
-      // Measure BEFORE .morphing lifts max-width (width:100% would snap the
-      // card to the full overlay width and pin that as the start size).
-      var startW = proCard.offsetWidth, startH = proCard.offsetHeight;
-      proCard.classList.add("morphing");
-      proCard.style.transition = "none";
-      proCard.style.width = startW + "px";
-      proCard.style.height = startH + "px";
-      void proCard.offsetHeight;
-      proCard.style.transition = "";
-      proCard.style.width = to.width + "px"; // 2. shell morphs back
-      proCard.style.height = to.height + "px";
-      proCard.style.borderColor = shell.borderColor;
-      proCard.style.boxShadow = shell.boxShadow;
-      setTimeout(function () {
-        profCard.style.visibility = ""; // identical rects → invisible swap
-        proOverlay.hidden = true;
-        proOverlay.classList.remove("show", "stacked");
-        proCard.classList.remove("morphing", "content-hidden");
-        proCard.style.width = ""; proCard.style.height = "";
-        proCard.style.borderColor = ""; proCard.style.boxShadow = "";
-        profCard.classList.remove("content-hidden"); // 3. profile content fades in
-        proMorphing = false;
-        // body keeps auth-open — the profile panel is open again
-      }, MORPH_MS);
-    }, FADE_MS);
+      profCard.style.visibility = ""; // identical rects → invisible swap
+      proOverlay.hidden = true;
+      proOverlay.classList.remove("show", "stacked");
+      proCard.classList.remove("morphing", "content-hidden");
+      proCard.style.width = ""; proCard.style.height = "";
+      proCard.style.borderColor = ""; proCard.style.boxShadow = "";
+      profCard.classList.remove("content-hidden"); // profile content fades in
+      setTimeout(function () { proMorphing = false; }, FADE_MS);
+      // body keeps auth-open — the profile panel is open again
+    }, MORPH_MS + 40); // small buffer so the shape transition has fully settled
   }
 
   /* ---------- profile panel (opens when the account chip is clicked) ---------- */
