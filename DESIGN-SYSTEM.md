@@ -184,11 +184,11 @@ Motion is subtle and premium — never bouncy or loud.
 - **Easing:** camera/parallax uses `cubic-bezier(0.76, 0, 0.24, 1)`; most UI uses `ease`,
   ~0.2–0.25s.
 - **Panel-to-panel transitions (HOUSE STANDARD):** whenever one panel/modal changes into
-  another (e.g. sign up ⇄ log in, profile ⇄ Pro), match the sign-up/log-in panel's mode
-  switch exactly: **content fades 0.4s `ease`, the panel's shape change 0.5s
-  `cubic-bezier(0.16, 1, 0.3, 1)`**. Pattern: old content fades out → the card shell
-  morphs size/border on one continuous backdrop → new content fades in (see the
-  profile ⇄ Pro morph in `auth.js`/`auth.css`).
+  another (e.g. profile ⇄ Pro), use these speeds: **content fades 0.4s `ease`, the
+  panel's shape change 0.5s `cubic-bezier(0.16, 1, 0.3, 1)`** — sequenced: the old
+  content fades for **0.5s first, THEN** the card shell morphs size/border on one
+  continuous backdrop, then the new content fades in (≈1.44s total). See the
+  profile ⇄ Pro morph in `auth.js` (`FADE_MS`/`MORPH_MS`/`MORPH_DELAY`) + `auth.css`.
 - **Accessibility:** everything respects `@media (prefers-reduced-motion: reduce)` — kill
   animations, force `opacity:1`, drop transitions. Always gate motion JS behind the
   `reduce` check (`matchMedia("(prefers-reduced-motion: reduce)")`) like the existing pages.
