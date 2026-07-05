@@ -104,6 +104,24 @@ export async function getBroadcaster() {
   return bcCache;
 }
 
+// Raw broadcaster-connection state for the admin diagnostic — does NOT refresh
+// the token (so it distinguishes "nothing saved" / "table missing" from a saved
+// row whose token is failing). Never returns the refresh_token itself.
+export async function getBroadcasterRaw() {
+  const r = await sb('GET', 'ak9_broadcaster?id=eq.1&select=login,scope,broadcaster_id,updated_at,refresh_token&limit=1');
+  if (!r.ok) {
+    const missing = r.status === 404 || (r.json && r.json.code === '42P01') || /does not exist|find the table/i.test(r.text || '');
+    return { tableMissing: !!missing, readError: true, hasRow: false };
+  }
+  const rec = (r.json || [])[0];
+  if (!rec) return { hasRow: false };
+  return {
+    hasRow: !!rec.refresh_token,           // boolean only — the token never leaves the server
+    login: rec.login || '', scope: rec.scope || '',
+    broadcaster_id: rec.broadcaster_id || '', updated_at: rec.updated_at || '',
+  };
+}
+
 // Does userId follow the AK9 channel? null = can't determine (not configured).
 export async function checkFollows(userId) {
   const bc = await getBroadcaster();

@@ -8,7 +8,7 @@
 //   save_settings { month_label, deadline, voting_open }
 //   reset_votes   { confirm:true }   ← clears ALL votes (new month)
 
-import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, sb, cors, readBody } from './_ak9.js';
+import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody } from './_ak9.js';
 
 async function requireAdmin(req, res) {
   const id = await validateToken(bearer(req));
@@ -54,10 +54,22 @@ export default async function handler(req, res) {
         }
       });
 
-      const bc = await getBroadcaster();
+      const bc = await getBroadcaster();       // refreshes → proves the token works
+      const raw = await getBroadcasterRaw();    // what's actually stored (no refresh)
       res.status(200).json({
         settings, awards, votes, tallies, totalVoters: votes.length,
         broadcaster: bc ? { login: bc.login, broadcaster_id: bc.broadcaster_id } : null,
+        broadcasterDiag: {
+          refreshOk: !!bc,                                  // token refreshed successfully
+          tableOk: !raw.tableMissing && !raw.readError,     // ak9_broadcaster is readable
+          hasRow: !!raw.hasRow,                             // a connection was actually saved
+          storedLogin: raw.login || null,
+          storedScope: raw.scope || null,
+          updatedAt: raw.updated_at || null,
+          scopeOk: /moderator:read:followers/.test(raw.scope || ''),
+          loginMatches: (raw.login || '').toLowerCase() === CHANNEL_LOGIN,
+          expectedChannel: CHANNEL_LOGIN,
+        },
         you: { login: admin.login },
       });
       return;

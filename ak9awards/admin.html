@@ -222,9 +222,32 @@ function toLocalInput(iso) {
   const local = new Date(d.getTime() - off * 60000);
   return local.toISOString().slice(0, 16);
 }
+function fmtWhen(iso) { try { return new Date(iso).toLocaleString(); } catch (e) { return ''; } }
+function broadcasterStatus() {
+  const dg = DATA.broadcasterDiag || {};
+  const chan = esc(dg.expectedChannel || 'aleksk9_');
+  const who = esc(dg.storedLogin || '');
+  // fully working
+  if (dg.refreshOk && dg.loginMatches)
+    return { html: 'Connected as <b class="ok">@' + who + '</b> — follower checks are working. ✓', connected: true };
+  // connected, but to the wrong Twitch account
+  if (dg.refreshOk && !dg.loginMatches)
+    return { html: '<b class="bad">Connected as @' + who + ', but that isn’t the AK9 channel (@' + chan + ').</b> Reconnect while logged into Twitch as <b>@' + chan + '</b>.', connected: true };
+  // the table itself couldn’t be read → schema not run
+  if (dg.tableOk === false)
+    return { html: '<b class="bad">Couldn’t read the broadcaster table.</b> The <b>ak9awards/schema.sql</b> setup likely wasn’t run in Supabase — run it, then reconnect.', connected: false };
+  // a row is saved but the token no longer works
+  if (dg.hasRow && !dg.refreshOk)
+    return { html: '<b class="bad">A connection is saved' + (who ? ' for @' + who : '') + ' (saved ' + esc(fmtWhen(dg.updatedAt)) + ')' +
+      ' but Twitch rejected its token.</b> Reconnect. If it keeps failing, the <b>TWITCH_CLIENT_SECRET</b> env var is likely wrong.' +
+      (dg.scopeOk ? '' : ' <br><span class="bad">Also: the saved permission is missing the follower scope.</span>'), connected: false };
+  // nothing saved at all
+  return { html: '<b class="bad">No channel connection has been saved yet.</b> Aleks must click the button below, log in as <b>@' + chan + '</b>, and press <b>Authorize</b> on the “View followers” permission. If he did and it still shows this, the authorization didn’t complete — watch for a red error when he returns.', connected: false };
+}
 function renderSettings() {
   const s = DATA.settings || {};
   const bc = DATA.broadcaster;
+  const bstat = broadcasterStatus();
   $('#tab-settings').innerHTML =
     '<div class="panel"><h3>Voting settings</h3><div class="sub">Set the month, the deadline, and open or close voting.</div>' +
     '<div class="row"><div class="field"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
@@ -234,9 +257,9 @@ function renderSettings() {
     '<button class="btn ghost" onclick="ak9ClearDeadline()">Clear deadline</button></div></div>' +
 
     '<div class="panel"><h3>Follower verification</h3><div class="sub">Voting is limited to followers of the channel. ' +
-    'Twitch requires the broadcaster to connect once so the server can check followers. ' +
-    (bc ? 'Connected as <b class="ok">@' + esc(bc.login) + '</b>.' : '<b class="bad">Not connected — voting is blocked until this is done.</b>') +
-    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bc ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button></div>' +
+    'Twitch requires the broadcaster to connect once so the server can check followers.<br><br>' +
+    bstat.html +
+    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button></div>' +
 
     '<div class="panel"><h3>Danger zone</h3><div class="sub">Clear every vote to start a fresh month. Awards/settings are kept. This cannot be undone.</div>' +
     '<button class="btn danger" onclick="ak9ResetVotes()">Reset all votes</button></div>';
