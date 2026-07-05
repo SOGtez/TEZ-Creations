@@ -35,7 +35,10 @@ export default async function handler(req, res) {
       }),
     });
     const tj = await tok.json();
-    if (!tok.ok || !tj.access_token) { res.status(400).json({ error: 'Twitch rejected the login — try again.' }); return; }
+    if (!tok.ok || !tj.access_token) {
+      console.error('ak9-auth: token exchange failed', role, tok.status, JSON.stringify(tj).slice(0, 200));
+      res.status(400).json({ error: 'Twitch rejected the login — try again.' }); return;
+    }
 
     // 2) validate → user id + login
     const val = await fetch('https://id.twitch.tv/oauth2/validate',
@@ -45,9 +48,13 @@ export default async function handler(req, res) {
 
     if (role === 'broadcaster') {
       // store the refresh token for follower verification (needs moderator:read:followers)
-      if (!tj.refresh_token) { res.status(400).json({ error: 'Twitch did not return a refresh token — try again.' }); return; }
+      if (!tj.refresh_token) {
+        console.error('ak9-auth broadcaster: Twitch returned no refresh_token for', vj.login);
+        res.status(400).json({ error: 'Twitch did not return a refresh token — try again.' }); return;
+      }
       const scope = (tj.scope || []).join(' ');
       if (!/moderator:read:followers/.test(scope)) {
+        console.error('ak9-auth broadcaster: missing follower scope for', vj.login, '— granted:', scope);
         res.status(400).json({ error: 'Missing the follower-read permission — reconnect and approve it.' }); return;
       }
       const up = await sb('POST', 'ak9_broadcaster', {
@@ -55,7 +62,11 @@ export default async function handler(req, res) {
           refresh_token: tj.refresh_token, scope, updated_at: new Date().toISOString() }],
         prefer: 'resolution=merge-duplicates,return=minimal',
       });
-      if (!up.ok) { res.status(502).json({ error: 'Could not save the channel connection.' }); return; }
+      if (!up.ok) {
+        console.error('ak9-auth broadcaster: DB save failed', up.status, (up.text || '').slice(0, 200));
+        res.status(502).json({ error: 'Could not save the channel connection.' }); return;
+      }
+      console.log('ak9-auth broadcaster: CONNECTED', vj.login, '(id ' + vj.user_id + ')');
       res.status(200).json({ ok: true, login: vj.login, broadcaster: true });
       return;
     }

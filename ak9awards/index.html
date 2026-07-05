@@ -291,25 +291,41 @@ function boot() {
 /* ---------- OAuth return + init ---------- */
 async function handleReturn() {
   const p = new URLSearchParams(location.search);
-  if (p.get('error')) {
-    history.replaceState({}, '', REDIRECT);
-    toast('Twitch login was cancelled.', true);
-    return;
-  }
+  const errParam = p.get('error');
   const code = p.get('code'), state = p.get('state');
-  if (!code || !state) return;
-  const st = b64d(state) || {};
-  const csrf = sessionStorage.getItem('ak9_csrf');
+  if (!errParam && !code) return;
+  // Parse state up front so we know the role even on an error return.
+  const st = state ? (b64d(state) || {}) : {};
+  const role = st.role === 'broadcaster' ? 'broadcaster' : 'voter';
+  const toAdmin = (q) => location.replace('/ak9awards/admin' + q);
   history.replaceState({}, '', REDIRECT);
-  if (csrf && st.c && st.c !== csrf) { toast('Login expired — try again.', true); return; }
+
+  // Twitch bounced back with an error (e.g. the user hit Cancel, or a config issue).
+  if (errParam) {
+    const msg = p.get('error_description') || errParam;
+    if (role === 'broadcaster') { toAdmin('?bc=error&msg=' + encodeURIComponent(msg)); return; }
+    toast('Twitch login was cancelled.', true); return;
+  }
+  if (!code || !state) return;
+
+  const csrf = sessionStorage.getItem('ak9_csrf');
+  if (csrf && st.c && st.c !== csrf) {
+    if (role === 'broadcaster') { toAdmin('?bc=error&msg=' + encodeURIComponent('login expired — try again')); return; }
+    toast('Login expired — try again.', true); return;
+  }
   sessionStorage.removeItem('ak9_csrf');
 
   view.innerHTML = '<div class="spin"></div>';
-  const role = st.role === 'broadcaster' ? 'broadcaster' : 'voter';
   const r = await api('/api/ak9?route=auth', { method: 'POST', body: { code, redirect_uri: REDIRECT, role } });
-  if (!r.ok) { toast(r.json.error || 'Login failed — try again.', true); return; }
 
-  if (role === 'broadcaster') { location.replace('/ak9awards/admin'); return; }
+  // Broadcaster connect: always land on the admin page with a clear result.
+  if (role === 'broadcaster') {
+    if (r.ok) toAdmin('?bc=ok');
+    else toAdmin('?bc=error&msg=' + encodeURIComponent(r.json.error || 'connect failed'));
+    return;
+  }
+
+  if (!r.ok) { toast(r.json.error || 'Login failed — try again.', true); return; }
   TOK = r.json.access_token; USER = r.json.user;
   sessionStorage.setItem('ak9_tok', TOK); sessionStorage.setItem('ak9_user', JSON.stringify(USER));
   if (st.ret === 'admin') { location.replace('/ak9awards/admin'); return; }

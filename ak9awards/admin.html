@@ -68,7 +68,25 @@ function gateMsg(h, p, btns) {
 const twitchBtn = (label, role) => '<button class="btn" type="button" onclick="ak9Login(' + (role ? "'" + role + "'" : '') + ')" style="margin-top:6px">' + esc(label) + '</button>';
 
 /* ---------- load ---------- */
+// Show the outcome of a just-completed "Connect channel" attempt (?bc=ok|error).
+function bcBanner() {
+  const p = new URLSearchParams(location.search);
+  const bc = p.get('bc'); if (!bc) return;
+  const msg = p.get('msg') || '';
+  try { history.replaceState({}, '', '/ak9awards/admin'); } catch (e) {}
+  const ok = bc === 'ok';
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.style.cssText = 'margin-top:0;margin-bottom:16px;border-color:' + (ok ? 'rgba(154,255,176,.45)' : 'rgba(255,141,141,.5)');
+  el.innerHTML = ok
+    ? '<b class="ok">✓ Channel connected.</b> Follower checks are ready — the status below should now show connected.'
+    : '<b class="bad">✗ Channel connect didn’t complete.</b> ' + esc(msg) +
+      '<div class="sub" style="margin:6px 0 0">Make sure you’re logged into Twitch as <b>@aleksk9_</b> and press <b>Authorize</b> on the “View followers” permission, then try “Connect channel” again.</div>';
+  const wrap = document.querySelector('.wrap');
+  wrap.insertBefore(el, document.getElementById('gate'));
+}
 async function load() {
+  bcBanner();
   if (!TOK) { gateMsg('Admin sign-in', 'Log in with the Twitch account that has admin access.', twitchBtn('Log in with Twitch')); return; }
   const r = await api('/api/ak9?route=admin');
   if (r.status === 401) { gateMsg('Session expired', 'Please log in again.', twitchBtn('Log in with Twitch')); return; }
