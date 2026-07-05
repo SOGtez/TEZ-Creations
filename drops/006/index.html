@@ -195,6 +195,43 @@ h1{
 }
 .pro-note button:hover{text-decoration:underline}
 
+/* Pro tool: verify a pasted list against the vault */
+.verify-card{
+  margin-top:22px;padding:22px;border-radius:18px;
+  background:var(--panel,rgba(12,18,13,0.55));border:1px solid var(--edge,rgba(255,255,255,0.08));
+}
+.verify-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.verify-title{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--text);display:flex;align-items:center;gap:9px}
+.verify-pro{
+  font-family:var(--font-sans);font-size:10px;font-weight:700;letter-spacing:.1em;
+  color:#04160b;background:linear-gradient(180deg,#4ade80,#16a34a);border-radius:999px;padding:2px 8px;
+}
+.verify-sub{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45;max-width:52ch}
+.verify-input{
+  width:100%;min-height:96px;resize:vertical;font-family:var(--font-mono,monospace);font-size:13px;line-height:1.6;
+  color:var(--text);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:12px 14px;outline:none;transition:border-color .2s;
+}
+.verify-input:focus{border-color:rgba(43,212,106,0.45)}
+.verify-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.verify-status{font-size:12px;color:var(--muted)}
+.verify-results{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.verify-results:empty{display:none}
+.verify-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 13px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  font-family:var(--font-mono,monospace);font-size:13px;color:var(--text);
+}
+.verify-row .vr-tag{font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:999px}
+.verify-row.open .vr-tag{color:#04160b;background:linear-gradient(180deg,#4ade80,#16a34a)}
+.verify-row.taken .vr-tag{color:var(--muted);background:rgba(255,255,255,0.07)}
+.verify-row.blocked .vr-tag,.verify-row.unclaimable .vr-tag{color:#1a1204;background:linear-gradient(180deg,#f5d67a,#d19a2a)}
+.verify-locked{
+  margin-top:12px;padding:16px;border-radius:12px;text-align:center;
+  background:rgba(43,212,106,0.06);border:1px dashed rgba(43,212,106,0.3);
+}
+.verify-locked p{font-size:13px;color:var(--text);margin:0 0 10px}
+
 /* Go button */
 .btn-primary{
   display:inline-flex;align-items:center;gap:10px;
@@ -501,7 +538,7 @@ body.fade-in{animation:page-fade .8s ease both}
       </div>
 
       <p class="pro-note" id="proNote" style="display:none">
-        Free hunts check 40 names · <button type="button" id="proNoteBtn">Pro finds 200+ per run →</button>
+        Free checks 40 names, raw availability · <button type="button" id="proNoteBtn">Pro finds 200+ &amp; flags verified can’t-claim names →</button>
       </p>
 
       <!-- Progress -->
@@ -517,6 +554,23 @@ body.fade-in{animation:page-fade .8s ease both}
       </div>
 
     </div>
+  </div>
+
+  <!-- Pro tool: verify a pasted list of handles against the vault -->
+  <div class="verify-card" id="verifyCard">
+    <div class="verify-head">
+      <div>
+        <div class="verify-title">Verify a list <span class="verify-pro">PRO</span></div>
+        <div class="verify-sub">Paste handles you’re eyeing — we cross-check the verified can’t-claim vault and live Twitch status in one shot.</div>
+      </div>
+    </div>
+    <textarea id="verifyInput" class="verify-input" placeholder="one handle per line, or comma-separated&#10;ninja&#10;shroud&#10;pokimane"></textarea>
+    <div class="verify-actions">
+      <button class="btn-primary" id="verifyBtn">Verify <span class="arrow">→</span></button>
+      <button class="btn-ghost" id="verifyCopyBtn" style="display:none">Copy results</button>
+      <span class="verify-status" id="verifyStatus"></span>
+    </div>
+    <div class="verify-results" id="verifyResults"></div>
   </div>
 
   <!-- Results -->
@@ -740,6 +794,16 @@ const PRO_FILTERS=['animals','nature','leetspeak']; // locked for free users
 const FREE_HUNT=40, PRO_HUNT=200;                   // candidates checked per run
 function hunterIsPro(){ return !!(window.TezAuth && TezAuth.isPro && TezAuth.isPro()); }
 
+// Attach the session token so the server can apply the Pro verified-vault
+// overlay (and so free/anon callers simply get raw results).
+function authHeaders(){
+  const h={};
+  if(window.TezAuth && TezAuth.isLoggedIn && TezAuth.isLoggedIn() && TezAuth.token){
+    const t=TezAuth.token(); if(t) h['Authorization']='Bearer '+t;
+  }
+  return h;
+}
+
 // Reflect the current tier in the UI: lock Pro-only filters, show the free note.
 function applyTierUI(){
   const pro=hunterIsPro();
@@ -845,6 +909,74 @@ if(proNoteBtn) proNoteBtn.addEventListener('click',()=>{
 if(window.TezAuth && TezAuth.onChange) TezAuth.onChange(applyTierUI);
 applyTierUI(); // set initial locks/note from cached tier (updates on revalidate)
 
+// ── Pro tool: verify a pasted list against the vault ─────────
+const verifyBtn=document.getElementById('verifyBtn');
+const verifyInput=document.getElementById('verifyInput');
+const verifyResults=document.getElementById('verifyResults');
+const verifyStatus=document.getElementById('verifyStatus');
+const verifyCopyBtn=document.getElementById('verifyCopyBtn');
+let verifyLast=[];
+const VERIFY_TAG={open:'open',taken:'taken',blocked:'can’t register',unclaimable:'can’t claim'};
+
+async function runVerify(){
+  if(!hunterIsPro()){
+    if(window.TezAuth) TezAuth.requirePro('Verify a shortlist against the can’t-claim vault with Pro.');
+    return;
+  }
+  const raw=(verifyInput.value||'').split(/[\s,]+/)
+    .map(s=>s.trim().toLowerCase().replace(/[^a-z0-9_]/g,'')).filter(Boolean);
+  const handles=[...new Set(raw)].filter(h=>h.length>=1&&h.length<=25).slice(0,200);
+  if(!handles.length){ verifyStatus.textContent='Paste a few handles first.'; return; }
+
+  verifyBtn.disabled=true; verifyCopyBtn.style.display='none'; verifyResults.innerHTML='';
+  verifyStatus.textContent='Checking '+handles.length+'…';
+  const out=[];
+  try{
+    for(let i=0;i<handles.length;i+=100){
+      const batch=handles.slice(i,i+100);
+      const qs=batch.map(u=>'usernames='+encodeURIComponent(u)).join('&');
+      const r=await fetch('/api/usercheck?platform=twitch&'+qs,{headers:authHeaders()});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const d=await r.json();
+      for(const res of (d.results||[])) out.push(res);
+      verifyStatus.textContent='Checked '+Math.min(i+100,handles.length)+' / '+handles.length+'…';
+    }
+  }catch(e){ verifyStatus.textContent='Connection error — try again.'; verifyBtn.disabled=false; return; }
+
+  verifyLast=out;
+  renderVerify(out);
+  verifyBtn.disabled=false;
+}
+
+function renderVerify(list){
+  const order={open:0,unclaimable:1,blocked:2,taken:3};
+  const sorted=[...list].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+  verifyResults.innerHTML='';
+  for(const r of sorted){
+    const row=document.createElement('div');
+    row.className='verify-row '+r.status;
+    let tag=VERIFY_TAG[r.status]||r.status;
+    if(r.status==='unclaimable') tag=r.confirmed?'verified · can’t claim':(r.reports?r.reports+' report'+(r.reports!==1?'s':''):'can’t claim');
+    const name=document.createElement('span'); name.textContent=r.username;
+    const t=document.createElement('span'); t.className='vr-tag'; t.textContent=tag;
+    row.appendChild(name); row.appendChild(t);
+    verifyResults.appendChild(row);
+  }
+  const openN=list.filter(r=>r.status==='open').length;
+  verifyStatus.textContent=list.length+' checked · '+openN+' open';
+  verifyCopyBtn.style.display=list.length?'inline-flex':'none';
+}
+
+verifyCopyBtn.addEventListener('click',()=>{
+  const sym={open:'○ ',taken:'✗ ',blocked:'⊘ ',unclaimable:'⊘ '};
+  const txt=verifyLast.map(r=>(sym[r.status]||'')+r.username).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>{
+    verifyCopyBtn.textContent='Copied ✓';
+    setTimeout(()=>verifyCopyBtn.textContent='Copy results',1600);
+  });
+});
+verifyBtn.addEventListener('click',runVerify);
+
 async function startHunt(){
   if(state.running) return;
   setError('');
@@ -900,7 +1032,7 @@ async function startHunt(){
     while(retries<3 && !state.aborted){
       try{
         const qs=batch.map(u=>`usernames=${encodeURIComponent(u)}`).join('&');
-        const r=await fetch(`/api/usercheck?platform=${state.platform}&${qs}`);
+        const r=await fetch(`/api/usercheck?platform=${state.platform}&${qs}`,{headers:authHeaders()});
         if(r.status===429){
           const reset=parseInt(r.headers.get('Ratelimit-Reset')||'0',10);
           const wait=Math.max(1000,(reset*1000-Date.now())||3000);
@@ -936,7 +1068,7 @@ async function startHunt(){
       const pill=pillMap[result.username];
       if(pill){
         const status=result.status||(result.available?'open':'taken');
-        fillPill(pill,status,result.username);
+        fillPill(pill,status,result.username,result);
       }
       state.results.push(result);
     }
@@ -1003,8 +1135,9 @@ function makePill(username, status){
   return div;
 }
 
-// Render a pill's contents for a final status.
-function fillPill(pill,status,username){
+// Render a pill's contents for a final status. `info` (optional) carries the
+// Pro verified-vault confidence: {reports, confirmed}.
+function fillPill(pill,status,username,info){
   pill.className='result-pill '+status;
   pill.dataset.username=username;
   if(status==='open'){
@@ -1014,7 +1147,12 @@ function fillPill(pill,status,username){
       '<button class="flag" type="button" title="Tried it and Twitch won’t let you claim it? Flag it.">⚑</button>';
     if(state.selected.has(username)) pill.classList.add('selected');
   } else if(status==='unclaimable'){
-    pill.innerHTML='<span>'+username+'</span><span class="tag">can’t claim</span><span class="status-dot"></span>';
+    let tag='can’t claim';
+    if(info){
+      if(info.confirmed) tag='verified · can’t claim';
+      else if(info.reports) tag=info.reports+' report'+(info.reports!==1?'s':'');
+    }
+    pill.innerHTML='<span>'+username+'</span><span class="tag">'+tag+'</span><span class="status-dot"></span>';
   } else {
     pill.innerHTML='<span>'+username+'</span><span class="status-dot"></span>';
   }

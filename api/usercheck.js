@@ -76,19 +76,39 @@ function ruleBlocked(login) {
 
 const cleanLogin = (u) => String(u).trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 
-// Look up which of these logins the community has flagged unclaimable.
-async function unclaimableSet(logins) {
-  if (!dbReady() || !logins.length) return new Set();
+// Look up the community "can't-claim" info for these logins, keyed by handle:
+//   { reports, confirmed }.  Only names that clear the threshold (or are
+//   owner-confirmed) are returned.
+async function unclaimableInfo(logins) {
+  if (!dbReady() || !logins.length) return new Map();
   const list = logins.map((l) => '"' + l + '"').join(',');
   const q = await sb('GET', 'tez_unclaimable?handle=in.(' + encodeURIComponent(list) +
     ')&select=handle,reports,confirmed');
-  const set = new Set();
+  const map = new Map();
   if (q.json && Array.isArray(q.json)) {
     for (const row of q.json) {
-      if (row.confirmed || (row.reports || 0) >= CONFIRM_THRESHOLD) set.add(row.handle);
+      if (row.confirmed || (row.reports || 0) >= CONFIRM_THRESHOLD) {
+        map.set(row.handle, { reports: row.reports || 0, confirmed: !!row.confirmed });
+      }
     }
   }
-  return set;
+  return map;
+}
+
+// Resolve the caller's tier from their (optional) session token. The verified
+// "can't-claim" vault is a Pro perk, so free/anonymous callers get raw results.
+// select=* so a missing optional column (e.g. pro_until) never breaks the query.
+async function callerTier(req) {
+  const tok = bearer(req);
+  if (!tok || !dbReady()) return 'free';
+  const p = verifyToken(tok);
+  if (!p) return 'free';
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=*&limit=1');
+  const row = q.json && q.json[0];
+  if (!row) return 'free';
+  if (row.pro_until && Date.now() > Date.parse(row.pro_until)) return 'free'; // expired grant
+  const t = row.tier || (row.pro ? 'pro' : 'free');
+  return (t === 'pro' || t === 'exclusive') ? t : 'free';
 }
 
 export default async function handler(req, res) {
@@ -96,7 +116,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
-  if (req.method === 'POST') return report(req, res);
+  if (req.method === 'POST') return post(req, res);
   if (req.method !== 'GET') { res.status(405).json({ error: 'Method not allowed' }); return; }
   return check(req, res);
 }
@@ -118,6 +138,10 @@ async function check(req, res) {
   )].slice(0, 100);
 
   if (logins.length === 0) { res.status(400).json({ results: [] }); return; }
+
+  // The verified "can't-claim" vault is a Pro perk — resolve tier first.
+  const tier = await callerTier(req);
+  const isPro = tier === 'pro' || tier === 'exclusive';
 
   try {
     // One batched GQL request, aliased per login. __typename is "User" when an
@@ -151,19 +175,30 @@ async function check(req, res) {
       return { username: login, status };
     });
 
-    // Second pass: overlay the community "unclaimable" layer onto open names.
+    // Second pass (Pro only): overlay the verified "can't-claim" vault + its
+    // confidence (report count / owner-confirmed) onto the open names. Free and
+    // anonymous callers get the raw open/taken/blocked result.
     const openLogins = base.filter((r) => r.status === 'open').map((r) => r.username);
-    const flagged = await unclaimableSet(openLogins);
+    const info = isPro ? await unclaimableInfo(openLogins) : new Map();
 
     const results = base.map((r) => {
-      const status = (r.status === 'open' && flagged.has(r.username)) ? 'unclaimable' : r.status;
-      return { username: r.username, status, available: status === 'open' };
+      if (r.status === 'open' && info.has(r.username)) {
+        const c = info.get(r.username);
+        return { username: r.username, status: 'unclaimable', available: false, reports: c.reports, confirmed: c.confirmed };
+      }
+      return { username: r.username, status: r.status, available: r.status === 'open' };
     });
 
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+    // A per-tier response must never be shared-cached (the token is in a header,
+    // not the URL), so only cache anonymous/no-token checks at the edge.
+    if (bearer(req)) res.setHeader('Cache-Control', 'private, no-store');
+    else res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+
     res.status(200).json({
-      results,
-      note: 'open = no active Twitch account. unclaimable = community-flagged as not registerable. Twitch still reserves some names, so verify before relying on it.',
+      results, tier, pro: isPro,
+      note: isPro
+        ? 'open = no active Twitch account. unclaimable = in the verified can’t-claim vault. Twitch still reserves some names, so verify before relying on it.'
+        : 'open = no active Twitch account. Twitch reserves some names — Pro cross-checks the verified can’t-claim vault so you don’t chase dead names.',
     });
   } catch (err) {
     console.error('usercheck', err);
@@ -171,16 +206,35 @@ async function check(req, res) {
   }
 }
 
-// ---- POST: a signed-in user reports handles as unclaimable ----
-async function report(req, res) {
-  if (!dbReady()) { res.status(503).json({ error: 'Reporting is not set up yet.' }); return; }
+// Accounts allowed to bulk-seed the vault (owner only). Extend if the owner
+// grants seeding to another account. Checked server-side against the DB row.
+const IMPORT_OWNERS = ['TEZ-FGHXR'];
+async function isImportOwner(uid) {
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(uid) + '&select=code&limit=1');
+  const row = q.json && q.json[0];
+  return !!(row && IMPORT_OWNERS.includes(row.code || ''));
+}
+
+// ---- POST: signed-in write actions ----
+//   { handles:[…] }  → community report (any signed-in user)
+//   { import:[…]  }  → bulk-seed the verified vault (owner only)
+async function post(req, res) {
+  if (!dbReady()) { res.status(503).json({ error: 'Not set up yet.' }); return; }
   const payload = verifyToken(bearer(req));
-  if (!payload) { res.status(401).json({ error: 'Sign in to flag unclaimable names.' }); return; }
+  if (!payload) { res.status(401).json({ error: 'Sign in first.' }); return; }
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = {}; } }
+  body = body || {};
+
+  if (Array.isArray(body.import)) return importSeed(req, res, payload, body.import);
+  return report(req, res, payload, body);
+}
+
+// A signed-in user reports handles they found un-registerable (community layer).
+async function report(req, res, payload, body) {
   const handles = [...new Set(
-    (Array.isArray(body && body.handles) ? body.handles : [])
+    (Array.isArray(body.handles) ? body.handles : [])
       .map(cleanLogin)
       .filter((h) => h.length >= 4 && h.length <= 25)
   )].slice(0, 100);
@@ -199,5 +253,28 @@ async function report(req, res) {
   } catch (err) {
     console.error('usercheck report', err);
     res.status(500).json({ error: 'Could not save your report. Try again.' });
+  }
+}
+
+// Owner-only: bulk-seed the vault from a real can't-claim list (e.g. a public
+// banned-names export). Upserts as owner-confirmed; existing rows keep their
+// community report count (reports is left out of the upsert payload on conflict).
+async function importSeed(req, res, payload, list) {
+  if (!(await isImportOwner(payload.uid))) { res.status(403).json({ error: 'This account cannot seed the vault.' }); return; }
+  const handles = [...new Set(
+    list.map(cleanLogin).filter((h) => h.length >= 1 && h.length <= 25)
+  )].slice(0, 5000);
+  if (!handles.length) { res.status(400).json({ error: 'No valid handles to import.' }); return; }
+
+  const rows = handles.map((h) => ({ handle: h, confirmed: true, note: 'seed' }));
+  try {
+    const r = await sb('POST', 'tez_unclaimable?on_conflict=handle', {
+      body: rows, prefer: 'resolution=merge-duplicates,return=minimal',
+    });
+    if (r.ok) { res.status(200).json({ ok: true, imported: handles.length }); return; }
+    res.status(502).json({ error: 'Import failed.', status: r.status });
+  } catch (err) {
+    console.error('usercheck import', err);
+    res.status(500).json({ error: 'Import failed. Try again.' });
   }
 }
