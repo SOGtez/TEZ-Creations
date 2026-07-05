@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AK9 AWARDS — Results</title>
+<meta name="description" content="The winners of the AK9 community awards, revealed." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070707; --panel:rgba(255,255,255,.035); --panel-2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.22);
+    --text:#f4f4f4; --muted:#9a9a9a; --faint:#6a6a6a; --white:#fff; --black:#0a0a0a;
+    --fd:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+    --fs:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+    --fm:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--fs);min-height:100%}
+  body{position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:radial-gradient(ellipse 90% 88% at 50% 42%, #000 24%, transparent 80%);
+            mask-image:radial-gradient(ellipse 90% 88% at 50% 42%, #000 24%, transparent 80%);}
+  .grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+    background-image:linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size:64px 64px;animation:grid-drift 28s linear infinite;
+    transform:perspective(1200px) scale(1.08);will-change:transform}
+  @keyframes grid-drift{to{background-position:64px 64px}}
+  .spot{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(900px 520px at 50% -8%, rgba(255,255,255,.10), transparent 60%);}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .vig{position:fixed;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.8);}
+
+  .wrap{position:relative;z-index:2;max-width:880px;margin:0 auto;padding:34px 22px 90px}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+  .backlink{font-family:var(--fm);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid var(--line-2);border-radius:999px;padding:7px 13px;color:var(--text);
+    text-decoration:none;transition:.2s}
+  .backlink:hover{background:var(--white);color:var(--black);border-color:var(--white)}
+
+  .hero{text-align:center;padding:30px 0 16px}
+  .kick{font-family:var(--fm);font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:var(--faint)}
+  .word{font-family:var(--fd);font-weight:700;font-size:clamp(46px,11vw,104px);line-height:.92;
+    letter-spacing:-1px;margin:12px 0 6px;
+    background-image:linear-gradient(100deg,#e6e6e6 0%,#fff 50%,#e6e6e6 100%);background-size:220% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 60px rgba(255,255,255,.06);
+    animation:fadeUp .7s .05s ease both, sheen 7s linear 1.3s infinite}
+  .results-tag{font-family:var(--fm);font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .month{font-family:var(--fm);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-top:8px}
+  .rule{width:60px;height:1px;background:var(--line-2);margin:18px auto 0}
+
+  .panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:28px 24px;margin-top:22px}
+  .center{text-align:center}
+  .msg-emoji{font-size:30px}
+  .msg-h{font-family:var(--fd);font-weight:600;font-size:22px;margin:10px 0 6px}
+  .msg-p{color:var(--muted);font-size:15px;line-height:1.6;max-width:480px;margin:0 auto}
+
+  .count{display:flex;justify-content:center;gap:10px;margin:22px 0 8px}
+  .cbox{min-width:74px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 8px;text-align:center}
+  .cbox b{display:block;font-family:var(--fm);font-weight:700;font-size:30px;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+  .cbox span{font-family:var(--fm);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .countlbl{text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+    font-family:var(--fs);font-weight:600;font-size:15px;border-radius:12px;padding:14px 22px;border:1px solid var(--white);
+    background:var(--white);color:var(--black);transition:.18s;text-decoration:none}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,255,255,.12)}
+  .btn.ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn.ghost:hover{background:var(--panel-2);box-shadow:none}
+  .btnrow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+
+  /* reveal CTA */
+  .reveal-cta{text-align:center;margin-top:30px}
+  .tally-teaser{font-family:var(--fm);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:18px}
+  .reveal-btn{font-family:var(--fd);font-weight:700;font-size:17px;padding:16px 30px}
+  .reveal-btn.pulse{animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.18)}50%{box-shadow:0 0 0 12px rgba(255,255,255,0)}}
+
+  /* results list */
+  .awards{display:flex;flex-direction:column;gap:20px;margin-top:26px}
+  .award{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:22px 22px 20px;
+    opacity:0;animation:fadeUp .6s ease both}
+  .award .anum{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .award .atitle{font-family:var(--fd);font-weight:600;font-size:21px;margin:3px 0 4px}
+  .award .adesc{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:16px}
+  .winlbl{font-family:var(--fm);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin:6px 0 10px}
+
+  /* winner block — the inverted white "highlight", scaled up */
+  .winner{display:flex;align-items:center;gap:14px;border:1px solid var(--white);background:var(--white);color:var(--black);
+    border-radius:14px;padding:16px 18px;opacity:0;transform:scale(.9);animation:winnerPop .5s ease both}
+  .winner + .winner{margin-top:8px}
+  .winner .av{width:46px;height:46px;border-radius:11px;flex:none;background:rgba(0,0,0,.08);
+    border:1px solid rgba(0,0,0,.15);background-size:cover;background-position:center;
+    display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:17px;color:#444}
+  .winner .wname{flex:1;min-width:0;font-family:var(--fd);font-weight:700;font-size:19px;line-height:1.2}
+  .winner .wsub{font-family:var(--fm);font-size:11px;color:#555;letter-spacing:.04em;margin-top:2px}
+  .winner .wvotes{font-family:var(--fm);font-weight:700;font-size:15px;color:#0a0a0a;text-align:right;flex:none;white-space:nowrap}
+  .winner .wvotes span{display:block;font-size:10px;font-weight:400;color:#555;letter-spacing:.06em}
+  .trophy{font-size:20px;flex:none}
+
+  .nowin{color:var(--muted);font-size:14px;border:1px dashed var(--line-2);border-radius:12px;padding:14px;text-align:center}
+
+  /* breakdown bars */
+  .breakdown{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .brow{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+  .brow .bname{font-size:13.5px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brow.win .bname{font-weight:700}
+  .brow .bval{font-family:var(--fm);font-size:12px;color:var(--muted);white-space:nowrap;text-align:right}
+  .brow .track{grid-column:1 / -1;height:6px;border-radius:999px;background:var(--panel-2);overflow:hidden}
+  .brow .track i{display:block;height:100%;width:0;border-radius:999px;background:var(--line-2);transition:width .9s cubic-bezier(.16,1,.3,1)}
+  .brow.win .track i{background:linear-gradient(90deg,#bdbdbd,#fff)}
+  .awards.go .brow .track i{width:var(--w)}
+
+  .foot{text-align:center;color:var(--faint);font-size:12px;margin-top:44px;line-height:1.7}
+  .hidden{display:none !important}
+  .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite;margin:30px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes sheen{to{background-position:220% center}}
+  @keyframes winnerPop{0%{opacity:0;transform:scale(.86)}60%{transform:scale(1.03)}100%{opacity:1;transform:scale(1)}}
+  .top{animation:fadeIn .8s ease both}
+  .kick{animation:fadeUp .6s ease both}
+  @media (prefers-reduced-motion:reduce){
+    .spin{animation:none}.btn:hover{transform:none}
+    .top,.kick,.word,.award,.winner,.reveal-btn,.grid{animation:none !important}
+    .award,.winner{opacity:1 !important;transform:none !important}
+    .word{background-position:0 !important}
+    .brow .track i{transition:none}
+  }
+</style>
+</head>
+<body>
+  <div class="grid-wrap"><div class="grid"></div></div><div class="spot"></div><div class="grain"></div><div class="vig"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <a class="backlink" href="/ak9awards">← Voting</a>
+      <span></span>
+    </div>
+
+    <div class="hero">
+      <div class="kick">AleksK9 presents…</div>
+      <div class="word">AK9 AWARDS</div>
+      <div class="results-tag">The Winners</div>
+      <div class="month" id="month"></div>
+      <div class="rule"></div>
+    </div>
+
+    <div id="view"><div class="spin"></div></div>
+
+    <div class="foot">
+      AK9 AWARDS · a community vote<br>
+      Winners are decided by follower votes — one ballot per Twitch account.
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   AK9 AWARDS — results / winners reveal (standalone, public read-only)
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const view = $('#view');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let deadlineMs = null, countTimer = null;
+
+async function apiGet(path) {
+  const r = await fetch(path);
+  let j = null; try { j = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, json: j || {} };
+}
+
+/* ---------- countdown (locked state) ---------- */
+function startCountdown(labelWrapId) {
+  clearInterval(countTimer);
+  const wrap = $('#' + labelWrapId);
+  if (!wrap || !deadlineMs) return;
+  const labels = ['days', 'hrs', 'min', 'sec'];
+  wrap.querySelector('.count').innerHTML = labels.map(l =>
+    '<div class="cbox"><b>00</b><span>' + l + '</span></div>').join('');
+  const boxes = [...wrap.querySelectorAll('.cbox b')];
+  const tick = () => {
+    const diff = deadlineMs - Date.now();
+    if (diff <= 0) { boxes.forEach(b => b.textContent = '00'); clearInterval(countTimer); load(); return; }
+    const v = [Math.floor(diff / 86400000), Math.floor(diff % 86400000 / 3600000),
+      Math.floor(diff % 3600000 / 60000), Math.floor(diff % 60000 / 1000)];
+    boxes.forEach((b, i) => b.textContent = pad(v[i]));
+  };
+  tick(); countTimer = setInterval(tick, 1000);
+}
+
+/* ---------- states ---------- */
+function renderMessage(emoji, h, p, btns, extra) {
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">' + emoji + '</div>' +
+    '<div class="msg-h">' + esc(h) + '</div><div class="msg-p">' + p + '</div>' +
+    (extra || '') + (btns ? '<div class="btnrow">' + btns + '</div>' : '') + '</div>';
+}
+
+function renderLocked(settings) {
+  deadlineMs = settings.deadline ? new Date(settings.deadline).getTime() : null;
+  const countBlock = deadlineMs
+    ? '<div id="lockCount" style="margin-top:22px"><div class="count"></div><div class="countlbl">until voting closes</div></div>'
+    : '';
+  renderMessage('🔒', 'The winners are sealed',
+    'Voting is still open — the results stay hidden so the standings can’t be watched or gamed. Come back when voting closes and the winners will be revealed right here.',
+    '<a class="btn" href="/ak9awards">Go vote →</a>', countBlock);
+  if (deadlineMs) startCountdown('lockCount');
+}
+
+function winnerBlock(n, total) {
+  const av = n.image ? '<span class="av" style="background-image:url(\'' + esc(n.image) + '\')"></span>'
+    : '<span class="av">' + esc((n.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+  const pct = total > 0 ? Math.round((n.votes / total) * 100) : 0;
+  return '<div class="winner">' + av +
+    '<div class="wname">' + esc(n.name) +
+    '<div class="wsub">' + pct + '% of the vote</div></div>' +
+    '<div class="wvotes">' + n.votes + '<span>vote' + (n.votes === 1 ? '' : 's') + '</span></div>' +
+    '<span class="trophy">🏆</span></div>';
+}
+
+function awardCard(a, i) {
+  const winners = (a.nominees || []).filter(n => a.winnerIds.indexOf(n.id) !== -1);
+  const max = (a.nominees[0] && a.nominees[0].votes) || 0;
+  let winHtml;
+  if (!winners.length) {
+    winHtml = '<div class="nowin">No votes were cast for this award.</div>';
+  } else {
+    winHtml = '<div class="winlbl">' + (winners.length > 1 ? 'Winners · tie' : 'And the winner is…') + '</div>' +
+      winners.map(n => winnerBlock(n, a.total)).join('');
+  }
+  // full breakdown (every nominee, ranked)
+  const rows = (a.nominees || []).map(n => {
+    const w = max > 0 ? Math.round((n.votes / max) * 100) : 0;
+    const isWin = a.winnerIds.indexOf(n.id) !== -1;
+    return '<div class="brow' + (isWin ? ' win' : '') + '">' +
+      '<div class="bname">' + esc(n.name) + '</div>' +
+      '<div class="bval">' + n.votes + ' · ' + (a.total > 0 ? Math.round((n.votes / a.total) * 100) : 0) + '%</div>' +
+      '<div class="track"><i style="--w:' + w + '%"></i></div></div>';
+  }).join('');
+  return '<div class="award" style="animation-delay:' + (i * 0.16).toFixed(2) + 's">' +
+    '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
+    '<div class="atitle">' + esc(a.title) + '</div>' +
+    (a.description ? '<div class="adesc">' + esc(a.description) + '</div>' : '') +
+    winHtml +
+    (rows ? '<div class="breakdown">' + rows + '</div>' : '') +
+    '</div>';
+}
+
+function renderResults(data) {
+  const awards = data.awards || [];
+  $('#month').textContent = data.settings.month_label || '';
+  if (!awards.length) {
+    renderMessage('🏆', 'No awards to show', 'There weren’t any awards set up for this round.',
+      '<a class="btn" href="/ak9awards">Back to AK9 →</a>');
+    return;
+  }
+  const voters = data.totalVoters || 0;
+  const teaser = voters + ' ballot' + (voters === 1 ? '' : 's') + ' cast · ' + awards.length + ' award' + (awards.length === 1 ? '' : 's');
+
+  view.innerHTML =
+    '<div class="reveal-cta" id="revealCta">' +
+      '<div class="tally-teaser">' + esc(teaser) + '</div>' +
+      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🏆 Reveal the winners</button>' +
+    '</div>' +
+    '<div id="stage" class="hidden">' +
+      '<div class="awards" id="awards">' + awards.map((a, i) => awardCard(a, i)).join('') + '</div>' +
+      '<div class="btnrow" style="margin-top:28px"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>' +
+    '</div>';
+
+  const reveal = () => {
+    $('#revealCta').classList.add('hidden');
+    const stage = $('#stage');
+    stage.classList.remove('hidden');
+    // grow the breakdown bars once the stage is painted
+    requestAnimationFrame(() => requestAnimationFrame(() => $('#awards').classList.add('go')));
+  };
+  $('#revealBtn').addEventListener('click', reveal);
+  if (reduceMotion) reveal(); // no drama needed — just show it
+}
+
+/* ---------- living grid warp (same as the voter page) ---------- */
+function setupGridWarp() {
+  const grid = document.querySelector('.grid');
+  if (!grid || reduceMotion) return;
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  window.addEventListener('mousemove', (e) => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 2;
+    ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  (function () {
+    let b0 = null, g0 = null;
+    const clamp = (v) => Math.max(-1.6, Math.min(1.6, v));
+    function onTilt(e) {
+      if (e.gamma == null || e.beta == null) return;
+      if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
+      tx = clamp((e.gamma - g0) / 18); ty = clamp((e.beta - b0) / 18);
+    }
+    const D = window.DeviceOrientationEvent;
+    if (D && typeof D.requestPermission === 'function') {
+      const ask = () => D.requestPermission().then((s) => { if (s === 'granted') window.addEventListener('deviceorientation', onTilt); }).catch(() => {});
+      window.addEventListener('touchend', ask, { once: true });
+      window.addEventListener('click', ask, { once: true });
+    } else if (D) { window.addEventListener('deviceorientation', onTilt); }
+  })();
+  (function tick() {
+    cx += (tx - cx) * 0.06; cy += (ty - cy) * 0.06;
+    grid.style.transform =
+      'perspective(1200px) rotateX(' + (-cy * 1.6).toFixed(3) + 'deg) rotateY(' + (cx * 1.6).toFixed(3) +
+      'deg) translate(' + (-cx * 8).toFixed(2) + 'px, ' + (-cy * 8).toFixed(2) + 'px) scale(1.08)';
+    requestAnimationFrame(tick);
+  })();
+}
+setupGridWarp();
+
+/* ---------- load ---------- */
+async function load() {
+  const r = await apiGet('/api/ak9?route=results');
+  if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
+  if (!r.ok) { renderMessage('⚠️', 'Couldn’t load results', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
+  if (!r.json.revealed) { renderLocked(r.json.settings || {}); return; }
+  renderResults(r.json);
+}
+load();
+</script>
+</body>
+</html>
