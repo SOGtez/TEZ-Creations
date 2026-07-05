@@ -1,0 +1,304 @@
+/* ============================================================
+   AK9 AWARDS — shared design system (voter + results + admin)
+   Black-and-white, awards-show premium. Metallic "platinum"
+   highlights, cinematic stage backdrop, glass panels.
+   Linked by index.html, results.html, admin.html.
+   ============================================================ */
+
+:root{
+  --bg:#060608; --bg-2:#0b0b0e;
+  --ink:#f6f7f9; --muted:#a3a5ae; --faint:#6c6e78;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.20);
+  --card-bd:rgba(255,255,255,.11);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  --plat:linear-gradient(180deg,#ffffff 0%,#e6e7ec 46%,#c9ccd4 62%,#f1f2f5 100%);
+  --danger:#ff8d8d; --danger-bd:#7a2b2b; --ok:#9affb0;
+  --radius:18px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --fd:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+  --fs:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+  --fm:"Space Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--fs);min-height:100%}
+body{position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit}
+::selection{background:#fff;color:#0a0a0b}
+
+/* ---------- cinematic backdrop ---------- */
+.grid-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  -webkit-mask-image:radial-gradient(ellipse 92% 90% at 50% 38%,#000 22%,transparent 82%);
+          mask-image:radial-gradient(ellipse 92% 90% at 50% 38%,#000 22%,transparent 82%);}
+.grid{position:absolute;top:-110%;left:-20%;width:140%;height:320%;
+  background-image:linear-gradient(to right,rgba(255,255,255,.045) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:62px 62px;animation:grid-drift 30s linear infinite;
+  transform:perspective(1200px) scale(1.08);will-change:transform}
+@keyframes grid-drift{to{background-position:62px 62px}}
+.aura{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(1050px 580px at 50% -14%,rgba(255,255,255,.16),transparent 62%);}
+.beams{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
+  background:conic-gradient(from 208deg at 50% -8%,transparent 0deg,rgba(255,255,255,.05) 10deg,transparent 24deg,
+    rgba(255,255,255,.038) 38deg,transparent 52deg,rgba(255,255,255,.05) 66deg,transparent 80deg);
+  -webkit-mask-image:radial-gradient(78% 62% at 50% 0,#000,transparent 76%);
+          mask-image:radial-gradient(78% 62% at 50% 0,#000,transparent 76%);}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 260px 70px rgba(0,0,0,.82);}
+
+/* ---------- layout ---------- */
+.wrap{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:34px 22px 96px}
+.wrap.wide{max-width:1040px}
+.hidden{display:none !important}
+.center{text-align:center}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.acct{display:flex;align-items:center;gap:10px;font-family:var(--fm);font-size:12px;color:var(--muted)}
+.acct img{width:28px;height:28px;border-radius:50%;border:1px solid var(--line-2);object-fit:cover}
+.acct .out{cursor:pointer;color:var(--faint);text-decoration:underline;text-underline-offset:2px}
+.acct .out:hover{color:var(--ink)}
+.acct a{text-decoration:none;border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;font-size:11px}
+.adminlink,.backlink{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid var(--line-2);border-radius:999px;padding:7px 14px;color:var(--ink);text-decoration:none;
+  transition:.22s var(--ease)}
+.adminlink:hover,.backlink:hover{background:var(--plat);color:#0a0a0b;border-color:#fff;
+  box-shadow:0 8px 24px -10px rgba(255,255,255,.4)}
+.brand{font-family:var(--fd);font-weight:700;font-size:22px;letter-spacing:.02em}
+.brand a{color:inherit;text-decoration:none;transition:opacity .2s ease}
+.brand a:hover{opacity:.62}
+.brand small{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.26em;display:block;margin-top:3px}
+
+/* ---------- hero / wordmark ---------- */
+.hero{text-align:center;padding:34px 0 18px}
+.kick{font-family:var(--fm);font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--faint)}
+.word{font-family:var(--fd);font-weight:700;font-size:clamp(50px,12vw,120px);line-height:.9;letter-spacing:-.035em;
+  margin:14px 0 8px;
+  background-image:linear-gradient(100deg,#c9ccd4 0%,#ffffff 16%,#c6c9d1 34%,#f3f4f7 52%,#bfc2cb 72%,#ffffff 90%,#c9ccd4 100%);
+  background-size:260% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 26px rgba(255,255,255,.12))}
+.results-tag{font-family:var(--fm);font-size:13px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.month{font-family:var(--fm);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-top:9px}
+.rule{width:150px;height:1px;margin:22px auto 0;position:relative;
+  background:linear-gradient(90deg,transparent,var(--line-2) 30%,var(--line-2) 70%,transparent)}
+.rule::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;
+  transform:translate(-50%,-50%) rotate(45deg);background:#eef0f4;opacity:.8;
+  box-shadow:0 0 12px rgba(255,255,255,.5)}
+
+/* ---------- panels & messages ---------- */
+.panel{position:relative;border:1px solid var(--card-bd);border-radius:var(--radius);background:var(--panel);
+  box-shadow:0 26px 64px -34px rgba(0,0,0,.92),0 1px 0 rgba(255,255,255,.06) inset;
+  padding:26px 24px;margin-top:22px}
+.panel h3{font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.55}
+.msg-emoji{font-size:32px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.5))}
+.msg-h{font-family:var(--fd);font-weight:600;font-size:23px;margin:10px 0 6px}
+.msg-p{color:var(--muted);font-size:15px;line-height:1.65;max-width:490px;margin:0 auto}
+
+/* ---------- buttons ---------- */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+  font-family:var(--fs);font-weight:600;font-size:15px;border-radius:12px;padding:14px 24px;
+  color:#0a0a0b;background:linear-gradient(180deg,#ffffff,#d8dae0);border:1px solid rgba(255,255,255,.65);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 12px 30px -12px rgba(0,0,0,.7);
+  transition:transform .18s var(--ease),box-shadow .22s var(--ease);text-decoration:none;white-space:nowrap}
+.btn::before{content:"";position:absolute;inset:0;transform:translateX(-130%);
+  background:linear-gradient(100deg,transparent 22%,rgba(255,255,255,.75) 50%,transparent 78%);transition:transform .6s var(--ease)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 18px 40px -14px rgba(0,0,0,.8)}
+.btn:hover::before{transform:translateX(130%)}
+.btn:active{transform:translateY(0)}
+.btn svg{width:18px;height:18px;fill:currentColor;position:relative}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn[disabled]::before{display:none}
+.btn.ghost{background:rgba(255,255,255,.045);color:var(--ink);border-color:var(--line-2);box-shadow:none}
+.btn.ghost::before{display:none}
+.btn.ghost:hover{background:rgba(255,255,255,.09);transform:translateY(-1px);box-shadow:none}
+.btn.danger{background:transparent;border-color:var(--danger-bd);color:var(--danger);box-shadow:none}
+.btn.danger::before{display:none}
+.btn.danger:hover{background:rgba(122,43,43,.2);transform:translateY(-1px);box-shadow:none}
+.btn.sm{padding:8px 13px;font-size:12px;border-radius:10px}
+.btnrow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+
+/* ---------- countdown ---------- */
+.count{display:flex;justify-content:center;gap:10px;margin:26px 0 8px}
+.cbox{min-width:76px;border:1px solid var(--card-bd);border-radius:13px;padding:13px 8px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 14px 30px -20px rgba(0,0,0,.8)}
+.cbox b{display:block;font-family:var(--fm);font-weight:700;font-size:31px;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.cbox span{font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.countlbl{text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px;letter-spacing:.05em}
+
+/* ---------- awards / ballot (voter) ---------- */
+.awards{display:flex;flex-direction:column;gap:18px;margin-top:26px}
+.award{position:relative;border:1px solid var(--card-bd);border-radius:var(--radius);background:var(--panel);
+  box-shadow:0 26px 64px -38px rgba(0,0,0,.92),0 1px 0 rgba(255,255,255,.05) inset;padding:24px 22px 22px;
+  transition:border-color .25s var(--ease),transform .25s var(--ease)}
+.award:hover{border-color:var(--line-2)}
+.award .anum{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.14em}
+.award .atitle{font-family:var(--fd);font-weight:600;font-size:22px;margin:4px 0 4px;letter-spacing:-.01em}
+.award .adesc{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:18px}
+.noms{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px}
+.nom{display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;width:100%;min-height:60px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--ink);border-radius:13px;padding:11px 13px;
+  font-family:var(--fs);font-size:14px;font-weight:500;transition:.18s var(--ease)}
+.nom:hover{border-color:var(--line-2);background:rgba(255,255,255,.055);transform:translateY(-1px)}
+.nom .av{width:36px;height:36px;border-radius:10px;flex:none;background:rgba(255,255,255,.06);border:1px solid var(--line);
+  background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:14px;color:var(--faint)}
+.nom .nm{flex:1;min-width:0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nom .tick{width:18px;height:18px;flex:none;opacity:0;transition:.16s}
+.nom .tick svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:3}
+.nom.sel{background:var(--plat);color:#0a0a0b;border-color:#fff;
+  box-shadow:0 12px 32px -14px rgba(255,255,255,.4),0 1px 0 rgba(255,255,255,.9) inset}
+.nom.sel .av{background-color:rgba(0,0,0,.08);border-color:rgba(0,0,0,.14);color:#444}
+.nom.sel .tick{opacity:1}
+.award.readonly .nom{cursor:default}
+.award.readonly .nom:not(.sel){opacity:.5}
+.award.readonly .nom:hover{transform:none;background:rgba(255,255,255,.02);border-color:var(--line)}
+
+.ballot-foot{position:sticky;bottom:14px;z-index:3;margin-top:28px;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;border:1px solid var(--line-2);background:rgba(10,10,12,.86);backdrop-filter:blur(14px);
+  border-radius:15px;padding:14px 18px;box-shadow:0 20px 50px -24px rgba(0,0,0,.9)}
+.ballot-foot .prog{font-family:var(--fm);font-size:13px;color:var(--muted)}
+.ballot-foot .prog b{color:#fff}
+
+.picks{display:flex;flex-direction:column;gap:2px;margin-top:6px;text-align:left}
+.pick{display:flex;justify-content:space-between;gap:14px;font-size:14px;border-bottom:1px solid var(--line);padding:10px 2px}
+.pick:last-child{border-bottom:none}
+.pick .pa{color:var(--muted)}
+.pick .pn{font-weight:600;color:#fff}
+
+/* ---------- results / winners ---------- */
+.reveal-cta{text-align:center;margin-top:32px}
+.tally-teaser{font-family:var(--fm);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:20px}
+.reveal-btn{font-family:var(--fd);font-weight:700;font-size:17px;padding:17px 32px}
+.reveal-btn.pulse{animation:pulse 2.6s ease-in-out infinite}
+.winlbl{font-family:var(--fm);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--faint);margin:8px 0 11px}
+.winner{position:relative;display:flex;align-items:center;gap:14px;border:1px solid #fff;border-radius:15px;padding:17px 19px;
+  color:#0a0a0b;background:var(--plat);box-shadow:0 22px 54px -20px rgba(255,255,255,.3),0 1px 0 rgba(255,255,255,.9) inset;
+  opacity:0;transform:scale(.9);animation:winnerPop .55s var(--ease) both}
+.winner + .winner{margin-top:9px}
+.winner .av{width:48px;height:48px;border-radius:12px;flex:none;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.14);
+  background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:18px;color:#444}
+.winner .wname{flex:1;min-width:0;font-family:var(--fd);font-weight:700;font-size:19px;line-height:1.2}
+.winner .wsub{font-family:var(--fm);font-size:11px;color:#555;letter-spacing:.04em;margin-top:3px}
+.winner .wvotes{font-family:var(--fm);font-weight:700;font-size:15px;color:#0a0a0b;text-align:right;flex:none;white-space:nowrap}
+.winner .wvotes span{display:block;font-size:10px;font-weight:400;color:#555;letter-spacing:.06em}
+.trophy{font-size:20px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+.nowin{color:var(--muted);font-size:14px;border:1px dashed var(--line-2);border-radius:12px;padding:15px;text-align:center}
+.breakdown{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.brow{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.brow .bname{font-size:13.5px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brow.win .bname{font-weight:700}
+.brow .bval{font-family:var(--fm);font-size:12px;color:var(--muted);white-space:nowrap;text-align:right}
+.brow .track{grid-column:1 / -1;height:7px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;border:1px solid var(--line)}
+.brow .track i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#8a8d97,#c7cad2);
+  transition:width 1s var(--ease)}
+.brow.win .track i{background:linear-gradient(90deg,#cfd2da,#fff)}
+.awards.go .brow .track i{width:var(--w)}
+
+/* ---------- admin: tabs / forms / tables / results ---------- */
+.tabs{display:inline-flex;gap:4px;margin:24px 0 22px;padding:4px;border:1px solid var(--line);border-radius:13px;
+  background:rgba(255,255,255,.03);flex-wrap:wrap;max-width:100%}
+.tab{cursor:pointer;font-family:var(--fm);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  padding:10px 16px;border-radius:9px;transition:color .2s ease,background .2s ease}
+.tab:hover{color:var(--ink)}
+.tab.on{color:#0a0a0b;background:var(--plat);box-shadow:0 1px 0 rgba(255,255,255,.8) inset}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+label{display:block;font-family:var(--fm);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+input,textarea,select{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+  font-family:var(--fs);font-size:14px;padding:11px 13px;transition:border-color .18s ease,box-shadow .18s ease}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--line-2);box-shadow:0 0 0 3px rgba(255,255,255,.05)}
+textarea{resize:vertical;min-height:64px}
+.field{flex:1;min-width:180px;margin-bottom:12px}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--ink)}
+.switch input{width:18px;height:18px;accent-color:#fff}
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.stat{flex:1;min-width:150px;border:1px solid var(--card-bd);border-radius:14px;padding:16px 20px;background:var(--panel);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+.stat b{font-family:var(--fm);font-size:28px;display:block;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+.award-res,.award-edit{position:relative;border:1px solid var(--card-bd);border-radius:15px;padding:20px;margin-bottom:14px;background:var(--panel);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+.award-res h4{font-family:var(--fd);font-size:16px;margin-bottom:14px}
+.bar{display:flex;align-items:center;gap:10px;margin:8px 0}
+.bar .lbl{width:150px;font-size:13px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track{flex:1;height:14px;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;background:linear-gradient(90deg,#8a8d97,#c7cad2)}
+.bar.win .fill{background:linear-gradient(90deg,#cfd2da,#fff)}
+.bar.win .lbl{font-weight:700}
+.bar .cnt{width:64px;text-align:right;font-family:var(--fm);font-size:12px;color:var(--muted);flex:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+td .mini{color:var(--muted);font-size:12px}
+.nom-edit{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.nom-edit input{flex:1;min-width:120px}
+.nom-edit .x{cursor:pointer;color:var(--faint);border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:rgba(255,255,255,.03)}
+.nom-edit .x:hover{color:var(--danger);border-color:var(--danger-bd)}
+.badge{display:inline-block;font-family:var(--fm);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--line-2);border-radius:999px;padding:3px 9px;color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--danger)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);z-index:9;
+  background:var(--plat);color:#0a0a0b;font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;opacity:0;
+  transition:.25s var(--ease);pointer-events:none;box-shadow:0 14px 44px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:#151517;color:#fff;border:1px solid var(--line-2)}
+
+/* ---------- misc ---------- */
+.foot{text-align:center;color:var(--faint);font-size:12px;margin-top:44px;line-height:1.8}
+.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;
+  animation:sp 1s linear infinite;margin:34px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- motion ---------- */
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheen{to{background-position:260% center}}
+@keyframes digitPop{0%{transform:translateY(-5px);opacity:.4}100%{transform:none;opacity:1}}
+@keyframes nomPop{0%{transform:scale(.97)}55%{transform:scale(1.025)}100%{transform:scale(1)}}
+@keyframes checkPop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+@keyframes winnerPop{0%{opacity:0;transform:scale(.86)}60%{transform:scale(1.03)}100%{opacity:1;transform:scale(1)}}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 0 0 0 rgba(255,255,255,.22)}
+  50%{box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 0 0 14px rgba(255,255,255,0)}}
+.top{animation:fadeIn .8s ease both}
+.kick{animation:fadeUp .6s ease both}
+.word{animation:fadeUp .7s .05s ease both,sheen 8s linear 1.2s infinite}
+.month,.results-tag{animation:fadeUp .6s .12s ease both}
+.rule{animation:fadeUp .6s .18s ease both}
+.cbox{animation:fadeUp .5s ease both}
+.cbox.tick b{animation:digitPop .4s ease}
+.panel{animation:fadeUp .5s ease both}
+.award{animation:fadeUp .55s ease both}
+.ballot-foot{animation:fadeUp .5s .06s ease both}
+.nom{will-change:transform}
+.nom.sel{animation:nomPop .26s ease}
+.nom .tick{transform:scale(.4)}
+.nom.sel .tick{transform:scale(1);animation:checkPop .3s ease}
+.tabs{animation:fadeIn .6s .05s ease both}
+.award-res,.award-edit,.stat{animation:fadeUp .45s ease both}
+#tab-results:not(.hidden),#tab-manage:not(.hidden),#tab-settings:not(.hidden){animation:fadeUp .35s ease}
+.bar .fill{transform-origin:left;animation:barGrow .85s cubic-bezier(.2,.7,.2,1) both}
+
+@media (prefers-reduced-motion:reduce){
+  .spin{animation:none}.btn:hover{transform:none}
+  .top,.kick,.word,.month,.results-tag,.rule,.cbox,.cbox.tick b,.panel,.award,.ballot-foot,.nom.sel,.nom.sel .tick,
+  .winner,.reveal-btn,.tabs,.award-res,.award-edit,.stat,.bar .fill,.grid,
+  #tab-results,#tab-manage,#tab-settings{animation:none !important}
+  .word{background-position:0 !important}
+  .award,.winner{opacity:1 !important;transform:none !important}
+  .nom .tick{transform:scale(1)}
+  .bar .fill{transform:none}
+  .brow .track i{transition:none}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:560px){
+  .wrap{padding:24px 16px 80px}
+  .noms{grid-template-columns:1fr}
+  .count{gap:7px}.cbox{min-width:0;flex:1;padding:11px 4px}.cbox b{font-size:26px}
+  .btn{padding:13px 20px}
+}
