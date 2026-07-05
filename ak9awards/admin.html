@@ -259,7 +259,8 @@ function renderSettings() {
     '<div class="panel"><h3>Follower verification</h3><div class="sub">Voting is limited to followers of the channel. ' +
     'Twitch requires the broadcaster to connect once so the server can check followers.<br><br>' +
     bstat.html +
-    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button></div>' +
+    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button> ' +
+    '<button class="btn ghost" onclick="ak9Recheck()">Re-check status</button></div>' +
 
     '<div class="panel"><h3>Danger zone</h3><div class="sub">Clear every vote to start a fresh month. Awards/settings are kept. This cannot be undone.</div>' +
     '<button class="btn danger" onclick="ak9ResetVotes()">Reset all votes</button></div>';
@@ -290,7 +291,9 @@ window.ak9ResetVoter = async function (uid, login) {
   toast('@' + login + ' can vote again'); await reload();
 };
 
-async function reload() { const r = await api('/api/ak9?route=admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } }
+async function reload() { const r = await api('/api/ak9?route=admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } return r.ok; }
+// Explicit refresh of the shared connection/vote state (re-fetches from the server).
+window.ak9Recheck = async function () { toast('Re-checking…'); const ok = await reload(); toast(ok ? 'Status updated' : 'Couldn’t refresh — try again', !ok); };
 
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
@@ -298,6 +301,15 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   t.classList.add('on');
   ['results', 'manage', 'settings'].forEach(n => $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
 }));
+
+// Auto-refresh the shared status when an admin returns to the tab — but ONLY on
+// the read-only Results tab, so it never wipes unsaved edits in Manage/Settings.
+let _lastAuto = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !DATA) return;
+  const on = document.querySelector('.tab.on');
+  if (on && on.dataset.tab === 'results' && Date.now() - _lastAuto > 4000) { _lastAuto = Date.now(); reload(); }
+});
 
 /* ---- living grid: warp toward the cursor (desktop) / device tilt (mobile) — same as the site ---- */
 (function setupGridWarp() {
