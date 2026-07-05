@@ -228,7 +228,7 @@ function renderSettings() {
   $('#tab-settings').innerHTML =
     '<div class="panel"><h3>Voting settings</h3><div class="sub">Set the month, the deadline, and open or close voting.</div>' +
     '<div class="row"><div class="field"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
-    '<div class="field"><label>Deadline (your local time)</label><input id="s-deadline" type="datetime-local" value="' + toLocalInput(s.deadline) + '"></div></div>' +
+    '<div class="field"><label>Deadline (your local time)</label><input id="s-deadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.deadline) + '"></div></div>' +
     '<label class="switch" style="margin:6px 0 16px"><input type="checkbox" id="s-open" ' + (s.voting_open !== false ? 'checked' : '') + '> Voting open</label>' +
     '<div><button class="btn" onclick="ak9SaveSettings(this)">Save settings</button> ' +
     '<button class="btn ghost" onclick="ak9ClearDeadline()">Clear deadline</button></div></div>' +

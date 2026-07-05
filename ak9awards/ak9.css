@@ -210,6 +210,9 @@ input,textarea,select{width:100%;background:rgba(255,255,255,.03);border:1px sol
   font-family:var(--fs);font-size:14px;padding:11px 13px;transition:border-color .18s ease,box-shadow .18s ease}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--line-2);box-shadow:0 0 0 3px rgba(255,255,255,.05)}
 textarea{resize:vertical;min-height:64px}
+/* whole date field opens the picker (JS calls showPicker on click) */
+input[type="datetime-local"]{cursor:pointer}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator{cursor:pointer}
 .field{flex:1;min-width:180px;margin-bottom:12px}
 .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--ink)}
 .switch input{width:18px;height:18px;accent-color:#fff}
