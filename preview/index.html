@@ -31,9 +31,10 @@
     transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s}
   .card:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
   .swatch{height:64px;border-radius:12px;margin-bottom:18px;border:1px solid var(--line)}
-  .sw-a{background:linear-gradient(120deg,#0c0f0d,#14100c);position:relative}
-  .sw-a::after{content:"Aa";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-family:Georgia,serif;font-style:italic;font-size:26px;color:#e8e2d6}
+  .sw-a{position:relative;background:
+    radial-gradient(90px 52px at 34% 30%,rgba(43,212,106,.55),transparent 70%),
+    radial-gradient(80px 50px at 72% 72%,rgba(55,224,255,.32),transparent 70%),
+    #060a08}
   .sw-b{background:radial-gradient(120px 60px at 30% 40%,rgba(43,212,106,.5),transparent 70%),#07130c;
     box-shadow:inset 0 0 30px rgba(43,212,106,.25);position:relative}
   .sw-b::after{content:"▲";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--green-b);text-shadow:0 0 14px var(--green);font-size:20px}
@@ -57,8 +58,8 @@
       <a class="card" href="/preview/concept-a">
         <div class="swatch sw-a"></div>
         <div class="kicker">Concept A</div>
-        <div class="ctitle">Editorial Studio</div>
-        <div class="cdesc">Refined and gallery-like. Elegant serif headlines, big framed covers, generous space, green used sparingly. Calm and premium.</div>
+        <div class="ctitle">Aurora / Product</div>
+        <div class="cdesc">Sleek and premium — a soft aurora glow, crisp glass cards, tight modern type. The polished look of a top-tier 2026 product site. Clean and expensive.</div>
         <div class="go">Open concept A →</div>
       </a>
       <a class="card" href="/preview/concept-b">
