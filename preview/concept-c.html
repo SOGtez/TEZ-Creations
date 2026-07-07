@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TEZ Creations // drops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050807;
+    --bg-2:#080d0b;
+    --panel:#0a110e;
+    --panel-2:#0c1512;
+    --line:#12251d;
+    --line-2:#183329;
+    --fg:#c9f7dc;
+    --fg-dim:#6f9a84;
+    --fg-mute:#42604f;
+    --green:#3ffb8f;
+    --green-soft:#25c46d;
+    --green-glow:rgba(63,251,143,.55);
+    --amber:#ffcf5c;
+    --red:#ff6b6b;
+    --cyan:#5cf0ff;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Space Grotesk',system-ui,sans-serif;
+    --radius:10px;
+    --maxw:1120px;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 82% -10%, rgba(63,251,143,.08), transparent 60%),
+      radial-gradient(900px 600px at 8% 100%, rgba(92,240,255,.05), transparent 55%),
+      var(--bg);
+    color:var(--fg);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* CRT scanline + grain overlay */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:60;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.16) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    mix-blend-mode:multiply;
+    opacity:.5;
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:59;
+    pointer-events:none;
+    background:radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(0,0,0,.55) 100%);
+  }
+
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--green);color:#04160c}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(9px);
+    background:linear-gradient(to bottom, rgba(5,8,7,.92), rgba(5,8,7,.6));
+    border-bottom:1px solid var(--line);
+  }
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;
+    height:60px;
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.5px}
+  .brand .glyph{
+    display:grid;place-items:center;
+    width:30px;height:30px;border-radius:7px;
+    border:1px solid var(--line-2);
+    background:linear-gradient(160deg,#0e1c16,#081511);
+    color:var(--green);font-size:15px;
+    box-shadow:0 0 14px rgba(63,251,143,.18), inset 0 0 10px rgba(63,251,143,.08);
+  }
+  .brand b{color:var(--fg)}
+  .brand .tez{color:var(--green);text-shadow:0 0 12px var(--green-glow)}
+  .brand small{color:var(--fg-mute);font-weight:500;font-size:11px}
+  nav{display:flex;align-items:center;gap:6px;font-size:13px}
+  nav a{
+    padding:7px 12px;border-radius:7px;color:var(--fg-dim);
+    border:1px solid transparent;transition:.18s;
+  }
+  nav a:hover{color:var(--green);border-color:var(--line-2);background:rgba(63,251,143,.05)}
+  nav a .pre{color:var(--fg-mute)}
+  .status-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 10px var(--green);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  .live-tag{display:none;align-items:center;gap:7px;color:var(--fg-dim);font-size:11.5px;padding-left:6px}
+  @media(min-width:760px){.live-tag{display:flex}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:64px 0 30px;position:relative}
+  .term{
+    border:1px solid var(--line-2);
+    border-radius:14px;
+    background:
+      linear-gradient(180deg, rgba(12,21,18,.9), rgba(7,12,10,.92));
+    box-shadow:
+      0 40px 90px -50px rgba(0,0,0,.9),
+      0 0 0 1px rgba(63,251,143,.04),
+      inset 0 1px 0 rgba(255,255,255,.03);
+    overflow:hidden;
+  }
+  .term-head{
+    display:flex;align-items:center;gap:8px;
+    padding:11px 15px;border-bottom:1px solid var(--line);
+    background:rgba(4,9,7,.6);
+  }
+  .dot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.4)}
+  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .term-title{margin-left:10px;color:var(--fg-mute);font-size:12px;letter-spacing:.4px}
+  .term-title b{color:var(--fg-dim);font-weight:500}
+  .term-body{padding:30px 26px 34px}
+  @media(min-width:720px){.term-body{padding:44px 40px 46px}}
+
+  .prompt-line{color:var(--fg-dim);font-size:13.5px;margin-bottom:22px}
+  .prompt-line .usr{color:var(--green)}
+  .prompt-line .path{color:var(--cyan)}
+  .prompt-line .cmd{color:var(--fg)}
+
+  h1{
+    margin:0;
+    font-family:var(--mono);
+    font-weight:800;
+    font-size:clamp(38px,9vw,88px);
+    line-height:.98;
+    letter-spacing:-1.5px;
+    color:var(--fg);
+  }
+  h1 .g{
+    color:var(--green);
+    text-shadow:0 0 26px var(--green-glow), 0 0 60px rgba(63,251,143,.25);
+  }
+  .cursor{
+    display:inline-block;width:.56em;height:.92em;
+    margin-left:.06em;transform:translateY(.08em);
+    background:var(--green);
+    box-shadow:0 0 16px var(--green-glow);
+    animation:blink 1.05s steps(1) infinite;
+  }
+  .tagline{
+    margin:24px 0 0;max-width:640px;
+    font-size:clamp(14.5px,2.4vw,18px);
+    line-height:1.65;color:var(--fg-dim);
+  }
+  .tagline b{color:var(--fg);font-weight:500}
+
+  .hero-meta{
+    display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:30px;
+    font-size:12.5px;color:var(--fg-mute);
+    border-top:1px dashed var(--line-2);padding-top:22px;
+  }
+  .hero-meta span{display:inline-flex;align-items:center;gap:8px}
+  .hero-meta b{color:var(--green-soft);font-weight:700}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:11px 18px;border-radius:9px;font-size:13.5px;font-weight:700;
+    border:1px solid var(--line-2);color:var(--fg);
+    transition:.18s;cursor:pointer;
+  }
+  .btn .arw{color:var(--green)}
+  .btn.primary{
+    background:linear-gradient(180deg,#124a2c,#0c331f);
+    border-color:#1c6b42;color:#daffe8;
+    box-shadow:0 0 22px rgba(63,251,143,.15), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .btn:hover{border-color:var(--green-soft);color:#eafff2;transform:translateY(-1px)}
+  .btn.primary:hover{box-shadow:0 0 30px rgba(63,251,143,.28)}
+
+  /* ---------- Section head ---------- */
+  .sec{padding:46px 0 20px}
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .sec-head h2{
+    margin:0;font-size:15px;font-weight:700;letter-spacing:.5px;color:var(--fg);
+  }
+  .sec-head h2 .p{color:var(--green)}
+  .sec-head .count{color:var(--fg-mute);font-size:12.5px}
+  .sec-rule{
+    flex:1;min-width:40px;height:1px;
+    background:repeating-linear-gradient(to right,var(--line-2) 0 6px,transparent 6px 12px);
+    align-self:center;
+  }
+  .listing{
+    color:var(--fg-mute);font-size:12px;letter-spacing:.3px;
+    margin:0 0 20px;padding:8px 2px;border-bottom:1px solid var(--line);
+    display:flex;gap:26px;flex-wrap:wrap;
+  }
+  .listing b{color:var(--fg-dim);font-weight:500}
+
+  /* ---------- Drops ---------- */
+  .drops{display:flex;flex-direction:column;gap:20px}
+  .drop{
+    display:grid;grid-template-columns:1fr;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--panel),var(--bg-2));
+    overflow:hidden;transition:.22s;position:relative;
+  }
+  @media(min-width:780px){
+    .drop{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+    .drop.rev{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
+    .drop.rev .shot{order:2}
+  }
+  .drop:hover{
+    border-color:var(--line-2);
+    box-shadow:0 30px 60px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(63,251,143,.06);
+    transform:translateY(-2px);
+  }
+  .drop:hover .shot img{transform:scale(1.035)}
+  .drop:hover .idx{color:var(--green);text-shadow:0 0 18px var(--green-glow)}
+
+  /* screenshot framed like a terminal window */
+  .shot{
+    position:relative;background:#04120c;border-bottom:1px solid var(--line);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  @media(min-width:780px){.shot{border-bottom:none;border-right:1px solid var(--line)}
+    .drop.rev .shot{border-right:none;border-left:1px solid var(--line)}}
+  .shot-bar{
+    display:flex;align-items:center;gap:7px;padding:9px 12px;
+    background:rgba(3,8,6,.7);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  .shot-bar .dot{width:9px;height:9px}
+  .shot-bar .fname{margin-left:8px;color:var(--fg-mute);font-size:11px;letter-spacing:.3px}
+  .shot-img{position:relative;flex:1;overflow:hidden;background:#020a06}
+  .shot-img img{
+    display:block;width:100%;height:100%;object-fit:cover;aspect-ratio:2/1;
+    transition:transform .5s cubic-bezier(.2,.7,.2,1);
+    filter:saturate(1.05) contrast(1.02);
+  }
+  .shot-img::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,transparent 55%,rgba(2,10,6,.55));
+  }
+
+  /* the no-cover tile for #006 */
+  .tile{
+    position:relative;flex:1;min-height:210px;overflow:hidden;
+    background:
+      radial-gradient(120% 120% at 80% 10%, rgba(63,251,143,.14), transparent 55%),
+      linear-gradient(180deg,#08160f,#040d09);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tile-grid{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(63,251,143,.09) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(63,251,143,.09) 1px,transparent 1px);
+    background-size:26px 26px;
+    mask-image:radial-gradient(120% 90% at 70% 20%,#000 30%,transparent 85%);
+  }
+  .tile-num{
+    position:relative;z-index:1;text-align:center;padding:26px;
+  }
+  .tile-num .big{
+    font-size:clamp(52px,12vw,92px);font-weight:800;letter-spacing:-2px;
+    color:var(--green);line-height:1;
+    text-shadow:0 0 30px var(--green-glow);
+  }
+  .tile-num .lbl{
+    margin-top:10px;color:var(--fg-dim);font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;
+  }
+  .tile-ascii{
+    position:absolute;left:14px;bottom:10px;z-index:1;
+    color:var(--fg-mute);font-size:10px;line-height:1.25;white-space:pre;opacity:.7;
+  }
+
+  /* drop text body */
+  .meta{padding:22px 22px 24px;display:flex;flex-direction:column;min-width:0}
+  @media(min-width:780px){.meta{padding:26px 26px}}
+  .meta-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .idx{
+    font-size:15px;font-weight:800;color:var(--fg-dim);letter-spacing:.5px;
+    transition:.22s;
+  }
+  .cat{
+    font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    padding:3px 9px;border-radius:20px;border:1px solid var(--line-2);
+  }
+  .cat.stream{color:var(--cyan);border-color:rgba(92,240,255,.28);background:rgba(92,240,255,.06)}
+  .cat.apps{color:var(--amber);border-color:rgba(255,207,92,.28);background:rgba(255,207,92,.06)}
+  .statusline{
+    margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+    font-size:11px;color:var(--fg-mute);
+  }
+  .statusline .ok{color:var(--green-soft);font-weight:700}
+  .drop h3{
+    margin:8px 0 0;font-family:var(--sans);
+    font-size:clamp(22px,3.4vw,27px);font-weight:700;letter-spacing:-.5px;color:#f2fff8;
+  }
+  .blurb{margin:11px 0 0;color:var(--fg-dim);font-size:13.5px;line-height:1.62;max-width:52ch}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+  .tag{
+    font-size:10.5px;color:var(--fg-mute);padding:3px 8px;border-radius:6px;
+    border:1px solid var(--line);background:rgba(63,251,143,.02);
+  }
+  .tag::before{content:"#";color:var(--green-soft);opacity:.7}
+  .open{
+    margin-top:20px;display:inline-flex;align-items:center;gap:9px;
+    align-self:flex-start;
+    padding:9px 15px;border-radius:8px;font-size:12.5px;font-weight:700;
+    border:1px solid var(--line-2);color:var(--fg);transition:.18s;
+  }
+  .open .arw{color:var(--green);transition:.18s}
+  .drop:hover .open{border-color:var(--green-soft);background:rgba(63,251,143,.06)}
+  .drop:hover .open .arw{transform:translateX(3px)}
+  /* whole card clickable overlay */
+  .drop .stretch{position:absolute;inset:0;z-index:2}
+  .drop .meta,.drop .shot{position:relative;z-index:3;pointer-events:none}
+  .drop .meta a,.drop .shot a{pointer-events:auto}
+
+  /* ---------- Footer ---------- */
+  footer{margin-top:60px;border-top:1px solid var(--line);background:rgba(4,8,6,.5)}
+  .foot{
+    padding:34px 0 44px;display:grid;gap:26px;
+  }
+  @media(min-width:720px){.foot{grid-template-columns:1.4fr 1fr 1fr}}
+  .foot .col h4{margin:0 0 12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg-mute)}
+  .foot .brand{margin-bottom:12px}
+  .foot p{margin:0;color:var(--fg-mute);font-size:12.5px;line-height:1.7;max-width:34ch}
+  .foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .foot ul a{color:var(--fg-dim);font-size:13px;transition:.15s;display:inline-flex;gap:8px}
+  .foot ul a:hover{color:var(--green)}
+  .foot ul a .b{color:var(--fg-mute)}
+  .foot-bottom{
+    border-top:1px solid var(--line);padding:16px 0 30px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    color:var(--fg-mute);font-size:11.5px;
+  }
+  .foot-bottom .blink{color:var(--green-soft)}
+
+  @keyframes blink{50%{opacity:0}}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 10px var(--green)}50%{opacity:.35;box-shadow:0 0 3px var(--green)}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+    .cursor{opacity:1}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="TEZ Creations home">
+      <span class="glyph">&gt;_</span>
+      <span><span class="tez">TEZ</span> <b>Creations</b> <small>// v.006</small></span>
+    </a>
+    <nav>
+      <span class="live-tag"><span class="status-dot"></span> systems nominal</span>
+      <a href="#drops"><span class="pre">./</span>drops</a>
+      <a href="#"><span class="pre">./</span>about</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="term">
+        <div class="term-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title"><b>tez</b>@creations: ~/drops — zsh</span>
+        </div>
+        <div class="term-body">
+          <div class="prompt-line">
+            <span class="usr">tez@creations</span>:<span class="path">~/creations</span>$ <span class="cmd">ls ./drops --newest</span>
+          </div>
+          <h1>random <span class="g">creations</span>,<br />tools &amp; experiments<span class="cursor" aria-hidden="true"></span></h1>
+          <p class="tagline">
+            A one-person workshop. I build weird, useful little things and
+            <b>drop them here — free, for anyone to use.</b> Stream overlays, browser
+            apps, half-mad experiments. No signups, no fluff. Just run it.
+          </p>
+
+          <div class="cta-row">
+            <a class="btn primary" href="#drops"><span class="arw">&gt;</span> browse the drops</a>
+            <a class="btn" href="/drops/006">latest: Handle Hunter <span class="arw">↗</span></a>
+          </div>
+
+          <div class="hero-meta">
+            <span>drops: <b>06</b></span>
+            <span>categories: <b>stream tools</b> · <b>apps</b></span>
+            <span>cost: <b>$0.00</b></span>
+            <span>maker: <b>solo</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DROPS FEED -->
+  <section class="sec" id="drops">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2><span class="p">$</span> cat ./manifest.log</h2>
+        <span class="sec-rule"></span>
+        <span class="count">6 entries · newest first</span>
+      </div>
+      <div class="listing">
+        <span>total <b>6</b></span>
+        <span>drwxr-xr-x <b>tez</b></span>
+        <span>sort=<b>-desc</b></span>
+        <span>filter=<b>none</b></span>
+      </div>
+
+      <div class="drops">
+
+        <!-- 006 -->
+        <article class="drop">
+          <a class="stretch" href="/drops/006" aria-label="Open Handle Hunter"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_006 — handle-hunter</span>
+            </div>
+            <div class="tile">
+              <div class="tile-grid"></div>
+              <div class="tile-num">
+                <div class="big">#006</div>
+                <div class="lbl">Handle&nbsp;Hunter</div>
+              </div>
+              <div class="tile-ascii">┌───────────────┐
+│  @  ?  █  ▓  ░ │
+└───────────────┘</div>
+            </div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#006</span>
+              <span class="cat apps">Apps</span>
+              <span class="statusline"><span class="ok">● NEW</span> · deployed</span>
+            </div>
+            <h3>Handle Hunter</h3>
+            <p class="blurb">Hunt rare, short usernames. Pick a platform + length + style, and it generates real candidates and checks availability live.</p>
+            <div class="tags"><span class="tag">usernames</span><span class="tag">availability</span><span class="tag">generator</span></div>
+            <a class="open" href="/drops/006">run drop_006 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+        <!-- 005 -->
+        <article class="drop rev">
+          <a class="stretch" href="/drops/005" aria-label="Open Ghosted"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_005 — ghosted / cover.png</span>
+            </div>
+            <div class="shot-img"><img src="/drops/005/cover.png" alt="Ghosted cover" loading="lazy" /></div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#005</span>
+              <span class="cat apps">Apps</span>
+              <span class="statusline"><span class="ok">● live</span> · client-side</span>
+            </div>
+            <h3>Ghosted</h3>
+            <p class="blurb">See who doesn't follow you back on Instagram — and who quietly unfollowed. 100% in your browser, nothing leaves your device.</p>
+            <div class="tags"><span class="tag">instagram</span><span class="tag">privacy</span><span class="tag">local-only</span></div>
+            <a class="open" href="/drops/005">run drop_005 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+        <!-- 004 -->
+        <article class="drop">
+          <a class="stretch" href="/gauntlet" aria-label="Open Game Gauntlet"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_004 — gauntlet / cover.png</span>
+            </div>
+            <div class="shot-img"><img src="/gauntlet/cover.png" alt="Game Gauntlet cover" loading="lazy" /></div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#004</span>
+              <span class="cat stream">Stream Tools</span>
+              <span class="statusline"><span class="ok">● live</span> · OBS</span>
+            </div>
+            <h3>Game Gauntlet</h3>
+            <p class="blurb">A win-to-advance gauntlet tracker for OBS. Mods cross games off live in chat with !win / !lost.</p>
+            <div class="tags"><span class="tag">obs-overlay</span><span class="tag">twitch-chat</span><span class="tag">mods</span></div>
+            <a class="open" href="/gauntlet">run drop_004 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+        <!-- 003 -->
+        <article class="drop rev">
+          <a class="stretch" href="/drops/003" aria-label="Open Live Map"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_003 — live-map / cover.png</span>
+            </div>
+            <div class="shot-img"><img src="/drops/003/cover.png" alt="Live Map cover" loading="lazy" /></div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#003</span>
+              <span class="cat stream">Stream Tools</span>
+              <span class="statusline"><span class="ok">● live</span> · GPS</span>
+            </div>
+            <h3>Live Map</h3>
+            <p class="blurb">A live GPS map overlay for IRL &amp; travel streams. Your location glides across a clean dark map in OBS.</p>
+            <div class="tags"><span class="tag">irl-stream</span><span class="tag">gps</span><span class="tag">obs-overlay</span></div>
+            <a class="open" href="/drops/003">run drop_003 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+        <!-- 002 -->
+        <article class="drop">
+          <a class="stretch" href="/subgoal" aria-label="Open Sub Goal Tracker"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_002 — subgoal / cover.png</span>
+            </div>
+            <div class="shot-img"><img src="/subgoal/cover.png" alt="Sub Goal Tracker cover" loading="lazy" /></div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#002</span>
+              <span class="cat stream">Stream Tools</span>
+              <span class="statusline"><span class="ok">● live</span> · Twitch</span>
+            </div>
+            <h3>Sub Goal Tracker</h3>
+            <p class="blurb">An auto-updating Twitch sub goal overlay for OBS. Counts subs live, celebrates on goal, rolls to the next.</p>
+            <div class="tags"><span class="tag">twitch</span><span class="tag">sub-goal</span><span class="tag">obs-overlay</span></div>
+            <a class="open" href="/subgoal">run drop_002 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+        <!-- 001 -->
+        <article class="drop rev">
+          <a class="stretch" href="/drops/001" aria-label="Open Sports Tracker"></a>
+          <div class="shot">
+            <div class="shot-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="fname">drop_001 — sports-tracker / cover.png</span>
+            </div>
+            <div class="shot-img"><img src="/drops/001/cover.png" alt="Sports Tracker cover" loading="lazy" /></div>
+          </div>
+          <div class="meta">
+            <div class="meta-top">
+              <span class="idx">#001</span>
+              <span class="cat stream">Stream Tools</span>
+              <span class="statusline"><span class="ok">● live</span> · OBS</span>
+            </div>
+            <h3>Sports Tracker</h3>
+            <p class="blurb">A live score tracker for your stream. Pick a game, paste a link into OBS — scores + clock update live.</p>
+            <div class="tags"><span class="tag">sports</span><span class="tag">live-scores</span><span class="tag">obs-overlay</span></div>
+            <a class="open" href="/drops/001">run drop_001 <span class="arw">→</span></a>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot">
+    <div class="col">
+      <div class="brand" style="font-weight:800">
+        <span class="glyph">&gt;_</span>
+        <span><span class="tez">TEZ</span> <b>Creations</b></span>
+      </div>
+      <p>A solo maker's drop feed. Free tools + experiments, shipped when they're ready. Built in the open, run by anyone.</p>
+    </div>
+    <div class="col">
+      <h4>// index</h4>
+      <ul>
+        <li><a href="#drops"><span class="b">$</span> all drops</a></li>
+        <li><a href="#"><span class="b">$</span> about</a></li>
+        <li><a href="/drops/006"><span class="b">$</span> latest drop</a></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>// categories</h4>
+      <ul>
+        <li><a href="#drops"><span class="b">></span> Stream Tools <span class="b">(4)</span></a></li>
+        <li><a href="#drops"><span class="b">></span> Apps <span class="b">(2)</span></a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© <span id="yr">2026</span> TEZ Creations — dropped for anyone to use.</span>
+    <span><span class="blink">●</span> end of manifest _</span>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

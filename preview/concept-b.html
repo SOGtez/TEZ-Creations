@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEZ Creations — Neon Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050806;
+    --bg-2:#0a0f0b;
+    --text:#eaf2ec;
+    --muted:#8fa394;
+    --accent:#2bd46a;
+    --accent-bright:#4ade80;
+    --accent-deep:#16a34a;
+    --glow:rgba(43,212,106,0.55);
+    --glow-soft:rgba(43,212,106,0.16);
+    --line:rgba(255,255,255,0.07);
+    --line-2:rgba(120,200,150,0.10);
+    --glass:rgba(255,255,255,0.028);
+    --ink:#04160b;
+    --font-display:'Space Grotesk',system-ui,sans-serif;
+    --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+    --font-mono:'Space Mono',ui-monospace,monospace;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ambient neon field */
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(120% 90% at 20% -10%, rgba(43,212,106,0.16), transparent 55%),
+      radial-gradient(90% 80% at 100% 0%, rgba(74,222,128,0.10), transparent 50%),
+      radial-gradient(120% 120% at 50% 120%, rgba(22,163,74,0.14), transparent 60%),
+      var(--bg);
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:
+      linear-gradient(var(--line-2) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+    mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+    opacity:.5;
+    animation:drift 24s linear infinite;
+  }
+  @keyframes drift{to{background-position:46px 46px,46px 46px}}
+
+  a{color:inherit;text-decoration:none}
+  .wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(5,8,6,0.86),rgba(5,8,6,0.45));
+    border-bottom:1px solid var(--line);
+  }
+  .bar{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.5px}
+  .brand .dot{
+    width:12px;height:12px;border-radius:3px;
+    background:var(--accent-bright);
+    box-shadow:0 0 10px var(--glow),0 0 22px var(--glow);
+    animation:blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+  .brand b{color:var(--text)}
+  .brand span{color:var(--accent-bright);text-shadow:0 0 12px var(--glow-soft)}
+  nav{display:flex;align-items:center;gap:8px}
+  nav a{
+    font-family:var(--font-mono);font-size:12.5px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--muted);padding:9px 15px;border-radius:9px;border:1px solid transparent;
+    transition:.25s;
+  }
+  nav a:hover{color:var(--accent-bright);border-color:var(--line-2);background:var(--glass);text-shadow:0 0 10px var(--glow-soft)}
+  nav a.cta{color:var(--ink);background:linear-gradient(180deg,var(--accent-bright),var(--accent-deep));border-color:transparent;box-shadow:0 6px 20px rgba(22,163,74,0.35),inset 0 1px 0 rgba(255,255,255,0.4)}
+  nav a.cta:hover{filter:brightness(1.08);text-shadow:none}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:96px 0 70px;text-align:center;overflow:hidden}
+  .badge{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--font-mono);font-size:11.5px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--accent-bright);
+    padding:7px 16px;border-radius:999px;
+    border:1px solid var(--line-2);background:var(--glass);
+    box-shadow:0 0 24px var(--glow-soft) inset;
+    margin-bottom:30px;
+  }
+  .badge i{width:7px;height:7px;border-radius:50%;background:var(--accent-bright);box-shadow:0 0 10px var(--glow);animation:blink 1.8s infinite}
+  .hero h1{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(52px,12vw,138px);line-height:.92;letter-spacing:-.02em;
+    margin:0 auto;max-width:11ch;
+    background:linear-gradient(180deg,#f4fff7 0%,#bff5d0 42%,var(--accent) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 60px rgba(43,212,106,0.10);
+    position:relative;
+  }
+  .hero h1 .glitch{position:relative;display:inline-block}
+  .hero h1 .glitch::before,.hero h1 .glitch::after{
+    content:"TEZ";position:absolute;inset:0;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    pointer-events:none;opacity:.65;
+  }
+  .hero h1 .glitch::before{background:linear-gradient(var(--accent-bright),var(--accent-bright));animation:gl1 5.5s steps(2,end) infinite}
+  .hero h1 .glitch::after{background:linear-gradient(#37e0ff,#37e0ff);animation:gl2 5.5s steps(2,end) infinite}
+  @keyframes gl1{0%,92%,100%{transform:none;opacity:0;clip-path:inset(0 0 0 0)}93%{opacity:.7;transform:translate(-3px,-1px);clip-path:inset(0 0 62% 0)}96%{opacity:.7;transform:translate(3px,1px);clip-path:inset(58% 0 0 0)}}
+  @keyframes gl2{0%,92%,100%{transform:none;opacity:0}94%{opacity:.6;transform:translate(3px,0);clip-path:inset(30% 0 40% 0)}97%{opacity:.6;transform:translate(-2px,0);clip-path:inset(70% 0 5% 0)}}
+
+  .hero p.tag{
+    margin:28px auto 0;max-width:620px;
+    font-size:clamp(16px,2.2vw,20px);color:var(--muted);
+  }
+  .hero p.tag b{color:var(--text);font-weight:600}
+  .hero-actions{margin-top:40px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn{
+    font-family:var(--font-display);font-weight:600;font-size:15px;
+    padding:14px 26px;border-radius:12px;cursor:pointer;transition:.22s;
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .btn-primary{
+    color:var(--ink);background:linear-gradient(180deg,var(--accent-bright),var(--accent-deep));
+    box-shadow:0 10px 30px rgba(22,163,74,0.4),inset 0 1px 0 rgba(255,255,255,0.45);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(22,163,74,0.55),inset 0 1px 0 rgba(255,255,255,0.45)}
+  .btn-ghost{color:var(--text);border:1px solid var(--line-2);background:var(--glass)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent-bright);box-shadow:0 0 24px var(--glow-soft)}
+
+  .stats{margin-top:56px;display:flex;gap:44px;justify-content:center;flex-wrap:wrap}
+  .stats .s{font-family:var(--font-mono)}
+  .stats .s b{display:block;font-size:26px;color:var(--accent-bright);text-shadow:0 0 18px var(--glow-soft)}
+  .stats .s span{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- FEED ---------- */
+  .feed{padding:40px 0 30px}
+  .feed-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:34px;flex-wrap:wrap}
+  .feed-head h2{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,5vw,42px);letter-spacing:-.01em}
+  .feed-head h2 em{font-style:normal;color:var(--accent-bright);text-shadow:0 0 20px var(--glow-soft)}
+  .feed-head p{color:var(--muted);font-size:14.5px;max-width:34ch}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+  .card:first-child{grid-column:1 / -1}
+
+  .card{
+    position:relative;display:block;border-radius:18px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(16,24,18,0.9),rgba(8,12,9,0.9));
+    border:1px solid var(--line);
+    transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,border-color .3s;
+    transform-style:preserve-3d;
+    will-change:transform;
+  }
+  .card:hover{
+    transform:translateY(-6px) scale(1.012);
+    border-color:rgba(43,212,106,0.5);
+    box-shadow:0 22px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(43,212,106,0.15),0 12px 50px var(--glow-soft);
+  }
+  /* shine sweep */
+  .card::after{
+    content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,0.13) 48%,transparent 62%);
+    transform:translateX(-120%);
+    transition:transform .7s ease;
+  }
+  .card:hover::after{transform:translateX(120%)}
+
+  .cover{position:relative;aspect-ratio:2/1;overflow:hidden;background:#0a0f0b}
+  .cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease,filter .5s ease;filter:saturate(1.05)}
+  .card:hover .cover img{transform:scale(1.06);filter:saturate(1.2) brightness(1.05)}
+  .cover::before{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,transparent 40%,rgba(5,8,6,0.55) 78%,rgba(5,8,6,0.95))}
+
+  /* designed tile for #006 (no cover) */
+  .tile{
+    position:relative;aspect-ratio:2/1;overflow:hidden;
+    background:
+      radial-gradient(80% 120% at 15% 10%, rgba(43,212,106,0.22), transparent 55%),
+      radial-gradient(90% 120% at 100% 100%, rgba(74,222,128,0.16), transparent 55%),
+      linear-gradient(135deg,#08130c,#050806);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tile::before{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(43,212,106,0.10) 1px,transparent 1px),linear-gradient(90deg,rgba(43,212,106,0.10) 1px,transparent 1px);
+    background-size:30px 30px;
+    -webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 80%);
+    mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent 80%);
+  }
+  .tile .huge{
+    font-family:var(--font-mono);font-weight:700;
+    font-size:clamp(70px,16vw,150px);letter-spacing:-2px;line-height:1;
+    color:transparent;-webkit-text-stroke:2px rgba(74,222,128,0.55);
+    text-shadow:0 0 40px var(--glow-soft);
+    position:relative;z-index:2;
+  }
+  .tile .tile-tag{
+    position:absolute;left:22px;bottom:20px;z-index:3;
+    font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3.4vw,30px);
+    color:var(--text);text-shadow:0 0 24px rgba(0,0,0,0.7);
+  }
+  .tile .spark{position:absolute;z-index:3;width:8px;height:8px;border-radius:50%;background:var(--accent-bright);box-shadow:0 0 14px var(--glow)}
+  .tile .spark.a{top:18%;left:24%;animation:blink 2s infinite}
+  .tile .spark.b{top:34%;right:20%;animation:blink 2.6s infinite .4s}
+  .tile .spark.c{bottom:30%;left:60%;animation:blink 3s infinite .8s}
+
+  .body{position:relative;z-index:3;padding:20px 22px 22px}
+  .card:first-child .body{padding:24px 28px 26px}
+  .meta{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .num{font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--accent-bright);text-shadow:0 0 12px var(--glow-soft)}
+  .cat{
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--muted);padding:4px 10px;border-radius:999px;
+    border:1px solid var(--line-2);background:var(--glass);
+  }
+  .cat.apps{color:#37e0ff;border-color:rgba(55,224,255,0.3)}
+  .cat.stream{color:var(--accent-bright);border-color:rgba(43,212,106,0.3)}
+  .card h3{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,26px);letter-spacing:-.01em;margin-bottom:8px}
+  .card:first-child h3{font-size:clamp(24px,4vw,34px)}
+  .card p.blurb{color:var(--muted);font-size:14.5px;max-width:60ch}
+  .open{
+    margin-top:16px;display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-mono);font-size:12.5px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--accent-bright);transition:gap .25s;
+  }
+  .card:hover .open{gap:14px}
+  .open .arw{transition:transform .25s}
+  .card:hover .open .arw{transform:translateX(4px)}
+
+  /* pin badge top corner */
+  .pin{
+    position:absolute;top:14px;left:14px;z-index:5;
+    font-family:var(--font-mono);font-weight:700;font-size:12px;
+    color:var(--ink);background:linear-gradient(180deg,var(--accent-bright),var(--accent-deep));
+    padding:5px 11px;border-radius:8px;
+    box-shadow:0 4px 16px rgba(22,163,74,0.45),inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .pin.latest::after{content:" · NEW"}
+
+  /* ---------- FOOTER ---------- */
+  footer{margin-top:70px;border-top:1px solid var(--line);padding:50px 0 40px;position:relative}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .foot .brand{font-size:16px}
+  .foot p{color:var(--muted);font-size:13px;font-family:var(--font-mono)}
+  .foot .fnav{display:flex;gap:20px}
+  .foot .fnav a{font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:.2s}
+  .foot .fnav a:hover{color:var(--accent-bright);text-shadow:0 0 10px var(--glow-soft)}
+  .foot-glow{position:absolute;left:50%;bottom:-40px;transform:translateX(-50%);width:60%;height:120px;background:radial-gradient(closest-side,var(--glow-soft),transparent);filter:blur(10px);pointer-events:none}
+
+  @media(max-width:720px){
+    .grid{grid-template-columns:1fr}
+    .card:first-child{grid-column:auto}
+    .stats{gap:28px}
+    nav a.about{display:none}
+    .hero{padding:70px 0 50px}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .card:hover{transform:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top"><span class="dot"></span><b>TEZ</b>&nbsp;<span>Creations</span></a>
+    <nav>
+      <a href="#drops">Drops</a>
+      <a class="about" href="#">About</a>
+      <a class="cta" href="#drops">Play the drops</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="badge"><i></i>6 drops live · new ones land often</span>
+      <h1><span class="glitch">TEZ</span> Creations</h1>
+      <p class="tag">Random <b>creations, tools &amp; experiments</b> — built for the fun of it, <b>dropped free</b> for anyone to grab and play with.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#drops">▶ Browse the drops</a>
+        <a class="btn btn-ghost" href="#">What is this?</a>
+      </div>
+      <div class="stats">
+        <div class="s"><b>06</b><span>Drops shipped</span></div>
+        <div class="s"><b>02</b><span>Categories</span></div>
+        <div class="s"><b>∞</b><span>Free forever</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feed wrap" id="drops">
+    <div class="feed-head">
+      <div>
+        <h2>The <em>Feed</em></h2>
+      </div>
+      <p>Every tool &amp; experiment, newest first. Tap in — they all just work.</p>
+    </div>
+
+    <div class="grid">
+
+      <!-- #006 -->
+      <a class="card" href="/drops/006">
+        <span class="pin latest">#006</span>
+        <div class="tile">
+          <span class="spark a"></span><span class="spark b"></span><span class="spark c"></span>
+          <span class="huge">006</span>
+          <span class="tile-tag">Handle Hunter</span>
+        </div>
+        <div class="body">
+          <div class="meta"><span class="num">#006</span><span class="cat apps">Apps</span></div>
+          <h3>Handle Hunter</h3>
+          <p class="blurb">Hunt rare, short usernames. Pick a platform + length + style, and it generates real candidates and checks availability live.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+      <!-- #005 -->
+      <a class="card" href="/drops/005">
+        <span class="pin">#005</span>
+        <div class="cover"><img src="/drops/005/cover.png" alt="Ghosted cover" loading="lazy" /></div>
+        <div class="body">
+          <div class="meta"><span class="num">#005</span><span class="cat apps">Apps</span></div>
+          <h3>Ghosted</h3>
+          <p class="blurb">See who doesn't follow you back on Instagram — and who quietly unfollowed. 100% in your browser, nothing leaves your device.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+      <!-- #004 -->
+      <a class="card" href="/gauntlet">
+        <span class="pin">#004</span>
+        <div class="cover"><img src="/gauntlet/cover.png" alt="Game Gauntlet cover" loading="lazy" /></div>
+        <div class="body">
+          <div class="meta"><span class="num">#004</span><span class="cat stream">Stream Tools</span></div>
+          <h3>Game Gauntlet</h3>
+          <p class="blurb">A win-to-advance gauntlet tracker for OBS. Mods cross games off live in chat with !win / !lost.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+      <!-- #003 -->
+      <a class="card" href="/drops/003">
+        <span class="pin">#003</span>
+        <div class="cover"><img src="/drops/003/cover.png" alt="Live Map cover" loading="lazy" /></div>
+        <div class="body">
+          <div class="meta"><span class="num">#003</span><span class="cat stream">Stream Tools</span></div>
+          <h3>Live Map</h3>
+          <p class="blurb">A live GPS map overlay for IRL &amp; travel streams. Your location glides across a clean dark map in OBS.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+      <!-- #002 -->
+      <a class="card" href="/subgoal">
+        <span class="pin">#002</span>
+        <div class="cover"><img src="/subgoal/cover.png" alt="Sub Goal Tracker cover" loading="lazy" /></div>
+        <div class="body">
+          <div class="meta"><span class="num">#002</span><span class="cat stream">Stream Tools</span></div>
+          <h3>Sub Goal Tracker</h3>
+          <p class="blurb">An auto-updating Twitch sub goal overlay for OBS. Counts subs live, celebrates on goal, rolls to the next.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+      <!-- #001 -->
+      <a class="card" href="/drops/001">
+        <span class="pin">#001</span>
+        <div class="cover"><img src="/drops/001/cover.png" alt="Sports Tracker cover" loading="lazy" /></div>
+        <div class="body">
+          <div class="meta"><span class="num">#001</span><span class="cat stream">Stream Tools</span></div>
+          <h3>Sports Tracker</h3>
+          <p class="blurb">A live score tracker for your stream. Pick a game, paste a link into OBS — scores + clock update live.</p>
+          <span class="open">Open drop <span class="arw">→</span></span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top"><span class="dot"></span><b>TEZ</b>&nbsp;<span>Creations</span></a>
+    <div class="fnav">
+      <a href="#drops">Drops</a>
+      <a href="#">About</a>
+      <a href="#top">Back to top</a>
+    </div>
+    <p>© 2026 · made in the dark, dropped for anyone</p>
+  </div>
+  <div class="foot-glow"></div>
+</footer>
+
+<script>
+  // Subtle pointer-tilt on drop cards (skipped for reduced-motion / touch)
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var coarse = window.matchMedia('(pointer: coarse)').matches;
+    if(reduce || coarse) return;
+    document.querySelectorAll('.card').forEach(function(card){
+      card.addEventListener('pointermove', function(e){
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left)/r.width - .5;
+        var py = (e.clientY - r.top)/r.height - .5;
+        card.style.transform = 'translateY(-6px) scale(1.012) perspective(900px) rotateX('+(-py*4).toFixed(2)+'deg) rotateY('+(px*5).toFixed(2)+'deg)';
+      });
+      card.addEventListener('pointerleave', function(){ card.style.transform=''; });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEZ Creations — Editorial Studio Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0c0b;
+    --bg-soft:#101210;
+    --panel:#141614;
+    --line:rgba(240,238,230,0.10);
+    --line-soft:rgba(240,238,230,0.06);
+    --ink:#f2efe6;
+    --ink-dim:#a7a89f;
+    --ink-faint:#6f716a;
+    --green:#7ee08a;
+    --green-deep:#2f7d43;
+    --green-ink:#a9e9b3;
+    --radius:14px;
+    --maxw:1180px;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      radial-gradient(900px 500px at 78% -8%, rgba(126,224,138,0.08), transparent 60%),
+      radial-gradient(700px 600px at 10% 110%, rgba(47,125,67,0.07), transparent 60%);
+    pointer-events:none;z-index:0;
+  }
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;position:relative;z-index:1}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(11,12,11,0.66);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .bar{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .mark{display:flex;align-items:baseline;gap:2px;font-family:'Fraunces',serif;letter-spacing:-0.01em}
+  .mark .t{font-size:22px;font-weight:500;font-style:italic}
+  .mark .rest{font-size:22px;font-weight:400}
+  .mark .dot{color:var(--green);font-size:22px;margin-left:1px}
+  nav{display:flex;align-items:center;gap:28px;font-size:13.5px;color:var(--ink-dim)}
+  nav a{position:relative;padding:4px 0;transition:color .3s var(--ease)}
+  nav a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:1px;background:var(--green);transition:width .35s var(--ease)}
+  nav a:hover{color:var(--ink)}
+  nav a:hover::after{width:100%}
+  .nav-idx{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);letter-spacing:0.04em}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:96px 0 72px;position:relative}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--ink-dim);margin-bottom:32px;
+  }
+  .eyebrow .bead{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(126,224,138,0.7)}
+  .hero h1{
+    font-family:'Fraunces',serif;
+    font-weight:300;
+    font-size:clamp(52px,10.5vw,132px);
+    line-height:0.92;
+    letter-spacing:-0.03em;
+    margin-bottom:34px;
+  }
+  .hero h1 em{font-style:italic;font-weight:400;color:var(--green-ink)}
+  .hero h1 .line{display:block}
+  .hero-lower{
+    display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:34px;
+    padding-top:34px;border-top:1px solid var(--line-soft);
+  }
+  .lede{max-width:560px;font-size:clamp(17px,2.2vw,21px);color:var(--ink-dim);line-height:1.55}
+  .lede b{color:var(--ink);font-weight:500}
+  .hero-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-faint);text-align:right;line-height:1.9}
+  .hero-meta .big{display:block;color:var(--green);font-size:14px}
+
+  /* ---------- Section head ---------- */
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:20px;
+    padding-top:16px;margin-bottom:44px;
+  }
+  .sec-head h2{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(26px,4vw,40px);letter-spacing:-0.02em}
+  .sec-head h2 em{font-style:italic;color:var(--ink-dim)}
+  .sec-head .count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-faint);letter-spacing:0.05em}
+
+  /* ---------- Drops grid (editorial / asymmetric) ---------- */
+  .drops{display:grid;grid-template-columns:repeat(12,1fr);gap:26px;padding-bottom:40px}
+  .drop{
+    grid-column:span 6;
+    display:flex;flex-direction:column;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    transition:border-color .5s var(--ease),transform .5s var(--ease),background .5s var(--ease);
+  }
+  /* editorial rhythm: first drop is a wide feature */
+  .drop.feature{grid-column:span 12}
+  .drop:hover{border-color:rgba(126,224,138,0.4);transform:translateY(-4px);background:#171916}
+
+  .cover{position:relative;overflow:hidden;background:var(--bg-soft)}
+  .cover.landscape{aspect-ratio:2/1}
+  .drop.feature .cover.landscape{aspect-ratio:2.6/1}
+  .cover img{width:100%;height:100%;object-fit:cover;filter:saturate(0.92) contrast(1.02);transition:transform 1s var(--ease),filter .6s var(--ease)}
+  .drop:hover .cover img{transform:scale(1.045);filter:saturate(1.05) contrast(1.04)}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(11,12,11,0.35));pointer-events:none}
+  .cover .num-tag{
+    position:absolute;top:14px;left:14px;z-index:2;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;
+    color:var(--ink);background:rgba(11,12,11,0.6);
+    backdrop-filter:blur(6px);border:1px solid var(--line);
+    padding:5px 9px;border-radius:7px;letter-spacing:0.03em;
+  }
+
+  /* Designed tile for #006 (no cover) */
+  .tile{
+    position:relative;aspect-ratio:2/1;overflow:hidden;
+    background:
+      radial-gradient(120% 120% at 82% 12%, rgba(47,125,67,0.28), transparent 55%),
+      linear-gradient(150deg,#0e120f 0%,#0b0c0b 60%);
+  }
+  .tile .grid-lines{position:absolute;inset:0;opacity:0.5;
+    background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+    background-size:44px 44px;mask-image:radial-gradient(120% 100% at 80% 10%,#000,transparent 80%)}
+  .tile .glyph{
+    position:absolute;right:18px;bottom:-14px;
+    font-family:'Fraunces',serif;font-style:italic;font-weight:300;
+    font-size:clamp(120px,20vw,220px);line-height:1;
+    color:transparent;-webkit-text-stroke:1px rgba(126,224,138,0.32);
+    letter-spacing:-0.04em;user-select:none;
+  }
+  .tile .tile-label{
+    position:absolute;left:20px;bottom:18px;z-index:2;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green-ink);letter-spacing:0.08em;
+  }
+  .tile .tile-title{
+    position:absolute;left:20px;top:18px;z-index:2;
+    font-family:'Fraunces',serif;font-size:26px;font-weight:400;color:var(--ink);letter-spacing:-0.01em;
+  }
+
+  .body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+  .drop.feature .body{padding:26px 30px 28px}
+  .meta-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .num{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--green);letter-spacing:0.02em}
+  .cat{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:0.16em;color:var(--ink-dim);
+    border:1px solid var(--line);border-radius:999px;padding:3px 10px;
+  }
+  .cat.apps{color:var(--green-ink);border-color:rgba(126,224,138,0.28)}
+  .drop h3{font-family:'Fraunces',serif;font-weight:400;font-size:24px;letter-spacing:-0.01em;margin-bottom:10px}
+  .drop.feature h3{font-size:clamp(28px,4vw,40px)}
+  .blurb{font-size:14.5px;color:var(--ink-dim);line-height:1.62;max-width:60ch}
+  .drop.feature .blurb{font-size:16px;max-width:56ch}
+  .go{
+    margin-top:20px;display:inline-flex;align-items:center;gap:9px;
+    font-size:13px;letter-spacing:0.02em;color:var(--ink);
+    align-self:flex-start;
+  }
+  .go .arrow{transition:transform .4s var(--ease);color:var(--green)}
+  .drop:hover .go .arrow{transform:translateX(5px)}
+  .go .rule{width:0;height:1px;background:var(--green);transition:width .45s var(--ease)}
+  .drop:hover .go .rule{width:26px}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line-soft);margin-top:40px;padding:64px 0 54px}
+  .foot-grid{display:flex;flex-wrap:wrap;justify-content:space-between;gap:40px;align-items:flex-start}
+  .foot-mark{font-family:'Fraunces',serif;font-size:clamp(34px,6vw,64px);font-weight:300;letter-spacing:-0.02em;line-height:1}
+  .foot-mark em{font-style:italic;color:var(--green-ink)}
+  .foot-sub{color:var(--ink-faint);font-size:13.5px;margin-top:16px;max-width:36ch}
+  .foot-links{display:flex;flex-direction:column;gap:10px;font-size:13.5px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace}
+  .foot-links a{transition:color .3s var(--ease)}
+  .foot-links a:hover{color:var(--green)}
+  .foot-bottom{
+    display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;
+    margin-top:56px;padding-top:26px;border-top:1px solid var(--line-soft);
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-faint);letter-spacing:0.03em;
+  }
+
+  /* ---------- Reveal animation ---------- */
+  .reveal{opacity:0;transform:translateY(22px)}
+  .revealed{opacity:1;transform:none;transition:opacity .9s var(--ease),transform .9s var(--ease)}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:860px){
+    .drop{grid-column:span 12}
+    .hero{padding:64px 0 52px}
+    .hero-meta{text-align:left}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 20px}
+    nav{gap:18px}
+    .nav-idx{display:none}
+    .bar{height:64px}
+    .drop.feature .cover.landscape{aspect-ratio:2/1}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a href="#" class="mark" aria-label="TEZ Creations home">
+      <span class="t">Tez</span><span class="rest">&nbsp;Creations</span><span class="dot">.</span>
+    </a>
+    <nav>
+      <a href="#drops">Drops</a>
+      <a href="#">About</a>
+      <span class="nav-idx">EST. 2025</span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <span class="eyebrow reveal"><span class="bead"></span>An independent studio of one</span>
+    <h1 class="reveal">
+      <span class="line">Random <em>creations</em>,</span>
+      <span class="line">quietly dropped.</span>
+    </h1>
+    <div class="hero-lower reveal">
+      <p class="lede">Tools, toys, and experiments — <b>built for the fun of it, given away for free.</b> No accounts, no noise. When something's ready, it drops here.</p>
+      <div class="hero-meta">
+        <span class="big">06 drops</span>
+        <span>2 apps · 4 stream tools</span>
+        <span>free · forever</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" id="drops">
+    <div class="sec-head reveal">
+      <h2>The <em>Feed</em></h2>
+      <span class="count">NEWEST FIRST — 006 → 001</span>
+    </div>
+
+    <div class="drops">
+
+      <!-- #006 Handle Hunter — feature, designed tile -->
+      <a class="drop feature reveal" href="/drops/006">
+        <div class="tile">
+          <div class="grid-lines"></div>
+          <span class="tile-title">Handle Hunter</span>
+          <span class="glyph">006</span>
+          <span class="tile-label">// no cover · generative tile</span>
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#006</span>
+            <span class="cat apps">Apps</span>
+          </div>
+          <h3>Handle Hunter</h3>
+          <p class="blurb">Hunt rare, short usernames. Pick a platform, a length, and a style — it generates real candidates and checks availability live.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+      <!-- #005 Ghosted -->
+      <a class="drop reveal" href="/drops/005">
+        <div class="cover landscape">
+          <span class="num-tag">#005</span>
+          <img src="/drops/005/cover.png" alt="Ghosted cover" loading="lazy">
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#005</span>
+            <span class="cat apps">Apps</span>
+          </div>
+          <h3>Ghosted</h3>
+          <p class="blurb">See who doesn't follow you back on Instagram — and who quietly unfollowed. 100% in your browser, nothing leaves your device.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+      <!-- #004 Game Gauntlet -->
+      <a class="drop reveal" href="/gauntlet">
+        <div class="cover landscape">
+          <span class="num-tag">#004</span>
+          <img src="/gauntlet/cover.png" alt="Game Gauntlet cover" loading="lazy">
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#004</span>
+            <span class="cat">Stream Tools</span>
+          </div>
+          <h3>Game Gauntlet</h3>
+          <p class="blurb">A win-to-advance gauntlet tracker for OBS. Mods cross games off live in chat with !win / !lost.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+      <!-- #003 Live Map -->
+      <a class="drop reveal" href="/drops/003">
+        <div class="cover landscape">
+          <span class="num-tag">#003</span>
+          <img src="/drops/003/cover.png" alt="Live Map cover" loading="lazy">
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#003</span>
+            <span class="cat">Stream Tools</span>
+          </div>
+          <h3>Live Map</h3>
+          <p class="blurb">A live GPS map overlay for IRL & travel streams. Your location glides across a clean dark map in OBS.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+      <!-- #002 Sub Goal Tracker -->
+      <a class="drop reveal" href="/subgoal">
+        <div class="cover landscape">
+          <span class="num-tag">#002</span>
+          <img src="/subgoal/cover.png" alt="Sub Goal Tracker cover" loading="lazy">
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#002</span>
+            <span class="cat">Stream Tools</span>
+          </div>
+          <h3>Sub Goal Tracker</h3>
+          <p class="blurb">An auto-updating Twitch sub goal overlay for OBS. Counts subs live, celebrates on goal, rolls to the next.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+      <!-- #001 Sports Tracker -->
+      <a class="drop reveal" href="/drops/001">
+        <div class="cover landscape">
+          <span class="num-tag">#001</span>
+          <img src="/drops/001/cover.png" alt="Sports Tracker cover" loading="lazy">
+        </div>
+        <div class="body">
+          <div class="meta-row">
+            <span class="num">#001</span>
+            <span class="cat">Stream Tools</span>
+          </div>
+          <h3>Sports Tracker</h3>
+          <p class="blurb">A live score tracker for your stream. Pick a game, paste a link into OBS — scores + clock update live.</p>
+          <span class="go">Open drop <span class="rule"></span><span class="arrow">→</span></span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-mark">Tez <em>Creations</em>.</div>
+        <p class="foot-sub">A solo maker's shelf of free tools and experiments. Made in the quiet, dropped for anyone.</p>
+      </div>
+      <div class="foot-links">
+        <a href="#drops">All drops</a>
+        <a href="#">About the maker</a>
+        <a href="#">Request a tool</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 TEZ CREATIONS — ALL DROPS FREE</span>
+      <span>DESIGN PREVIEW · CONCEPT A</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('.reveal');
+    if(reduce || !('IntersectionObserver' in window)){
+      els.forEach(function(el){el.classList.add('revealed')});
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){e.target.classList.add('revealed');io.unobserve(e.target);}
+      });
+    },{threshold:0.12,rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(el){io.observe(el)});
+  })();
+</script>
+
+</body>
+</html>

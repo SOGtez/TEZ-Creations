@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow" />
+<title>TEZ Creations — Redesign Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050806; --panel:rgba(255,255,255,.035); --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.2);
+    --text:#eaf2ec; --muted:#8fa394; --green:#2bd46a; --green-b:#4ade80;
+    --fd:"Space Grotesk",sans-serif; --fs:"Plus Jakarta Sans",sans-serif; --fm:"Space Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--fs);min-height:100%}
+  body{-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(900px 500px at 50% -10%,rgba(43,212,106,.09),transparent 60%);}
+  .wrap{max-width:900px;margin:0 auto;padding:64px 22px 90px}
+  .eyebrow{font-family:var(--fm);font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--green-b);text-align:center}
+  h1{font-family:var(--fd);font-weight:700;font-size:clamp(32px,6vw,52px);letter-spacing:-.02em;text-align:center;margin:14px 0 10px}
+  .lede{text-align:center;color:var(--muted);font-size:15px;line-height:1.6;max-width:560px;margin:0 auto 12px}
+  .note{text-align:center;color:var(--muted);font-size:12.5px;max-width:560px;margin:0 auto 40px;opacity:.8}
+  .note b{color:var(--text)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:24px 22px;
+    transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
+  .swatch{height:64px;border-radius:12px;margin-bottom:18px;border:1px solid var(--line)}
+  .sw-a{background:linear-gradient(120deg,#0c0f0d,#14100c);position:relative}
+  .sw-a::after{content:"Aa";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,serif;font-style:italic;font-size:26px;color:#e8e2d6}
+  .sw-b{background:radial-gradient(120px 60px at 30% 40%,rgba(43,212,106,.5),transparent 70%),#07130c;
+    box-shadow:inset 0 0 30px rgba(43,212,106,.25);position:relative}
+  .sw-b::after{content:"▲";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--green-b);text-shadow:0 0 14px var(--green);font-size:20px}
+  .sw-c{background:#040604;position:relative;overflow:hidden}
+  .sw-c::after{content:"> ls ./drops_";position:absolute;left:12px;top:22px;font-family:var(--fm);font-size:12px;color:var(--green-b)}
+  .kicker{font-family:var(--fm);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .ctitle{font-family:var(--fd);font-weight:600;font-size:20px;margin:6px 0 8px}
+  .cdesc{color:var(--muted);font-size:13.5px;line-height:1.55;flex:1}
+  .go{margin-top:16px;font-family:var(--fm);font-size:12px;letter-spacing:.06em;color:var(--green-b)}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:48px;opacity:.7}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Redesign · Concepts</div>
+    <h1>TEZ Creations, three ways</h1>
+    <p class="lede">Three directions for the homepage, each built with your real drops. Open one, click around, and tell me which feels right — I'll build the winner out across every page.</p>
+    <p class="note"><b>Nothing here touches the live site.</b> These are throwaway previews at a hidden URL — if none land, they're deleted with zero trace.</p>
+
+    <div class="grid">
+      <a class="card" href="/preview/concept-a">
+        <div class="swatch sw-a"></div>
+        <div class="kicker">Concept A</div>
+        <div class="ctitle">Editorial Studio</div>
+        <div class="cdesc">Refined and gallery-like. Elegant serif headlines, big framed covers, generous space, green used sparingly. Calm and premium.</div>
+        <div class="go">Open concept A →</div>
+      </a>
+      <a class="card" href="/preview/concept-b">
+        <div class="swatch sw-b"></div>
+        <div class="kicker">Concept B</div>
+        <div class="ctitle">Neon Arcade</div>
+        <div class="cdesc">Bold and alive. Neon-green glow, tactile drop tiles that tilt and shine on hover, an animated hero. A cool tools launcher.</div>
+        <div class="go">Open concept B →</div>
+      </a>
+      <a class="card" href="/preview/concept-c">
+        <div class="swatch sw-c"></div>
+        <div class="kicker">Concept C</div>
+        <div class="ctitle">Terminal / Systems</div>
+        <div class="cdesc">A maker's console. Monospace green-on-black, a command-prompt hero, drops as a system manifest with covers framed like screenshots.</div>
+        <div class="go">Open concept C →</div>
+      </a>
+    </div>
+
+    <div class="foot">Previews only · not linked from tezcreations.com</div>
+  </div>
+</body>
+</html>
