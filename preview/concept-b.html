@@ -113,14 +113,18 @@
     font-size:clamp(52px,12vw,138px);line-height:.92;letter-spacing:-.02em;
     margin:0 auto;max-width:11ch;
     background:linear-gradient(180deg,#f4fff7 0%,#bff5d0 42%,var(--accent) 100%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
     text-shadow:0 0 60px rgba(43,212,106,0.10);
     position:relative;
   }
-  .hero h1 .glitch{position:relative;display:inline-block}
+  /* self-sufficient gradient so the "TEZ" span renders in Safari too (an
+     inline-block child doesn't inherit the parent's text-clipped background) */
+  .hero h1 .glitch{position:relative;display:inline-block;
+    background:linear-gradient(180deg,#f4fff7 0%,#bff5d0 42%,var(--accent) 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
   .hero h1 .glitch::before,.hero h1 .glitch::after{
     content:"TEZ";position:absolute;inset:0;
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
     pointer-events:none;opacity:.65;
   }
   .hero h1 .glitch::before{background:linear-gradient(var(--accent-bright),var(--accent-bright));animation:gl1 5.5s steps(2,end) infinite}
