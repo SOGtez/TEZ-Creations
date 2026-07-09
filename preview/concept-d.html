@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- real account system (sign up / log in / profile) -->
+<link rel="stylesheet" href="/auth.css" />
 <style>
   :root {
     /* neutral scale */
@@ -64,6 +66,23 @@
   html { scroll-behavior: smooth; }
   #top, #drops, #about, #manifesto { scroll-margin-top: 90px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* account: suppress auth.js's fixed corner chip — we render it in the header */
+  .tez-corner { display: none !important; }
+  #acctSlot { display: inline-flex; align-items: center; }
+  .acct-chip {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600; color: #e8ece9;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px; padding: 5px 12px 5px 5px; transition: background .18s ease, border-color .18s ease;
+  }
+  .acct-chip:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.24); }
+  .acct-av {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+    background: #3fe08b; color: #04160b; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .acct-nm { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ambient background */
   .bg-field {
@@ -656,7 +675,7 @@
           <a href="#about">About</a>
           <a href="#manifesto">Studio</a>
         </nav>
-        <a class="cta ghost" href="#">Sign in</a>
+        <div id="acctSlot"></div>
         <a class="cta" href="#drops">Browse drops</a>
       </div>
     </div>
@@ -936,5 +955,28 @@
       </div>
     </div>
   </footer>
+<!-- real account system: sign up / log in / profile via /api/auth -->
+<script src="/auth.js"></script>
+<script>
+  (function () {
+    var slot = document.getElementById('acctSlot');
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    function render() {
+      if (!slot || !window.TezAuth) return;
+      if (TezAuth.isLoggedIn()) {
+        var u = TezAuth.currentUser() || {};
+        var initial = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+        slot.innerHTML = '<button type="button" class="acct-chip"><span class="acct-av">' + esc(initial) +
+          '</span><span class="acct-nm">' + esc(u.name || u.email || '') + '</span></button>';
+        slot.querySelector('.acct-chip').addEventListener('click', function () { TezAuth.openProfile(); });
+      } else {
+        slot.innerHTML = '<a class="cta ghost" href="#">Sign in</a>';
+        slot.querySelector('a').addEventListener('click', function (e) { e.preventDefault(); TezAuth.open({ mode: 'login' }); });
+      }
+    }
+    function start() { if (!window.TezAuth) return; TezAuth.onChange(render); render(); }
+    if (window.TezAuth) start(); else window.addEventListener('load', start);
+  })();
+</script>
 </body>
 </html>
