@@ -60,6 +60,11 @@
   img { max-width: 100%; display: block; }
   .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
 
+  /* smooth in-page scrolling; offset so sections clear the sticky header */
+  html { scroll-behavior: smooth; }
+  #top, #drops, #about, #manifesto { scroll-margin-top: 90px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
   /* ambient background */
   .bg-field {
     position: fixed;
