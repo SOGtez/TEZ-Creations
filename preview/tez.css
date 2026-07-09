@@ -629,3 +629,118 @@
     .d4 { animation-delay: .29s; }
     @keyframes rise { to { opacity: 1; transform: none; } }
   }
+
+  /* ==========================================================
+     drop-detail page (drop.html) — added section
+     ========================================================== */
+  #detail { scroll-margin-top: 90px; }
+
+  .hero-drop { padding: 56px 0 64px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--t-xs);
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin-bottom: 40px;
+    transition: color .2s var(--ease);
+  }
+  .back-link:hover { color: var(--text); }
+  .back-link svg { transition: transform .2s var(--ease); }
+  .back-link:hover svg { transform: translateX(-3px); }
+
+  /* two-column hero: info + media */
+  .drop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .drop-info { min-width: 0; }
+
+  .drop-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .drop-meta .n {
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--t-sm);
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .drop-meta .tag {
+    font-size: var(--t-xs);
+    color: var(--muted-2);
+    border: 1px solid var(--line-2);
+    padding: 3px 11px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+  .drop-meta .kind {
+    font-size: var(--t-xs);
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h1.drop-title {
+    font-size: var(--t-3xl);
+    line-height: 1.03;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+    max-width: 14ch;
+  }
+  .drop-info .lede {
+    font-size: var(--t-lg);
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+  .drop-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .drop-date {
+    font-size: var(--t-xs);
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  /* media column — framed cover / tile, larger than the card thumbs */
+  .drop-media {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--panel);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+  .drop-media .cover,
+  .drop-media .tile {
+    border-bottom: none;
+    aspect-ratio: 16 / 10;
+  }
+  .drop-media .tile .tile-num { font-size: 7rem; }
+
+  .more-drops { padding: 24px 0 96px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 900px) {
+    .drop-grid { grid-template-columns: 1fr; gap: 32px; }
+    .drop-media { order: -1; }
+    h1.drop-title { max-width: none; }
+  }
+  @media (max-width: 680px) {
+    .hero-drop { padding: 40px 0 48px; }
+    .back-link { margin-bottom: 28px; }
+    .drop-media .tile .tile-num { font-size: 4.6rem; }
+  }
