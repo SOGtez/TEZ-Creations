@@ -8,6 +8,43 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- homepage feed built from the real catalog (/drops.js) so new drops appear automatically -->
+<script src="/drops.js"></script>
+<script>
+(function () {
+  var feed = document.getElementById('feed');
+  if (!feed || typeof DROPS === 'undefined') return;
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  var ARROW = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SUB = { 'Apps': 'in the browser', 'Stream Tools': 'overlays for OBS' };
+  function pad(n){ n = String(n); while (n.length < 3) n = '0' + n; return n; }
+  function card(d){
+    var id = String(d.id);
+    var media = d.image
+      ? '<div class="cover"><span class="badge mono">#' + esc(id) + '</span><img src="/' + esc(String(d.image).replace(/^\/+/, '')) + '" alt="' + esc(d.title) + ' cover" loading="lazy"></div>'
+      : '<div class="tile"><span class="tile-num">' + esc(id) + '</span><span class="tile-glyph">' + esc(d.title) + '</span></div>';
+    var open = d.category === 'Apps' ? 'Open tool' : 'Open overlay';
+    return '<a class="card" href="/preview/drop?id=' + esc(id) + '">' + media +
+      '<div class="card-body"><div class="card-meta"><span class="n mono">#' + esc(id) + '</span><span class="tag">' + esc(d.category) + '</span></div>' +
+      '<h3>' + esc(d.title) + '</h3><p>' + esc(d.description) + '</p>' +
+      '<span class="card-cta">' + open + ARROW + '</span></div></a>';
+  }
+  var byCat = {};
+  DROPS.forEach(function (d) { (byCat[d.category] = byCat[d.category] || []).push(d); });
+  function maxId(list){ return list.reduce(function (m, d) { return Math.max(m, +d.id); }, 0); }
+  var cats = Object.keys(byCat).sort(function (a, b) { return maxId(byCat[b]) - maxId(byCat[a]); });
+  var html = '';
+  cats.forEach(function (cat) {
+    var list = byCat[cat].slice().sort(function (a, b) { return (+b.id) - (+a.id); });
+    var ids = list.map(function (d) { return +d.id; });
+    var range = pad(Math.min.apply(null, ids)) + ' \u2013 ' + pad(Math.max.apply(null, ids));
+    html += '<div class="cat-row"><span class="cat-name"><b>' + esc(cat) + '</b> \u00b7 ' + esc(SUB[cat] || '') + '</span><span class="cat-line"></span><span class="cat-name mono">' + range + '</span></div>';
+    html += '<div class="grid">' + list.map(card).join('') + '</div>';
+  });
+  feed.innerHTML = html;
+})();
+</script>
+
 <!-- real account system (sign up / log in / profile) -->
 <link rel="stylesheet" href="/auth.css" />
 <link rel="stylesheet" href="/preview/tez.css" />
@@ -115,140 +152,7 @@
           <a class="cta ghost" href="/drops">All drops →</a>
         </div>
 
-        <!-- APPS -->
-        <div class="cat-row">
-          <span class="cat-name"><b>Apps</b> · in the browser</span>
-          <span class="cat-line"></span>
-          <span class="cat-name mono">005 – 006</span>
-        </div>
-        <div class="grid">
-
-          <!-- 006 -->
-          <a class="card" href="/preview/drop?id=006">
-            <div class="tile">
-              <span class="tile-num">006</span>
-              <span class="tile-glyph">
-                <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#3fe08b" stroke-width="2"/><path d="m16 16 5 5" stroke="#3fe08b" stroke-width="2" stroke-linecap="round"/></svg>
-                Handle Hunter
-              </span>
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#006</span>
-                <span class="tag">Apps</span>
-              </div>
-              <h3>Handle Hunter</h3>
-              <p>Hunt rare, short usernames. Pick a platform + length + style, and it generates real candidates and checks availability live.</p>
-              <span class="card-cta">Open tool
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-
-          <!-- 005 -->
-          <a class="card" href="/preview/drop?id=005">
-            <div class="cover">
-              <span class="badge mono">#005</span>
-              <img src="/drops/005/cover.png" alt="Ghosted cover" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#005</span>
-                <span class="tag">Apps</span>
-              </div>
-              <h3>Ghosted</h3>
-              <p>See who doesn't follow you back on Instagram — and who quietly unfollowed. 100% in your browser, nothing leaves your device.</p>
-              <span class="card-cta">Open tool
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-        </div>
-
-        <!-- STREAM TOOLS -->
-        <div class="cat-row">
-          <span class="cat-name"><b>Stream Tools</b> · overlays for OBS</span>
-          <span class="cat-line"></span>
-          <span class="cat-name mono">001 – 004</span>
-        </div>
-        <div class="grid">
-
-          <!-- 004 -->
-          <a class="card" href="/preview/drop?id=004">
-            <div class="cover">
-              <span class="badge mono">#004</span>
-              <img src="/gauntlet/cover.png" alt="Game Gauntlet cover" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#004</span>
-                <span class="tag">Stream Tools</span>
-              </div>
-              <h3>Game Gauntlet</h3>
-              <p>A win-to-advance gauntlet tracker for OBS. Mods cross games off live in chat with !win / !lost.</p>
-              <span class="card-cta">Open overlay
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-
-          <!-- 003 -->
-          <a class="card" href="/preview/drop?id=003">
-            <div class="cover">
-              <span class="badge mono">#003</span>
-              <img src="/drops/003/cover.png" alt="Live Map cover" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#003</span>
-                <span class="tag">Stream Tools</span>
-              </div>
-              <h3>Live Map</h3>
-              <p>A live GPS map overlay for IRL & travel streams. Your location glides across a clean dark map in OBS.</p>
-              <span class="card-cta">Open overlay
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-
-          <!-- 002 -->
-          <a class="card" href="/preview/drop?id=002">
-            <div class="cover">
-              <span class="badge mono">#002</span>
-              <img src="/subgoal/cover.png" alt="Sub Goal Tracker cover" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#002</span>
-                <span class="tag">Stream Tools</span>
-              </div>
-              <h3>Sub Goal Tracker</h3>
-              <p>An auto-updating Twitch sub goal overlay for OBS. Counts subs live, celebrates on goal, rolls to the next.</p>
-              <span class="card-cta">Open overlay
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-
-          <!-- 001 -->
-          <a class="card" href="/preview/drop?id=001">
-            <div class="cover">
-              <span class="badge mono">#001</span>
-              <img src="/drops/001/cover.png" alt="Sports Tracker cover" loading="lazy" />
-            </div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="n mono">#001</span>
-                <span class="tag">Stream Tools</span>
-              </div>
-              <h3>Sports Tracker</h3>
-              <p>A live score tracker for your stream. Pick a game, paste a link into OBS — scores + clock update live.</p>
-              <span class="card-cta">Open overlay
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-          </a>
-        </div>
+        <div id="feed"></div>
       </div>
     </section>
 

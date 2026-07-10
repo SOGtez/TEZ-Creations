@@ -95,7 +95,9 @@
     </div>
   </footer>
 
-  <!-- drop detail rendered from ?id= -->
+  <!-- drop detail rendered from ?id=, using the real catalog (/drops.js) -->
+  <script src="/drops.js"></script>
+  <script>window.__DROPS = (typeof DROPS !== 'undefined' && Array.isArray(DROPS)) ? DROPS : [];</script>
   <script>
   (function () {
     function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -104,39 +106,25 @@
     var ARROW = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     var ARROW_SM = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    var DROPS = {
-      '006': {
-        num: '006', title: 'Handle Hunter', category: 'Apps', kind: 'Browser app',
-        tool: '/preview/handle-hunter', cover: null, date: '2026-06-29',
-        desc: "Hunt rare, short usernames for Twitch. Pick a platform and a length, choose your style filters (real words, animals, nature, l33t, combos), and it generates meaningful candidates and checks availability live against Twitch. Copy the open ones and go claim them."
-      },
-      '005': {
-        num: '005', title: 'Ghosted', category: 'Apps', kind: 'Browser app',
-        tool: '/drops/005', cover: '/drops/005/cover.png', date: '2026-06-23',
-        desc: "Find out who doesn't follow you back on Instagram — and who quietly unfollowed you. Upload your own data export and everything is computed right in your browser; nothing is ever sent to a server. Check again later and it shows exactly who left since last time."
-      },
-      '004': {
-        num: '004', title: 'Game Gauntlet', category: 'Stream Tools', kind: 'OBS overlay',
-        tool: '/gauntlet', cover: '/gauntlet/cover.png', date: '2026-06-21',
-        desc: "A win-to-advance gauntlet tracker for OBS. Search and add your games with cover art, then mods cross them off live in chat with !win / !lost / !active. The active game gets a NOW PLAYING banner. State is saved, so an OBS refresh never loses progress."
-      },
-      '003': {
-        num: '003', title: 'Live Map', category: 'Stream Tools', kind: 'OBS overlay',
-        tool: '/drops/003', cover: '/drops/003/cover.png', date: '2026-06-14',
-        desc: "A live GPS map overlay for IRL & travel streams. Powered by your RealtimeIRL feed — your location glides across a clean dark map in OBS, with speed, heading, and where you are. Paste your pull key, copy a link, done."
-      },
-      '002': {
-        num: '002', title: 'Sub Goal Tracker', category: 'Stream Tools', kind: 'OBS overlay',
-        tool: '/subgoal', cover: '/subgoal/cover.png', date: '2026-06-12',
-        desc: "An auto-updating Twitch sub goal overlay for OBS. Connect your Twitch, set your tiers, copy a link — it counts subs live, celebrates on goal, and rolls to the next one."
-      },
-      '001': {
-        num: '001', title: 'Sports Tracker', category: 'Stream Tools', kind: 'OBS overlay',
-        tool: '/drops/001', cover: '/drops/001/cover.png', date: '2026-06-10',
-        desc: "Pop a live score tracker on your stream. Pick a game, copy a link, paste it into OBS — scores, clock, and win celebrations update live while the game plays."
-      }
-    };
-    var ORDER = ['006','005','004','003','002','001'];
+    // Build a keyed map from the real catalog (/drops.js) so new drops appear
+    // automatically — same source the live site uses.
+    var TOOL_OVERRIDE = { '006': '/preview/handle-hunter' }; // reskinned preview tool
+    var DROPS = {};
+    (window.__DROPS || []).forEach(function (entry) {
+      var id = String(entry.id);
+      var url = String((entry.action && entry.action.url) || '').replace(/^\/+/, '');
+      DROPS[id] = {
+        num: id,
+        title: entry.title,
+        category: entry.category,
+        kind: entry.category === 'Apps' ? 'Browser app' : 'OBS overlay',
+        tool: TOOL_OVERRIDE[id] || ('/' + url),
+        cover: entry.image ? ('/' + String(entry.image).replace(/^\/+/, '')) : null,
+        date: entry.date,
+        desc: entry.description
+      };
+    });
+    var ORDER = Object.keys(DROPS).sort(function (a, b) { return (+b) - (+a); });
 
     var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     function fmtDate(iso) {

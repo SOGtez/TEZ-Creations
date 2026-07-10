@@ -744,3 +744,6 @@
     .back-link { margin-bottom: 28px; }
     .drop-media .tile .tile-num { font-size: 4.6rem; }
   }
+
+/* keep card descriptions tidy when built from full drops.js text */
+.card-body p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
