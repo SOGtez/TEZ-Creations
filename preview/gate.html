@@ -41,7 +41,9 @@
   /* ---- splash: "something great is on the way…" + Enter ---- */
   .splash {
     width: 100%; overflow: hidden;
-    max-height: 260px; opacity: 1; margin-top: 6px;
+    /* room for the Enter button's glow so overflow:hidden doesn't clip it */
+    padding-bottom: 40px;
+    max-height: 300px; opacity: 1; margin-top: 6px;
     transition: max-height 1.05s cubic-bezier(0.76, 0, 0.24, 1), opacity .7s ease, margin-top 1.05s cubic-bezier(0.76, 0, 0.24, 1);
   }
   body.stage-unlock .splash { max-height: 0; opacity: 0; margin-top: 0; }
