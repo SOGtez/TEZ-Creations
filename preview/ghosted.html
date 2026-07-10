@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Find out who doesn't follow you back on Instagram — and who unfollowed you — from your own data export. 100% in your browser. By TEZ Creations." />
+<title>Ghosted — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- real account system (sign up / log in / profile) -->
+<link rel="stylesheet" href="/auth.css" />
+<!-- shared brand design system -->
+<link rel="stylesheet" href="/preview/tez.css" />
+<style>
+/* ── Local tokens: map the app's component vars onto the TEZ brand ── */
+:root{
+  --accent-bright:#3fe08b;
+  --accent-deep:#2bb873;
+  --accent-glow:rgba(63,224,139,0.16);
+  --danger:#f78a8a;
+  --card-fill:rgba(255,255,255,0.02);
+  --input-fill:rgba(255,255,255,0.03);
+  --hair:rgba(255,255,255,0.07);
+  --hair-input:rgba(255,255,255,0.11);
+  --muted-dim:rgba(154,163,156,0.7);
+  --foot:rgba(154,163,156,0.55);
+  --font-display:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --font-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+
+/* ── App shell / hero ── */
+.app-wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 24px 96px}
+.app-hero{padding:64px 0 4px}
+.app-eyebrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.app-eyebrow .dropnum{
+  font-family:var(--font-mono);font-weight:600;font-size:0.82rem;letter-spacing:.04em;
+  color:var(--accent);display:inline-flex;align-items:center;gap:9px;
+  padding:6px 12px 6px 11px;border:1px solid var(--line-2);border-radius:999px;
+  background:rgba(255,255,255,0.015);
+}
+.app-eyebrow .dropnum .dot{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 4px rgba(63,224,139,0.15);flex:none;
+}
+.app-eyebrow .type-tag{
+  font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted-2);border:1px solid var(--line-2);border-radius:999px;padding:5px 11px;
+}
+.app-hero h1{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(2.8rem,9vw,4.6rem);line-height:1.02;letter-spacing:-.03em;
+  margin:0;color:var(--text);
+}
+.app-hero h1 .accent{
+  background:linear-gradient(100deg,var(--accent),#7cf0b3 60%,var(--accent));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+}
+.app-hero .lede{
+  color:var(--muted);font-size:1.05rem;max-width:52ch;margin:22px 0 0;line-height:1.55;
+}
+.app-hero .lede .accent{color:var(--accent);font-style:italic}
+.app-hero .lede b{color:var(--text);font-weight:600}
+
+/* ── Card (glass panel) ── */
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;
+  transition:none;
+}
+.card:hover{transform:none;border-color:var(--line);box-shadow:none}
+
+/* ── Dropzone ── */
+.drop-zone{padding:40px 26px;text-align:center;cursor:pointer;transition:background .2s var(--ease)}
+.drop-zone:hover{background:rgba(255,255,255,0.02)}
+.drop-zone.over{background:rgba(63,224,139,0.06)}
+.drop-zone .ring{width:56px;height:56px;margin:0 auto 16px;border-radius:14px;display:grid;place-items:center;
+  border:1px solid rgba(63,224,139,0.28);background:rgba(63,224,139,0.06)}
+.drop-zone .ring svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.6}
+.drop-zone h3{font-family:var(--font-display);font-weight:600;font-size:1.12rem;letter-spacing:-.01em;color:var(--text)}
+.drop-zone p{color:var(--muted);font-size:0.86rem;margin-top:7px}
+.drop-zone .files{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent);margin-top:14px;min-height:16px;letter-spacing:.02em}
+
+/* ── Rows / buttons ── */
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:22px}
+.btn{font-family:var(--font-display);font-size:0.94rem;font-weight:700;border-radius:var(--radius-sm);cursor:pointer;
+  padding:14px 26px;display:inline-flex;align-items:center;gap:10px;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease),color .2s;border:0}
+.btn .arrow{transition:transform .18s var(--ease)}
+.btn:hover .arrow{transform:translateX(3px)}
+.btn-primary{color:var(--accent-ink);
+  background:linear-gradient(180deg,var(--accent-bright) 0%,var(--accent-deep) 100%);
+  box-shadow:0 6px 20px rgba(63,224,139,0.18)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(63,224,139,0.28)}
+.btn-primary:active{transform:translateY(0);box-shadow:0 3px 12px rgba(63,224,139,0.2)}
+.btn-ghost{background:transparent;border:1px solid var(--line-2);color:var(--muted);font-weight:600}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent-dim)}
+
+/* ── Demo run toggle ── */
+.toggle{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--radius-sm);overflow:hidden;
+  font-family:var(--font-sans);font-size:0.82rem;font-weight:600}
+.toggle button{background:transparent;border:0;color:var(--muted);padding:12px 16px;cursor:pointer;transition:all .18s var(--ease)}
+.toggle button.on{background:rgba(63,224,139,0.1);color:var(--accent)}
+
+/* ── How-to disclosure ── */
+details.how{margin-top:16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
+details.how summary{list-style:none;cursor:pointer;padding:16px 20px;font-family:var(--font-display);font-size:0.9rem;font-weight:600;
+  color:var(--text);display:flex;align-items:center;gap:10px}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary .chev{margin-left:auto;color:var(--muted);transition:transform .2s var(--ease)}
+details.how[open] summary .chev{transform:rotate(90deg)}
+details.how .body{padding:0 20px 18px;color:var(--muted);font-size:0.92rem;line-height:1.7}
+details.how ol{margin:0;padding-left:18px}
+details.how li{margin:8px 0}
+details.how b{color:var(--text);font-weight:600}
+details.how code{font-family:var(--font-mono);font-size:0.78rem;color:var(--accent);background:rgba(63,224,139,0.08);padding:2px 6px;border-radius:5px}
+details.how a{display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:600;text-decoration:none;
+  background:rgba(63,224,139,0.1);border:1px solid rgba(63,224,139,0.4);border-radius:8px;padding:2px 9px;
+  transition:background .15s,border-color .15s,box-shadow .15s}
+details.how a b{color:var(--accent);font-weight:600}
+details.how a::after{content:"↗";font-size:11px;opacity:.85}
+details.how a:hover{background:rgba(63,224,139,0.18);border-color:rgba(63,224,139,0.7);box-shadow:0 0 16px var(--accent-glow)}
+
+/* ── Results ── */
+#results{display:none}
+#results.show{display:block}
+.rise{animation:rise .6s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
+.stat{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;border-left:1px solid var(--line);transition:none}
+.stat:hover{transform:none;border-color:var(--line);box-shadow:none}
+.stat .n{font-family:var(--font-mono);font-weight:500;font-size:2.2rem;letter-spacing:-.02em;line-height:1;color:var(--text)}
+.stat .l{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);margin-top:10px}
+.stat.alert .n{color:var(--danger)}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.tab{font-family:var(--font-sans);font-size:0.82rem;font-weight:600;border:1px solid var(--line-2);background:var(--input-fill);color:var(--muted);
+  padding:11px 15px;border-radius:999px;cursor:pointer;transition:all .18s var(--ease);display:inline-flex;gap:8px;align-items:center}
+.tab:hover{color:var(--text);border-color:var(--accent-dim)}
+.tab.on{background:rgba(63,224,139,0.1);border-color:rgba(63,224,139,0.45);color:var(--accent)}
+.tab.alert.on{background:rgba(247,138,138,0.1);border-color:rgba(247,138,138,0.45);color:var(--danger)}
+.tab .ct{background:rgba(255,255,255,0.06);border-radius:6px;padding:1px 7px;font-size:0.68rem;font-family:var(--font-mono)}
+
+/* ── Search ── */
+.search{margin-top:18px;position:relative}
+.search input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--line-2);border-radius:12px;padding:14px 18px 14px 44px;
+  color:var(--text);font-family:var(--font-sans);font-size:0.92rem;outline:none;transition:border-color .18s,box-shadow .18s}
+.search input:focus{border-color:rgba(63,224,139,0.5);box-shadow:0 0 24px var(--accent-glow)}
+.search input::placeholder{color:var(--muted-dim)}
+.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:1.8}
+
+/* ── Result list ── */
+.list{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+.item{display:flex;align-items:center;gap:13px;padding:14px 16px;text-decoration:none;color:var(--text);border-bottom:1px solid var(--line);transition:background .14s}
+.item:last-child{border-bottom:0}
+.item:hover{background:rgba(255,255,255,0.03)}
+.item .av{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;
+  font-size:0.86rem;color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-bright),var(--accent-deep))}
+.item.left .av{background:linear-gradient(135deg,var(--danger),#c0504f);color:#1a0808}
+.item .u{font-weight:500;font-size:0.92rem}
+.item .u .at{color:var(--muted)}
+.item .go{margin-left:auto;color:var(--muted-dim);font-size:0.78rem;font-family:var(--font-mono);transition:color .14s}
+.item:hover .go{color:var(--accent)}
+.item.left:hover .go{color:var(--danger)}
+
+/* ── Empty states ── */
+.empty{padding:44px 26px;text-align:center}
+.empty .ic{width:48px;height:48px;border-radius:14px;margin:0 auto 16px;display:grid;place-items:center;border:1px solid rgba(63,224,139,0.25);
+  background:rgba(63,224,139,0.06);font-size:20px}
+.empty h4{font-family:var(--font-display);font-weight:600;font-size:1.12rem;margin-bottom:8px;color:var(--text)}
+.empty p{color:var(--muted);font-size:0.9rem;max-width:42ch;margin:0 auto;line-height:1.6}
+
+/* ── Footnote / reset ── */
+.footnote{margin-top:34px;color:var(--foot);font-size:0.76rem;font-family:var(--font-mono);display:flex;align-items:center;gap:10px;line-height:1.5}
+.footnote svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:1.6;flex:none;opacity:.7}
+.reset{font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);background:none;border:0;cursor:pointer;margin-top:24px;
+  letter-spacing:.05em;text-decoration:underline;text-underline-offset:3px;opacity:.75}
+.reset:hover{opacity:1;color:var(--text)}
+
+/* ── Slim footer ── */
+.app-foot{
+  position:relative;z-index:1;text-align:center;
+  padding:40px 24px;border-top:1px solid var(--line);
+  font-family:var(--font-mono);font-size:0.75rem;color:var(--muted-2);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .rise{animation:none}
+}
+
+/* ── Mobile ── */
+@media (max-width:600px){
+  .app-hero{padding-top:44px}
+  .stat .n{font-size:1.9rem}
+}
+</style>
+</head>
+<body>
+
+<!-- Signature brand background -->
+<div class="bg-field" aria-hidden="true"></div>
+<div class="bg-grid" id="bgGrid" aria-hidden="true"></div>
+<div class="glows" aria-hidden="true">
+  <span class="star s1"></span>
+  <span class="star s2"></span>
+  <span class="star s3"></span>
+  <span class="star s4"></span>
+  <span class="star s5"></span>
+</div>
+
+<!-- HEADER (Concept D chrome) -->
+<header>
+  <div class="container nav">
+    <a class="lockup" href="/preview/concept-d" aria-label="TEZ Creations home">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="#3fe08b">
+          <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+        </svg>
+      </span>
+      <span class="wordmark">
+        <span class="name">TEZ Creations</span>
+        <span class="sub">Studio</span>
+      </span>
+    </a>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="/preview/concept-d#drops">Drops</a>
+        <a href="/preview/about">About</a>
+        <a href="/ak9awards">AK9 Awards</a>
+        <a href="/ai">TEZ AI</a>
+      </nav>
+      <div id="acctSlot"></div>
+      <a class="cta" href="/preview/concept-d#drops">← All drops</a>
+    </div>
+  </div>
+</header>
+
+<main class="app-wrap" id="top">
+
+  <!-- Hero -->
+  <div class="app-hero">
+    <div class="app-eyebrow reveal d1">
+      <span class="dropnum"><span class="dot"></span>#005</span>
+      <span class="type-tag">Instagram Tool</span>
+    </div>
+    <h1 class="reveal d2">Ghosted</h1>
+    <p class="lede reveal d3">
+      Find out who doesn't follow you back — and who quietly <span class="accent">left</span>.
+      <b>Your data, your browser.</b> Nothing is ever uploaded.
+    </p>
+  </div>
+
+  <div id="uploadView">
+    <div class="card" style="margin-top:40px">
+      <div class="drop-zone" id="drop">
+        <input type="file" id="file" accept=".json,application/json" multiple hidden>
+        <div class="ring">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        </div>
+        <h3>Drop your export files here</h3>
+        <p>followers_1.json&nbsp; + &nbsp;following.json&nbsp; · &nbsp;or click to browse</p>
+        <div class="files" id="fileNote"></div>
+      </div>
+    </div>
+
+    <details class="how">
+      <summary>How to get your data <span class="chev">▸</span></summary>
+      <div class="body">
+        <ol>
+          <li>Open Instagram's <a href="https://accountscenter.instagram.com/info_and_permissions/dyi/" target="_blank" rel="noopener"><b>Export your information</b></a> page (Settings → Accounts Center → Your information and permissions → Export your information).</li>
+          <li>Choose your account, pick <b>Some of your information</b>, and select <b>Followers and following</b>.</li>
+          <li>Set format to <code>JSON</code> and date range to <b>All time</b>, then request the download.</li>
+          <li>Instagram emails a link (minutes, sometimes up to a day). Unzip it and find <code>followers_1.json</code> and <code>following.json</code> under <code>connections/followers_and_following/</code>.</li>
+          <li>Drop both files above. Everything is parsed here in your browser — it never leaves this page.</li>
+        </ol>
+      </div>
+    </details>
+
+    <div class="row">
+      <button class="btn btn-primary" id="demoBtn">Load demo data <span class="arrow">→</span></button>
+      <div class="toggle" id="demoToggle" style="display:none">
+        <button data-run="1" class="on">First check</button>
+        <button data-run="2">Second check · 1 wk later</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="stats">
+      <div class="stat"><div class="n" id="sFollowers">0</div><div class="l">Followers</div></div>
+      <div class="stat"><div class="n" id="sFollowing">0</div><div class="l">Following</div></div>
+      <div class="stat alert" id="sUnfollowStat"><div class="n" id="sUnfollow">0</div><div class="l">Unfollowed you</div></div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="notback">Not following you back <span class="ct" id="cNotback">0</span></button>
+      <button class="tab" data-tab="youback">You don't follow back <span class="ct" id="cYouback">0</span></button>
+      <button class="tab" data-tab="mutual">Mutuals <span class="ct" id="cMutual">0</span></button>
+      <button class="tab alert" data-tab="unfollow">Unfollowers <span class="ct" id="cUnfollow">0</span></button>
+    </div>
+
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Filter usernames…">
+    </div>
+
+    <div id="listWrap"></div>
+    <button class="reset" id="resetBtn">↺ Start over with new files</button>
+  </div>
+
+  <div class="footnote">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    100% client-side. Your follower lists are processed in your browser and never sent to a server.
+  </div>
+
+</main>
+
+<footer class="app-foot">TEZ Creations · Drop #005</footer>
+
+<!-- real account system: sign up / log in / profile via /api/auth -->
+<script src="/auth.js"></script>
+<!-- Concept D account slot: renders Sign in / profile chip into #acctSlot -->
+<script>
+  (function () {
+    var slot = document.getElementById('acctSlot');
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    function render() {
+      if (!slot || !window.TezAuth) return;
+      if (TezAuth.isLoggedIn()) {
+        var u = TezAuth.currentUser() || {};
+        var initial = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+        slot.innerHTML = '<button type="button" class="acct-chip"><span class="acct-av">' + esc(initial) +
+          '</span><span class="acct-nm">' + esc(u.name || u.email || '') + '</span></button>';
+        slot.querySelector('.acct-chip').addEventListener('click', function () { TezAuth.openProfile(); });
+      } else {
+        slot.innerHTML = '<a class="cta ghost" href="#">Sign in</a>';
+        slot.querySelector('a').addEventListener('click', function (e) { e.preventDefault(); TezAuth.open({ mode: 'login' }); });
+      }
+    }
+    function start() { if (!window.TezAuth) return; TezAuth.onChange(render); render(); }
+    if (window.TezAuth) start(); else window.addEventListener('load', start);
+  })();
+</script>
+
+<script>
+/* ---- §6 grid cursor-warp (reduced-motion gated, per design system) ---- */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bgGrid = document.getElementById('bgGrid');
+if(!reduce){
+  let tx=0,ty=0,cx=0,cy=0;
+  window.addEventListener('mousemove',e=>{
+    tx = (e.clientX/window.innerWidth - .5)*2;
+    ty = (e.clientY/window.innerHeight - .5)*2;
+  });
+  (function loop(){
+    cx += (tx-cx)*0.06; cy += (ty-cy)*0.06;
+    bgGrid.style.transform =
+      `perspective(1200px) rotateX(${-cy*1.6}deg) rotateY(${cx*1.6}deg) translate(${-cx*8}px,${-cy*8}px) scale(1.08)`;
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---- Instagram export parser (tolerant of both shapes IG ships) ---- */
+function extractUsernames(json){
+  let arr = Array.isArray(json) ? json : null;
+  if(!arr && json && typeof json === 'object'){
+    for(const k of Object.keys(json)){ if(Array.isArray(json[k])){ arr = json[k]; break; } }
+  }
+  if(!arr) return [];
+  const out = [];
+  for(const item of arr){
+    const sld = item && item.string_list_data;
+    if(sld && sld.length && sld[0].value) out.push(sld[0].value.toLowerCase());
+  }
+  return out;
+}
+
+/* ---- baseline snapshot store (localStorage, with demo isolation) ----
+   Real uploads persist the followers list under LS_KEY so the next visit can
+   diff against it. Demo mode is held in memory only, so loading the demo never
+   touches (or overwrites) a real user's saved baseline. All storage calls are
+   guarded so a blocked-storage context degrades gracefully (tracking just
+   won't persist) instead of throwing. */
+const LS_KEY = 'ghosted_snapshot';
+let demoMode = false;
+let DEMO_SNAPSHOT = null;
+function loadSnapshot(){
+  if(demoMode) return DEMO_SNAPSHOT;
+  try{ const v = localStorage.getItem(LS_KEY); return v ? JSON.parse(v) : null; }
+  catch(e){ return null; }
+}
+function saveSnapshot(f){
+  if(demoMode){ DEMO_SNAPSHOT = f.slice(); return; }
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(f)); }catch(e){}
+}
+
+let followers=[], following=[], unfollowers=[], current='notback';
+let pendingFollowers=null, pendingFollowing=null;
+
+function compute(){
+  const fSet=new Set(followers), gSet=new Set(following);
+  const notback = following.filter(u=>!fSet.has(u));
+  const youback = followers.filter(u=>!gSet.has(u));
+  const mutual  = followers.filter(u=>gSet.has(u));
+  const prev = loadSnapshot();
+  if(prev){ const now=new Set(followers); unfollowers = prev.filter(u=>!now.has(u)); }
+  else { unfollowers = null; }
+  saveSnapshot(followers);
+  return {notback,youback,mutual};
+}
+
+function render(){
+  const {notback,youback,mutual} = compute();
+  document.getElementById('sFollowers').textContent = followers.length.toLocaleString();
+  document.getElementById('sFollowing').textContent = following.length.toLocaleString();
+  document.getElementById('cNotback').textContent = notback.length;
+  document.getElementById('cYouback').textContent = youback.length;
+  document.getElementById('cMutual').textContent = mutual.length;
+  const uStat=document.getElementById('sUnfollowStat');
+  if(unfollowers===null){
+    document.getElementById('sUnfollow').textContent='—';
+    document.getElementById('cUnfollow').textContent='0';
+    uStat.style.opacity='.5';
+  }else{
+    document.getElementById('sUnfollow').textContent=unfollowers.length;
+    document.getElementById('cUnfollow').textContent=unfollowers.length;
+    uStat.style.opacity='1';
+  }
+  window._lists={notback,youback,mutual,unfollow:unfollowers};
+  document.getElementById('uploadView').style.display='none';
+  const r=document.getElementById('results');
+  r.classList.add('show'); r.classList.remove('rise'); void r.offsetWidth; r.classList.add('rise');
+  drawList();
+}
+
+function initials(u){ return u.replace(/[^a-z0-9]/gi,'').slice(0,2).toUpperCase() || '?'; }
+
+function drawList(){
+  const wrap=document.getElementById('listWrap');
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const isAlert=current==='unfollow';
+  if(isAlert && window._lists.unfollow===null){
+    wrap.innerHTML=`<div class="list"><div class="empty">
+      <div class="ic">📍</div><h4>Baseline saved</h4>
+      <p>This is your first check, so there's nothing to compare against yet. Grab a fresh export next time and anyone who left will show up right here.</p></div></div>`;
+    return;
+  }
+  let data=window._lists[current]||[];
+  if(q) data=data.filter(u=>u.includes(q));
+  if(!data.length){
+    wrap.innerHTML=`<div class="list"><div class="empty">
+      <div class="ic">${isAlert?'🎉':'✓'}</div>
+      <h4>${q?'No matches':(isAlert?'Nobody left':'All clear')}</h4>
+      <p>${q?'No usernames match that filter.':(isAlert?'No one from your last check has unfollowed you.':'Nobody falls into this group.')}</p></div></div>`;
+    return;
+  }
+  wrap.innerHTML=`<div class="list">`+data.map(u=>`
+    <a class="item ${isAlert?'left':''}" href="https://instagram.com/${u}" target="_blank" rel="noopener">
+      <div class="av">${initials(u)}</div>
+      <div class="u"><span class="at">@</span>${u}</div>
+      <div class="go">↗ profile</div></a>`).join('')+`</div>`;
+}
+
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t) return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); current=t.dataset.tab;
+  document.getElementById('searchInput').value=''; drawList();
+});
+document.getElementById('searchInput').addEventListener('input',drawList);
+
+/* ---- file handling ---- */
+const drop=document.getElementById('drop'), fileInput=document.getElementById('file'), fileNote=document.getElementById('fileNote');
+drop.addEventListener('click',()=>fileInput.click());
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
+fileInput.addEventListener('change',e=>handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  const files=[...fileList].filter(f=>f.name.endsWith('.json'));
+  let loaded=0;
+  files.forEach(f=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      try{
+        const json=JSON.parse(fr.result);
+        const names=extractUsernames(json);
+        const lower=f.name.toLowerCase();
+        const isFollowing = lower.includes('following') || (json && !Array.isArray(json) && json.relationships_following);
+        if(isFollowing) pendingFollowing=names;
+        else pendingFollowers=(pendingFollowers||[]).concat(names);
+      }catch(err){ fileNote.textContent='⚠ '+f.name+' is not valid JSON'; }
+      if(++loaded===files.length) tryRender();
+    };
+    fr.readAsText(f);
+  });
+  if(files.length) fileNote.textContent=files.map(f=>f.name).join('  ·  ');
+}
+function tryRender(){
+  if(pendingFollowers && pendingFollowing){
+    demoMode=false;                       // real upload → use persistent localStorage baseline
+    followers=[...new Set(pendingFollowers)]; following=[...new Set(pendingFollowing)]; render();
+  }else{
+    fileNote.textContent=pendingFollowers?'✓ followers loaded — now add following.json':'✓ following loaded — now add followers_1.json';
+  }
+}
+
+/* ---- demo data (mirrors real export shape) ---- */
+const baseFollowers=['kira.frames','lo_fi_dom','pixelwitch','nova_runs','greg','tess.makes','vaporvonn','mika__','sundaykid','quietloops','arc_welder','holly.codes','3am.thoughts','benji','steeze','marlowe','dustblue','okay.cool','rivers','jpeg_dreams','sol','tinyrobot','mossy','plumb','echo.park','dani_hz','wired_oak','glimmer','offbrand','cassette.boy','noor','vega','halcyon','smol.bean','cleo','aux.cord','rook','indigo','milo.png','fernweh'];
+const baseFollowing=[...baseFollowers.slice(0,34),'verge_official','rawmaterial','studioghost','no.reply','bot_account_42','famous.person','brand.x','onlydrops'];
+const demoRuns={
+  1:{followers:baseFollowers,following:baseFollowing},
+  2:{followers:baseFollowers.filter(u=>!['kira.frames','greg','marlowe','rook'].includes(u)).concat(['late.night.dev','copper']),following:baseFollowing}
+};
+function loadDemo(run){
+  const r=demoRuns[run]; pendingFollowers=null; pendingFollowing=null;
+  followers=r.followers.map(u=>u.toLowerCase()); following=r.following.map(u=>u.toLowerCase()); render();
+}
+document.getElementById('demoBtn').addEventListener('click',()=>{
+  demoMode=true; DEMO_SNAPSHOT=null; document.getElementById('demoToggle').style.display='inline-flex'; loadDemo(1);
+});
+document.getElementById('demoToggle').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#demoToggle button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); const run=+b.dataset.run;
+  demoMode=true;
+  if(run===1){ DEMO_SNAPSHOT=null; } else { DEMO_SNAPSHOT=baseFollowers.map(u=>u.toLowerCase()); }
+  loadDemo(run);
+});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  demoMode=false; pendingFollowers=pendingFollowing=null; fileNote.textContent='';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('uploadView').style.display='block';
+  document.getElementById('demoToggle').style.display='none';
+});
+</script>
+</body>
+</html>

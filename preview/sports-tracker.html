@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sports Tracker — TEZ Creations</title>
+  <meta name="description" content="Pick a game, copy a link, get a live score tracker on your stream." />
+  <meta name="theme-color" content="#0a0c0b" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- real account system (sign up / log in / profile) -->
+  <link rel="stylesheet" href="/auth.css" />
+  <!-- shared brand design system -->
+  <link rel="stylesheet" href="/preview/tez.css" />
+  <style>
+    /* ── Local tokens: map the finder's component vars onto the TEZ brand ── */
+    :root{
+      --accent-bright:#3fe08b;
+      --accent-deep:#2bb873;
+      --accent-glow:rgba(63,224,139,0.16);
+      --input-fill:rgba(255,255,255,0.03);
+      --hair:rgba(255,255,255,0.07);
+      --muted-dim:rgba(154,163,156,0.7);
+      --font-display:'Space Grotesk',system-ui,-apple-system,sans-serif;
+      --font-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+
+    /* ── App shell / hero ── */
+    .app-wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 24px 96px}
+    .app-hero{padding:64px 0 4px}
+    .app-eyebrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+    .app-eyebrow .dropnum{
+      font-family:var(--font-mono);font-weight:600;font-size:0.82rem;letter-spacing:.04em;
+      color:var(--accent);display:inline-flex;align-items:center;gap:9px;
+      padding:6px 12px 6px 11px;border:1px solid var(--line-2);border-radius:999px;
+      background:rgba(255,255,255,0.015);
+    }
+    .app-eyebrow .dropnum .dot{
+      width:7px;height:7px;border-radius:50%;background:var(--accent);
+      box-shadow:0 0 0 4px rgba(63,224,139,0.15);flex:none;
+    }
+    .app-eyebrow .type-tag{
+      font-family:var(--font-mono);font-size:0.72rem;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted-2);border:1px solid var(--line-2);border-radius:999px;padding:5px 11px;
+    }
+    .app-hero h1{
+      font-family:var(--font-display);font-weight:700;
+      font-size:clamp(2.6rem,7vw,4.4rem);line-height:1.02;letter-spacing:-.03em;
+      margin:0;color:var(--text);
+    }
+    .app-hero .lede{
+      color:var(--muted);font-size:1.05rem;max-width:56ch;margin:22px 0 0;line-height:1.55;
+    }
+
+    /* ── Card wrapping the finder ── */
+    .card{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:var(--radius);overflow:hidden;
+    }
+    .card-body{padding:26px 26px 30px}
+    .controls-card{margin-top:40px}
+    .section-label{
+      font-family:var(--font-mono);font-size:0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.2em;
+      color:var(--muted-2);margin:0 0 12px;
+    }
+
+    /* ── League tabs ── */
+    .league-row{
+      display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;
+      scrollbar-width:none;
+    }
+    .league-row::-webkit-scrollbar{display:none}
+    .league-btn{
+      font-family:var(--font-sans);font-weight:600;font-size:13px;letter-spacing:.02em;
+      color:var(--muted);background:var(--input-fill);
+      border:1px solid var(--line-2);border-radius:var(--radius-sm);
+      padding:9px 16px;cursor:pointer;white-space:nowrap;
+      transition:all .18s var(--ease);
+    }
+    .league-btn:hover{color:var(--text);border-color:var(--accent-dim)}
+    .league-btn.on{
+      color:var(--accent-ink);
+      background:linear-gradient(180deg,var(--accent-bright) 0%,var(--accent-deep) 100%);
+      border-color:var(--accent-deep);
+      box-shadow:0 0 18px rgba(63,224,139,0.22),inset 0 1px rgba(255,255,255,0.4);
+    }
+
+    /* ── Team filter ── */
+    .filter{
+      width:100%;background:var(--input-fill);
+      border:1px solid var(--line-2);border-radius:12px;
+      padding:13px 16px;color:var(--text);
+      font-family:var(--font-sans);font-size:15px;outline:none;
+      margin-bottom:24px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+    }
+    .filter::placeholder{color:rgba(255,255,255,0.28)}
+    .filter:focus{
+      border-color:rgba(63,224,139,0.45);
+      box-shadow:0 0 22px var(--accent-glow);
+    }
+
+    /* ── Game list ── */
+    .games{display:flex;flex-direction:column;gap:10px}
+    .game{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      text-decoration:none;color:var(--text);
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--line);border-radius:14px;
+      padding:15px 18px;
+      transition:border-color .2s var(--ease),box-shadow .2s var(--ease),transform .2s var(--ease);
+    }
+    .game:hover{
+      border-color:rgba(63,224,139,0.35);
+      box-shadow:0 0 26px var(--accent-glow);
+      transform:translateY(-2px);
+    }
+    .matchup{display:flex;align-items:center;gap:12px;min-width:0}
+    .side{display:flex;align-items:center;gap:8px;min-width:0}
+    .side img{width:28px;height:28px;object-fit:contain;flex:none}
+    .side .nm{font-family:var(--font-sans);font-weight:700;font-size:14px;white-space:nowrap}
+    .side .rc{font-family:var(--font-mono);font-size:11px;color:var(--muted-2);white-space:nowrap}
+    .at{font-family:var(--font-mono);font-size:11px;color:var(--muted-2);flex:none}
+
+    .game-state{text-align:right;flex:none}
+    .game-state .pill{
+      display:inline-block;font-family:var(--font-mono);font-weight:600;
+      font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+      border-radius:999px;padding:4px 10px;margin-bottom:4px;
+    }
+    .pill.live{color:#ff6a6a;background:rgba(255,70,70,0.12);border:1px solid rgba(255,70,70,0.3)}
+    .pill.pre{color:var(--accent-bright);background:rgba(63,224,139,0.1);border:1px solid rgba(63,224,139,0.3)}
+    .pill.post{color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--line-2)}
+    .game-state .det{
+      display:block;font-family:var(--font-sans);font-size:12px;color:var(--muted);
+      font-variant-numeric:tabular-nums;
+    }
+    .game-state .sc{
+      display:block;font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--text);
+    }
+
+    /* ── Empty / loading ── */
+    .empty{
+      text-align:center;font-family:var(--font-sans);color:var(--muted);
+      padding:44px 0;line-height:1.6;
+    }
+
+    /* ── Slim footer ── */
+    .app-foot{
+      position:relative;z-index:1;text-align:center;
+      padding:40px 24px;border-top:1px solid var(--line);
+      font-family:var(--font-mono);font-size:0.75rem;color:var(--muted-2);
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:600px){
+      .app-hero{padding-top:44px}
+      .side .rc{display:none}
+      .side .nm{font-size:13px}
+    }
+
+    /* ── Reduced motion ── */
+    @media(prefers-reduced-motion:reduce){
+      *{animation:none!important;transition:none!important}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Signature brand background -->
+<div class="bg-field" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="glows" aria-hidden="true">
+  <span class="star s1"></span>
+  <span class="star s2"></span>
+  <span class="star s3"></span>
+  <span class="star s4"></span>
+  <span class="star s5"></span>
+</div>
+
+<!-- HEADER (Concept D chrome) -->
+<header>
+  <div class="container nav">
+    <a class="lockup" href="/preview/concept-d" aria-label="TEZ Creations home">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="#3fe08b">
+          <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+        </svg>
+      </span>
+      <span class="wordmark">
+        <span class="name">TEZ Creations</span>
+        <span class="sub">Studio</span>
+      </span>
+    </a>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="/preview/concept-d#drops">Drops</a>
+        <a href="/preview/about">About</a>
+        <a href="/ak9awards">AK9 Awards</a>
+        <a href="/ai">TEZ AI</a>
+      </nav>
+      <div id="acctSlot"></div>
+      <a class="cta" href="/preview/concept-d#drops">← All drops</a>
+    </div>
+  </div>
+</header>
+
+<main class="app-wrap" id="top">
+
+  <!-- Hero -->
+  <div class="app-hero">
+    <div class="app-eyebrow reveal d1">
+      <span class="dropnum"><span class="dot"></span>#001</span>
+      <span class="type-tag">Tool · Live</span>
+    </div>
+    <h1 class="reveal d2">Sports Tracker</h1>
+    <p class="lede reveal d3">
+      Pick a game below and get a live score tracker for your stream. Games show up here on game day.
+    </p>
+  </div>
+
+  <!-- Finder -->
+  <div class="card controls-card reveal d4">
+    <div class="card-body">
+      <p class="section-label">League</p>
+      <div class="league-row" id="leagues"></div>
+      <input class="filter" id="filter" type="text" placeholder="Filter by team…" />
+      <div class="games" id="games"><p class="empty">Loading games…</p></div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="app-foot">TEZ Creations · Drop #001</footer>
+
+<!-- real account system: sign up / log in / profile via /api/auth -->
+<script src="/auth.js"></script>
+<!-- Concept D account slot: renders Sign in / profile chip into #acctSlot -->
+<script>
+  (function () {
+    var slot = document.getElementById('acctSlot');
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    function render() {
+      if (!slot || !window.TezAuth) return;
+      if (TezAuth.isLoggedIn()) {
+        var u = TezAuth.currentUser() || {};
+        var initial = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+        slot.innerHTML = '<button type="button" class="acct-chip"><span class="acct-av">' + esc(initial) +
+          '</span><span class="acct-nm">' + esc(u.name || u.email || '') + '</span></button>';
+        slot.querySelector('.acct-chip').addEventListener('click', function () { TezAuth.openProfile(); });
+      } else {
+        slot.innerHTML = '<a class="cta ghost" href="#">Sign in</a>';
+        slot.querySelector('a').addEventListener('click', function (e) { e.preventDefault(); TezAuth.open({ mode: 'login' }); });
+      }
+    }
+    function start() { if (!window.TezAuth) return; TezAuth.onChange(render); render(); }
+    if (window.TezAuth) start(); else window.addEventListener('load', start);
+  })();
+</script>
+
+  <script>
+    const LEAGUES = [
+      { key: "worldcup", label: "World Cup", path: "soccer/fifa.world" },
+      { key: "nba", label: "NBA", path: "basketball/nba" },
+      { key: "nfl", label: "NFL", path: "football/nfl" },
+      { key: "mlb", label: "MLB", path: "baseball/mlb" },
+      { key: "nhl", label: "NHL", path: "hockey/nhl" },
+      { key: "wnba", label: "WNBA", path: "basketball/wnba" },
+      { key: "mls", label: "MLS", path: "soccer/usa.1" },
+      { key: "epl", label: "Premier League", path: "soccer/eng.1" },
+      { key: "laliga", label: "La Liga", path: "soccer/esp.1" },
+      { key: "ucl", label: "Champions League", path: "soccer/uefa.champions" },
+      { key: "ncaam", label: "NCAA M", path: "basketball/mens-college-basketball" },
+      { key: "ncaaw", label: "NCAA W", path: "basketball/womens-college-basketball" },
+      { key: "ncaaf", label: "College Football", path: "football/college-football" }
+    ];
+
+    let current = "nba";
+    let games = [];
+    let refreshTimer = null;
+
+    const leaguesEl = document.getElementById("leagues");
+    const gamesEl = document.getElementById("games");
+    const filterEl = document.getElementById("filter");
+
+    leaguesEl.innerHTML = LEAGUES.map(
+      (l) => `<button class="league-btn${l.key === current ? " on" : ""}" data-k="${l.key}">${l.label}</button>`
+    ).join("");
+
+    leaguesEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".league-btn");
+      if (!btn) return;
+      current = btn.dataset.k;
+      document.querySelectorAll(".league-btn").forEach((b) => b.classList.toggle("on", b === btn));
+      load();
+    });
+
+    filterEl.addEventListener("input", render);
+
+    function normalizeEvent(ev) {
+      const comp = ev.competitions[0];
+      const status = comp.status || ev.status;
+      const teams = comp.competitors.map((c) => ({
+        side: c.homeAway,
+        name: c.team.shortDisplayName || c.team.name || c.team.displayName,
+        abbrev: c.team.abbreviation || "",
+        logo: c.team.logo || "",
+        score: parseInt(c.score || "0", 10),
+        record: (c.records && c.records[0] && c.records[0].summary) || ""
+      }));
+      teams.sort((a, b) => (a.side === "away" ? -1 : 1));
+      return { id: String(ev.id), state: status.type.state, detail: status.type.shortDetail, date: ev.date, teams };
+    }
+
+    async function fetchGames(league) {
+      // Try the site's cached API first; fall back to ESPN directly
+      try {
+        const r = await fetch(`/api/score?league=${league}`, { cache: "no-store" });
+        if (r.ok) return (await r.json()).games;
+        throw new Error("api");
+      } catch (_) {
+        const path = LEAGUES.find((l) => l.key === league).path;
+        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`, { cache: "no-store" });
+        const board = await r.json();
+        return (board.events || []).map(normalizeEvent);
+      }
+    }
+
+    const ORDER = { in: 0, pre: 1, post: 2 };
+
+    async function load() {
+      gamesEl.innerHTML = `<p class="empty">Loading games…</p>`;
+      try {
+        games = await fetchGames(current);
+        games.sort((a, b) => (ORDER[a.state] - ORDER[b.state]) || (new Date(a.date) - new Date(b.date)));
+        render();
+      } catch (e) {
+        gamesEl.innerHTML = `<p class="empty">Couldn't load games right now.<br/>Give it a second and try another league or refresh.</p>`;
+      }
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(load, 30000);
+    }
+
+    // ESPN API data is third-party / untrusted — escape it before it touches innerHTML
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "");
+
+    function sideHTML(t) {
+      const safe = safeUrl(t.logo);
+      const logo = safe ? `<img src="${safe}" alt="" loading="lazy" />` : "";
+      return `<span class="side">${logo}<span><span class="nm">${esc(t.abbrev || t.name)}</span> <span class="rc">${esc(t.record)}</span></span></span>`;
+    }
+
+    function render() {
+      const q = filterEl.value.trim().toLowerCase();
+      const list = q
+        ? games.filter((g) => g.teams.some((t) => (t.name + " " + t.abbrev).toLowerCase().includes(q)))
+        : games;
+
+      if (!list.length) {
+        gamesEl.innerHTML = `<p class="empty">${q ? "No games match that team." : "No games on the board for this league today.<br/>Check back on game day."}</p>`;
+        return;
+      }
+
+      gamesEl.innerHTML = list
+        .map((g) => {
+          const [A, B] = g.teams;
+          const pillCls = g.state === "in" ? "live" : g.state === "post" ? "post" : "pre";
+          const pillTxt = g.state === "in" ? "Live" : g.state === "post" ? "Final" : "Upcoming";
+          const score =
+            g.state === "pre" ? `<span class="det">${esc(g.detail)}</span>` : `<span class="sc">${A.score} – ${B.score}</span><span class="det">${esc(g.detail)}</span>`;
+          return `
+          <a class="game" href="/drops/001/builder?game=${encodeURIComponent(g.id)}&league=${encodeURIComponent(current)}">
+            <span class="matchup">${sideHTML(A)}<span class="at">@</span>${sideHTML(B)}</span>
+            <span class="game-state"><span class="pill ${pillCls}">${pillTxt}</span>${score}</span>
+          </a>`;
+        })
+        .join("");
+    }
+
+    load();
+
+    /* Grid mouse warp */
+    const grid = document.querySelector(".grid");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (grid && !reduce) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener("mousemove", (e) => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+      (function tick() {
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        grid.style.transform =
+          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+  </script>
+</body>
+</html>

@@ -108,7 +108,14 @@
 
     // Build a keyed map from the real catalog (/drops.js) so new drops appear
     // automatically — same source the live site uses.
-    var TOOL_OVERRIDE = { '006': '/preview/handle-hunter' }; // reskinned preview tool
+    var TOOL_OVERRIDE = { // reskinned preview tools
+      '006': '/preview/handle-hunter',
+      '005': '/preview/ghosted',
+      '004': '/preview/gauntlet',
+      '003': '/preview/live-map',
+      '002': '/preview/sub-goal',
+      '001': '/preview/sports-tracker'
+    };
     var DROPS = {};
     (window.__DROPS || []).forEach(function (entry) {
       var id = String(entry.id);
