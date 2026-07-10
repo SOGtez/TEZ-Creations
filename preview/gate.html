@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEZ Creations</title>
+<meta name="description" content="Random creations, tools, and experiments — dropped for anyone to use. Stream overlays and small web apps, built by one person." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/preview/tez.css" />
+<style>
+  /* ---------- gate page ---------- */
+  .gate {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+  .gate-inner {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  /* centered lockup — larger mark than the header */
+  .gate .lockup {
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 26px;
+  }
+  .gate .mark {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+  }
+  .gate .mark svg { width: 32px; height: 32px; }
+  .gate .wordmark { align-items: center; }
+  .gate .wordmark .name {
+    font-size: 1.65rem;
+    letter-spacing: -0.01em;
+  }
+  .gate .wordmark .sub {
+    letter-spacing: 0.32em;
+    margin-top: 8px;
+  }
+  .gate .tagline {
+    margin: 0 0 40px;
+    color: var(--muted);
+    font-size: var(--t-lg);
+    line-height: 1.5;
+    max-width: 34ch;
+  }
+
+  /* glass card */
+  .gate-card {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background:
+      radial-gradient(520px 260px at 90% 0%, rgba(63,224,139,0.07), transparent 60%),
+      var(--panel);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    padding: 34px 30px 32px;
+    text-align: left;
+  }
+  .gate-card .prompt {
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--t-xs);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+  .gate-card h1 {
+    font-size: var(--t-xl);
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 22px;
+  }
+  .gate-field {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .gate-field input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line-2);
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-size: var(--t-base);
+    letter-spacing: 0.02em;
+    transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s;
+  }
+  .gate-field input::placeholder { color: var(--muted-2); }
+  .gate-field input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+    background: rgba(63,224,139,0.03);
+    box-shadow: 0 0 0 3px rgba(63,224,139,0.14);
+  }
+  .gate-field input.err {
+    border-color: #e0533f;
+    box-shadow: 0 0 0 3px rgba(224,83,63,0.16);
+  }
+  .gate-card .cta {
+    width: 100%;
+    height: 50px;
+    justify-content: center;
+    font-size: var(--t-base);
+  }
+  .gate-msg {
+    min-height: 20px;
+    margin: 14px 2px 0;
+    font-size: var(--t-sm);
+    color: #ff8f7d;
+    opacity: 0;
+    transition: opacity .2s var(--ease);
+  }
+  .gate-msg.show { opacity: 1; }
+  .gate-foot {
+    margin-top: 26px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--t-xs);
+    letter-spacing: 0.06em;
+    color: var(--muted-2);
+  }
+
+  /* shake — only when motion allowed */
+  @media (prefers-reduced-motion: no-preference) {
+    .gate-card.shake { animation: shake .42s var(--ease); }
+    @keyframes shake {
+      10%, 90% { transform: translateX(-2px); }
+      20%, 80% { transform: translateX(4px); }
+      30%, 50%, 70% { transform: translateX(-8px); }
+      40%, 60% { transform: translateX(8px); }
+    }
+  }
+
+  @media (max-width: 680px) {
+    .gate { padding: 40px 18px; }
+    .gate .wordmark .name { font-size: 1.45rem; }
+    .gate-card { padding: 28px 22px 26px; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-field" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="glows" aria-hidden="true">
+    <span class="star s1"></span>
+    <span class="star s2"></span>
+    <span class="star s3"></span>
+    <span class="star s4"></span>
+    <span class="star s5"></span>
+  </div>
+
+  <main class="gate">
+    <div class="gate-inner">
+      <div class="lockup" aria-label="TEZ Creations">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="#3fe08b">
+            <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+          </svg>
+        </span>
+        <span class="wordmark">
+          <span class="name">TEZ Creations</span>
+          <span class="sub">Studio</span>
+        </span>
+      </div>
+
+      <p class="tagline">A one-person studio for tools, overlays &amp; experiments — dropped for anyone to use.</p>
+
+      <form class="gate-card" id="gateForm" novalidate>
+        <p class="prompt">Private preview</p>
+        <h1>Enter the password to come in.</h1>
+        <div class="gate-field">
+          <input
+            id="pw"
+            type="password"
+            name="password"
+            placeholder="Password"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            aria-label="Password"
+            aria-describedby="gateMsg"
+          />
+          <button class="cta" type="submit">
+            Enter
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <p class="gate-msg" id="gateMsg" role="alert" aria-live="polite"></p>
+      </form>
+
+      <p class="gate-foot">TEZ Creations · redesign preview</p>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var form = document.getElementById('gateForm');
+      var input = document.getElementById('pw');
+      var card = form;
+      var msg = document.getElementById('gateMsg');
+      var PASSWORD = 'tez2026';
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function fail() {
+        msg.textContent = 'Not quite — try again';
+        msg.classList.add('show');
+        input.classList.add('err');
+        if (!reduce) {
+          card.classList.remove('shake');
+          // force reflow so the animation can retrigger
+          void card.offsetWidth;
+          card.classList.add('shake');
+        }
+        input.value = '';
+        input.focus();
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value === PASSWORD) {
+          try { sessionStorage.setItem('tez_access', '1'); } catch (err) {}
+          window.location.href = '/preview/concept-d';
+        } else {
+          fail();
+        }
+      });
+
+      // clear the error state as soon as the user starts typing again
+      input.addEventListener('input', function () {
+        if (input.classList.contains('err')) {
+          input.classList.remove('err');
+          msg.classList.remove('show');
+        }
+      });
+
+      input.focus();
+    })();
+  </script>
+</body>
+</html>
