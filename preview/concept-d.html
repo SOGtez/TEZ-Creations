@@ -8,43 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<!-- homepage feed built from the real catalog (/drops.js) so new drops appear automatically -->
-<script src="/drops.js"></script>
-<script>
-(function () {
-  var feed = document.getElementById('feed');
-  if (!feed || typeof DROPS === 'undefined') return;
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  var ARROW = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var SUB = { 'Apps': 'in the browser', 'Stream Tools': 'overlays for OBS' };
-  function pad(n){ n = String(n); while (n.length < 3) n = '0' + n; return n; }
-  function card(d){
-    var id = String(d.id);
-    var media = d.image
-      ? '<div class="cover"><span class="badge mono">#' + esc(id) + '</span><img src="/' + esc(String(d.image).replace(/^\/+/, '')) + '" alt="' + esc(d.title) + ' cover" loading="lazy"></div>'
-      : '<div class="tile"><span class="tile-num">' + esc(id) + '</span><span class="tile-glyph">' + esc(d.title) + '</span></div>';
-    var open = d.category === 'Apps' ? 'Open tool' : 'Open overlay';
-    return '<a class="card" href="/preview/drop?id=' + esc(id) + '">' + media +
-      '<div class="card-body"><div class="card-meta"><span class="n mono">#' + esc(id) + '</span><span class="tag">' + esc(d.category) + '</span></div>' +
-      '<h3>' + esc(d.title) + '</h3><p>' + esc(d.description) + '</p>' +
-      '<span class="card-cta">' + open + ARROW + '</span></div></a>';
-  }
-  var byCat = {};
-  DROPS.forEach(function (d) { (byCat[d.category] = byCat[d.category] || []).push(d); });
-  function maxId(list){ return list.reduce(function (m, d) { return Math.max(m, +d.id); }, 0); }
-  var cats = Object.keys(byCat).sort(function (a, b) { return maxId(byCat[b]) - maxId(byCat[a]); });
-  var html = '';
-  cats.forEach(function (cat) {
-    var list = byCat[cat].slice().sort(function (a, b) { return (+b.id) - (+a.id); });
-    var ids = list.map(function (d) { return +d.id; });
-    var range = pad(Math.min.apply(null, ids)) + ' \u2013 ' + pad(Math.max.apply(null, ids));
-    html += '<div class="cat-row"><span class="cat-name"><b>' + esc(cat) + '</b> \u00b7 ' + esc(SUB[cat] || '') + '</span><span class="cat-line"></span><span class="cat-name mono">' + range + '</span></div>';
-    html += '<div class="grid">' + list.map(card).join('') + '</div>';
-  });
-  feed.innerHTML = html;
-})();
-</script>
-
 <!-- real account system (sign up / log in / profile) -->
 <link rel="stylesheet" href="/auth.css" />
 <link rel="stylesheet" href="/preview/tez.css" />
@@ -250,6 +213,42 @@
     function start() { if (!window.TezAuth) return; TezAuth.onChange(render); render(); }
     if (window.TezAuth) start(); else window.addEventListener('load', start);
   })();
+</script>
+<!-- homepage feed built from the real catalog (/drops.js) so new drops appear automatically -->
+<script src="/drops.js"></script>
+<script>
+(function () {
+  var feed = document.getElementById('feed');
+  if (!feed || typeof DROPS === 'undefined') return;
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  var ARROW = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SUB = { 'Apps': 'in the browser', 'Stream Tools': 'overlays for OBS' };
+  function pad(n){ n = String(n); while (n.length < 3) n = '0' + n; return n; }
+  function card(d){
+    var id = String(d.id);
+    var media = d.image
+      ? '<div class="cover"><span class="badge mono">#' + esc(id) + '</span><img src="/' + esc(String(d.image).replace(/^\/+/, '')) + '" alt="' + esc(d.title) + ' cover" loading="lazy"></div>'
+      : '<div class="tile"><span class="tile-num">' + esc(id) + '</span><span class="tile-glyph">' + esc(d.title) + '</span></div>';
+    var open = d.category === 'Apps' ? 'Open tool' : 'Open overlay';
+    return '<a class="card" href="/preview/drop?id=' + esc(id) + '">' + media +
+      '<div class="card-body"><div class="card-meta"><span class="n mono">#' + esc(id) + '</span><span class="tag">' + esc(d.category) + '</span></div>' +
+      '<h3>' + esc(d.title) + '</h3><p>' + esc(d.description) + '</p>' +
+      '<span class="card-cta">' + open + ARROW + '</span></div></a>';
+  }
+  var byCat = {};
+  DROPS.forEach(function (d) { (byCat[d.category] = byCat[d.category] || []).push(d); });
+  function maxId(list){ return list.reduce(function (m, d) { return Math.max(m, +d.id); }, 0); }
+  var cats = Object.keys(byCat).sort(function (a, b) { return maxId(byCat[b]) - maxId(byCat[a]); });
+  var html = '';
+  cats.forEach(function (cat) {
+    var list = byCat[cat].slice().sort(function (a, b) { return (+b.id) - (+a.id); });
+    var ids = list.map(function (d) { return +d.id; });
+    var range = pad(Math.min.apply(null, ids)) + ' \u2013 ' + pad(Math.max.apply(null, ids));
+    html += '<div class="cat-row"><span class="cat-name"><b>' + esc(cat) + '</b> \u00b7 ' + esc(SUB[cat] || '') + '</span><span class="cat-line"></span><span class="cat-name mono">' + range + '</span></div>';
+    html += '<div class="grid">' + list.map(card).join('') + '</div>';
+  });
+  feed.innerHTML = html;
+})();
 </script>
 </body>
 </html>
