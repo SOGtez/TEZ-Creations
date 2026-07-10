@@ -19,7 +19,8 @@
   .gate-inner {
     width: 100%; max-width: 440px;
     display: flex; flex-direction: column; align-items: center; text-align: center;
-    transition: transform .85s var(--ease), opacity .6s var(--ease);
+    /* match the real gate's camera-pan speed + easing */
+    transition: transform 1.15s cubic-bezier(0.76, 0, 0.24, 1), opacity .8s ease;
   }
   /* the whole thing slides up into the home page on unlock */
   body.stage-done .gate-inner { transform: translateY(-108vh); opacity: 0; }
@@ -28,7 +29,7 @@
      settles down/up smoothly when the password panel opens. */
   .gate .lockup {
     flex-direction: column; gap: 18px; margin-bottom: 26px;
-    transition: transform .8s var(--ease);
+    transition: transform 1.15s cubic-bezier(0.76, 0, 0.24, 1);
   }
   body:not(.stage-unlock) .gate .lockup { transform: translateY(22px) scale(1.06); }
   .gate .mark { width: 58px; height: 58px; border-radius: 14px; }
@@ -41,7 +42,7 @@
   .splash {
     width: 100%; overflow: hidden;
     max-height: 260px; opacity: 1; margin-top: 6px;
-    transition: max-height .55s var(--ease), opacity .38s var(--ease), margin-top .55s var(--ease);
+    transition: max-height 1.05s cubic-bezier(0.76, 0, 0.24, 1), opacity .7s ease, margin-top 1.05s cubic-bezier(0.76, 0, 0.24, 1);
   }
   body.stage-unlock .splash { max-height: 0; opacity: 0; margin-top: 0; }
   .coming {
@@ -61,7 +62,7 @@
   .card-wrap {
     width: 100%; overflow: hidden;
     max-height: 0; opacity: 0;
-    transition: max-height .7s var(--ease) .1s, opacity .5s var(--ease) .16s;
+    transition: max-height 1.15s cubic-bezier(0.76, 0, 0.24, 1) .08s, opacity .8s ease .18s;
   }
   body.stage-unlock .card-wrap { max-height: 560px; opacity: 1; }
   .gate-card {
@@ -69,7 +70,7 @@
     background: radial-gradient(520px 260px at 90% 0%, rgba(63,224,139,0.07), transparent 60%), var(--panel);
     box-shadow: 0 30px 70px rgba(0,0,0,0.5);
     padding: 34px 30px 32px; text-align: left;
-    transform: translateY(18px); transition: transform .7s var(--ease) .1s;
+    transform: translateY(18px); transition: transform 1.15s cubic-bezier(0.76, 0, 0.24, 1) .08s;
   }
   body.stage-unlock .gate-card { transform: none; }
   .gate-card .prompt {
@@ -192,7 +193,7 @@
       enterBtn.addEventListener('click', function () {
         if (body.classList.contains('stage-unlock')) return;
         body.classList.add('stage-unlock');
-        setTimeout(function () { input.focus(); }, reduce ? 0 : 420);
+        setTimeout(function () { input.focus(); }, reduce ? 0 : 1150);
       });
 
       function fail() {
@@ -215,7 +216,7 @@
           try { sessionStorage.setItem('tez_access', '1'); } catch (err) {}
           input.blur();
           body.classList.add('stage-done');
-          setTimeout(function () { window.location.href = '/preview/concept-d'; }, reduce ? 60 : 780);
+          setTimeout(function () { window.location.href = '/preview/concept-d'; }, reduce ? 60 : 1200);
         } else {
           fail();
         }
