@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/auth.css" />
 <style>
 :root{
   --bg:#050806; --bg-2:#0a0f0b;
@@ -578,6 +579,7 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"></div>
 
+<script src="/auth.js"></script>
 <script>
 (function(){
 "use strict";
@@ -591,6 +593,15 @@ var SB_URL = "https://taodbtlgpvaabvcnsekg.supabase.co";
 var SB_KEY = "sb_publishable_imq8qxgP3woB_umzNjMDSw_4CpBrgvp";
 var PF_FULL = { tw:"twitch", ki:"kick", yt:"youtube" };
 var PF_SHORT = { twitch:"tw", kick:"ki", youtube:"yt" };
+// Accounts that can start tracking channels they don't own (mirror of the
+// server-side TRACK_ADMINS in api/tracker.js — the server is the real gate).
+var OWNER_CODES = ["TEZ-FGHXR"];
+function isOwner(){
+  try{
+    var u = window.TezAuth && TezAuth.currentUser && TezAuth.currentUser();
+    return !!(u && OWNER_CODES.indexOf(u.code) !== -1);
+  }catch(e){ return false; }
+}
 
 /* ---------- seeded rng (demo engine) ---------- */
 function hashStr(s){
@@ -1223,7 +1234,7 @@ function applyCreator(data){
     : (state.claimed
       ? "tezcreations.com/drops/007?u=" + c.handle
       : "auto-tracking on — page not claimed yet");
-  $("trackBtn").hidden = !state.preview;
+  $("trackBtn").hidden = !(state.preview && isOwner());
   applyEditMode();
   updateLiveChip();
   refresh();
@@ -1234,7 +1245,9 @@ function applyCreator(data){
 function applyEditMode(){
   document.body.classList.toggle("readonly", !DEMO && !state.canEdit);
   if(state.preview){
-    $("graphTip").textContent = "Preview built from this channel's recent VODs only — start tracking to auto-log every stream from now, or claim the page to own and edit it.";
+    $("graphTip").textContent = isOwner()
+      ? "Preview built from this channel's recent VODs only — start tracking to auto-log every stream from now, or claim the page to own and edit it."
+      : "Preview built from this channel's recent VODs only — claim the page to auto-track every stream, keep history forever, and edit.";
   } else if(!DEMO && !state.canEdit && !state.claimed){
     $("graphTip").textContent = "This channel is being auto-tracked but the page is unclaimed — if it's yours, claim it above to take ownership and edit. All history carries over.";
   } else if(!DEMO && !state.canEdit){
@@ -1494,13 +1507,14 @@ $("simStream").addEventListener("click", function(){
     }
   }
 });
-/* ---------- start tracking (no ownership) — shown on VOD previews ---------- */
+/* ---------- start tracking (no ownership) — owner-only, shown on VOD previews ---------- */
 $("trackBtn").addEventListener("click", function(){
-  if(DEMO || !state.preview || !state.handleLogin) return;
+  if(DEMO || !state.preview || !state.handleLogin || !isOwner()) return;
   var btn = this, login = state.handleLogin;
   btn.disabled = true;
   fetch(API, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ((window.TezAuth && TezAuth.token()) || "") },
     body: JSON.stringify({ handle: login, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, track: true })
   }).then(function(r){
     return r.json().then(function(j){
@@ -1517,6 +1531,13 @@ $("trackBtn").addEventListener("click", function(){
     showToast(String((e && e.message) || e));
   });
 });
+
+// owner logs in/out while a preview is open → re-evaluate the button
+if(window.TezAuth && TezAuth.onChange){
+  TezAuth.onChange(function(){
+    $("trackBtn").hidden = !(state.preview && isOwner());
+  });
+}
 
 $("share").addEventListener("click", function(){
   if(DEMO){ showToast("Demo mode — live drop copies your public tracker link"); return; }

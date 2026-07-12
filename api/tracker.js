@@ -8,6 +8,8 @@
 //   import, but no edit token is issued (claim_token stored as '') — the page
 //   stays claimable. Claiming a tracked-but-unclaimed channel later upgrades it:
 //   a fresh token is issued and all accumulated history is kept.
+//   Track mode is OWNER-ONLY: requires a signed-in TEZ account (Bearer token,
+//   same HMAC scheme as api/auth.js) whose member code is in TRACK_ADMINS.
 //
 // GET   /api/tracker?u=handle
 //   Public read: creator public fields + all activity rows. The client computes
@@ -90,6 +92,34 @@ const PLATFORMS = ['twitch', 'kick', 'youtube'];
 // Linked-handle shapes per platform (twitch is the record's own handle, never linked).
 const LINK_RULES = { kick: /^[a-z0-9_]{3,25}$/i, youtube: /^[a-z0-9._-]{3,30}$/i };
 
+// ---- owner gate for track-without-claiming (same pattern as auth.js TIER_TESTERS) ----
+// Member codes allowed to start tracking channels they don't own. The token is the
+// site session token from api/auth.js (HMAC over the same secret).
+const TRACK_ADMINS = ['TEZ-FGHXR'];
+const authSecret = () => process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+function bearer(req) {
+  const h = (req.headers && (req.headers.authorization || req.headers.Authorization)) || '';
+  const m = /^Bearer\s+(.+)$/i.exec(String(h));
+  return m ? m[1].trim() : '';
+}
+function verifyTezToken(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 2) return null;
+  const expect = crypto.createHmac('sha256', authSecret()).update(parts[0]).digest('base64url');
+  const a = Buffer.from(parts[1]), b = Buffer.from(expect);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  let p; try { p = JSON.parse(Buffer.from(parts[0], 'base64url').toString()); } catch (_) { return null; }
+  if (!p || !p.exp || p.exp < Date.now()) return null;
+  return p;
+}
+async function trackAllowed(req) {
+  const p = verifyTezToken(bearer(req));
+  if (!p || !p.uid) return false;
+  const q = await sb('GET', 'tez_users?id=eq.' + encodeURIComponent(p.uid) + '&select=code&limit=1');
+  const row = q.json && q.json[0];
+  return !!(row && TRACK_ADMINS.includes(row.code || ''));
+}
+
 function cleanTz(tz) {
   try { new Intl.DateTimeFormat('en', { timeZone: String(tz) }); return String(tz); }
   catch (_) { return 'UTC'; }
@@ -123,7 +153,7 @@ function publicCreator(row) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (!configured()) { res.status(503).json({ error: 'Tracker is not set up yet.' }); return; }
   if (req.method === 'POST') return claim(req, res);
@@ -152,6 +182,10 @@ async function claim(req, res) {
   const track = !!body.track;   // start tracking without taking ownership
 
   try {
+    if (track && !(await trackAllowed(req))) {
+      res.status(403).json({ error: 'Starting a tracker for another channel is owner-only right now.' });
+      return;
+    }
     // 0. existing record? tracking is idempotent; claiming an unclaimed tracker
     //    upgrades it in place (fresh token, history kept, webhooks already armed)
     const q0 = await sb('GET', 'tracker_creators?handle=eq.' + encodeURIComponent(handle) + '&select=*&limit=1');
