@@ -16,9 +16,10 @@
 //   Read-only look at ANY Twitch channel: if claimed → the real record; else a
 //   VOD-built preview (creator.preview=true, nothing written to the DB).
 //
-// PATCH /api/tracker             { handle, claim_token, activity?, schedule? }
+// PATCH /api/tracker             { handle, claim_token, activity?, schedule?, platforms? }
 //   Owner edits (token from claim, verified timing-safe): manual backfill rows
-//   (minutes 0 ⇒ delete) and/or the 7-bool weekly schedule.
+//   (minutes 0 ⇒ delete), the 7-bool weekly schedule, and/or linked handles on
+//   other platforms ({ kick, youtube } — empty/missing value unlinks).
 //
 // Env: TWITCH_CLIENT_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
 //      EVENTSUB_SECRET (+ optional TWITCH_CLIENT_ID, EVENTSUB_CALLBACK overrides)
@@ -82,6 +83,8 @@ async function helix(path) {
 const cleanLogin = (u) => String(u || '').trim().toLowerCase().replace(/^@/, '');
 const validLogin = (u) => /^[a-z0-9_]{3,25}$/.test(u);
 const PLATFORMS = ['twitch', 'kick', 'youtube'];
+// Linked-handle shapes per platform (twitch is the record's own handle, never linked).
+const LINK_RULES = { kick: /^[a-z0-9_]{3,25}$/i, youtube: /^[a-z0-9._-]{3,30}$/i };
 
 function cleanTz(tz) {
   try { new Intl.DateTimeFormat('en', { timeZone: String(tz) }); return String(tz); }
@@ -107,7 +110,8 @@ function publicCreator(row) {
   const live = !!(ls.started_at && !ls.last_offline_at);
   return {
     id: row.id, handle: row.handle, display_name: row.display_name,
-    tz: row.tz, schedule: row.schedule, created_at: row.created_at,
+    tz: row.tz, schedule: row.schedule, platforms: row.platforms || {},
+    created_at: row.created_at,
     live, live_started_at: live ? ls.started_at : null,
   };
 }
@@ -285,6 +289,7 @@ async function preview(req, res) {
         id: null, handle: String(user.login || handle).toLowerCase(),
         display_name: user.display_name || handle, tz,
         schedule: [false, false, false, false, false, false, false],
+        platforms: {},
         created_at: null, live: false, live_started_at: null, preview: true,
       },
       activity: days.map((d) => ({ date: d.date, platform: 'twitch', minutes: d.minutes, source: 'vod' })),
@@ -336,6 +341,29 @@ async function edit(req, res) {
         body: { schedule: sched }, prefer: 'return=minimal',
       });
       if (r.ok) saved++;
+    }
+
+    // linked handles on other platforms — full replace of the {kick, youtube} object
+    if (body.platforms !== undefined) {
+      const src = (body.platforms && typeof body.platforms === 'object' && !Array.isArray(body.platforms))
+        ? body.platforms : {};
+      const plat = {};
+      for (const k of Object.keys(LINK_RULES)) {
+        const v = String(src[k] == null ? '' : src[k]).trim().replace(/^@/, '');
+        if (!v) continue;                                    // empty ⇒ unlink
+        if (!LINK_RULES[k].test(v)) {
+          res.status(400).json({ error: 'That ' + k + ' handle does not look right.' });
+          return;
+        }
+        plat[k] = k === 'kick' ? v.toLowerCase() : v;        // youtube handles keep their casing
+      }
+      const r = await sb('PATCH', 'tracker_creators?id=eq.' + row.id, {
+        body: { platforms: plat }, prefer: 'return=minimal',
+      });
+      // surface a hard failure (e.g. platforms column not migrated yet) instead
+      // of a silent success — the page shows its "couldn't save" toast on !ok
+      if (!r.ok) { res.status(502).json({ error: 'Could not save the channel links.' }); return; }
+      saved++;
     }
 
     res.status(200).json({ ok: true, saved });

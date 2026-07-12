@@ -252,6 +252,47 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
   .pf-row .pf-bar{grid-column:2/5}
   .pf-row .pf-days{display:none}
 }
+/* linked channels (platform handles) */
+.links-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.05);
+}
+.links-label{font-size:11px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(143,163,148,0.7);margin-right:4px}
+.link-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;padding:7px 14px;
+  font-family:var(--font-sans);font-weight:600;font-size:12.5px;color:var(--muted);
+  transition:border-color .2s ease, color .2s ease;
+}
+.link-chip a{color:var(--text);text-decoration:none;font-weight:600}
+.link-chip a:hover{color:var(--accent-bright)}
+.link-chip .lc-edit{
+  background:none;border:none;cursor:pointer;color:rgba(143,163,148,0.6);
+  font-size:12px;padding:0 0 0 2px;line-height:1;transition:color .2s ease;
+}
+.link-chip .lc-edit:hover{color:var(--accent-bright)}
+.link-chip.add{
+  border-style:dashed;color:rgba(143,163,148,0.8);cursor:pointer;background:transparent;
+  font-family:var(--font-sans);font-weight:600;font-size:12.5px;
+}
+.link-chip.add:hover{color:var(--text);border-color:rgba(43,212,106,0.35)}
+.link-input{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(43,212,106,0.4);
+  border-radius:8px;padding:4px 10px;width:150px;
+  color:var(--text);font-family:var(--font-sans);font-weight:600;font-size:12.5px;
+  outline:none;
+}
+.link-chip .lc-save{
+  background:var(--accent-bright);border:none;border-radius:8px;color:#04160b;
+  font-weight:700;font-size:11.5px;padding:4px 10px;cursor:pointer;
+}
+.link-chip .lc-cancel{
+  background:none;border:none;cursor:pointer;color:rgba(143,163,148,0.7);
+  font-size:13px;padding:0 2px;line-height:1;
+}
+.link-chip .lc-cancel:hover{color:var(--text)}
+
 .ovl-live{
   font-family:var(--font-sans);font-weight:700;font-size:10px;text-transform:uppercase;
   letter-spacing:0.16em;color:#04160b;background:var(--danger);border-radius:999px;
@@ -525,6 +566,7 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
         <div class="sub">One consistency record across every platform — a slot counts if you streamed <em>anywhere</em>. Simulcasts detected automatically.</div>
         <div id="pfRows"></div>
         <div class="sched-note" id="simulNote"></div>
+        <div class="links-row" id="linksRow"></div>
       </div>
     </section>
   </main>
@@ -607,6 +649,7 @@ var state = {
   live: false,
   liveStartedAt: null,    // ms epoch (live mode)
   pfilter: "all",         // all | tw | ki | yt
+  platforms: { ki:"", yt:"" },   // linked handles elsewhere (twitch = handleLogin)
   schedule: [false,false,false,false,false,false,false],
   ovlMode: "pill",
   token: null,
@@ -964,6 +1007,78 @@ function renderBreakdown(){
     : "No simulcast days yet — bars show slot hit-rate per platform.";
 }
 
+/* ---------- linked channels (per-platform handles) ---------- */
+var LINK_META = {
+  ki: { name:"Kick",    url:function(h){ return "https://kick.com/" + h; },      re:/^[a-z0-9_]{3,25}$/i,      ph:"kick handle" },
+  yt: { name:"YouTube", url:function(h){ return "https://youtube.com/@" + h; },  re:/^[a-zA-Z0-9._-]{3,30}$/,  ph:"youtube handle" }
+};
+var linkEditing = null;   // "ki" | "yt" | null
+function canEditLinks(){ return DEMO || state.canEdit; }
+function linkChipHtml(pf){
+  var meta = pf === "tw"
+    ? { name:"Twitch", url:function(h){ return "https://twitch.tv/" + h; } }
+    : LINK_META[pf];
+  var handle = pf === "tw" ? state.handleLogin : state.platforms[pf];
+  var dot = '<span class="pf-dot" style="background:' + PF[pf].color + '"></span>';
+  if(linkEditing === pf){
+    return '<span class="link-chip" data-pf="' + pf + '">' + dot + meta.name +
+      ' <input class="link-input" data-pf="' + pf + '" maxlength="30" placeholder="' + LINK_META[pf].ph +
+      '" value="' + escHtml(state.platforms[pf] || "") + '" spellcheck="false" autocomplete="off" />' +
+      '<button class="lc-save" data-pf="' + pf + '">Save</button>' +
+      '<button class="lc-cancel" data-pf="' + pf + '" title="Cancel">✕</button></span>';
+  }
+  if(handle){
+    return '<span class="link-chip">' + dot + meta.name +
+      ' <a href="' + meta.url(escHtml(handle)) + '" target="_blank" rel="noopener">@' + escHtml(handle) + '</a>' +
+      (pf !== "tw" && canEditLinks()
+        ? '<button class="lc-edit" data-pf="' + pf + '" title="Edit handle">✎</button>' : '') +
+      '</span>';
+  }
+  if(pf !== "tw" && canEditLinks()){
+    return '<button class="link-chip add" data-pf="' + pf + '">+ ' + meta.name + ' handle</button>';
+  }
+  return "";
+}
+function renderLinks(){
+  var wrap = $("linksRow");
+  if(!state.handleLogin){ wrap.innerHTML = ""; return; }
+  // don't clobber an open editor when a background refresh repaints the dash
+  if(linkEditing && wrap.querySelector('.link-input[data-pf="' + linkEditing + '"]')) return;
+  wrap.innerHTML = '<span class="links-label">Channels</span>' +
+    linkChipHtml("tw") + linkChipHtml("ki") + linkChipHtml("yt");
+  var inp = wrap.querySelector(".link-input");
+  if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+function saveLink(pf){
+  var wrap = $("linksRow");
+  var inp = wrap.querySelector('.link-input[data-pf="' + pf + '"]');
+  if(!inp) return;
+  var v = inp.value.trim().replace(/^@/,"");
+  if(v && !LINK_META[pf].re.test(v)){
+    inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake");
+    showToast(LINK_META[pf].name + " handles are 3–" + (pf === "yt" ? "30" : "25") + " characters, no spaces.");
+    return;
+  }
+  state.platforms[pf] = pf === "ki" ? v.toLowerCase() : v;
+  linkEditing = null;
+  renderLinks();
+  if(!DEMO) pushPlatforms();
+  showToast(v ? LINK_META[pf].name + " channel linked." : LINK_META[pf].name + " channel unlinked.");
+}
+$("linksRow").addEventListener("click", function(e){
+  var t = e.target;
+  if(t.classList.contains("lc-save")){ saveLink(t.getAttribute("data-pf")); return; }
+  if(t.classList.contains("lc-cancel")){ linkEditing = null; renderLinks(); return; }
+  var opener = t.closest(".link-chip.add, .lc-edit");
+  if(opener && canEditLinks()){ linkEditing = opener.getAttribute("data-pf"); renderLinks(); }
+});
+$("linksRow").addEventListener("keydown", function(e){
+  var t = e.target;
+  if(!t.classList.contains("link-input")) return;
+  if(e.key === "Enter") saveLink(t.getAttribute("data-pf"));
+  if(e.key === "Escape"){ linkEditing = null; renderLinks(); }
+});
+
 /* ---------- refresh ---------- */
 function refresh(){
   var s = computeStats();
@@ -975,6 +1090,7 @@ function refresh(){
   paintAll();
   renderOverlay(s);
   renderBreakdown();
+  renderLinks();
 }
 
 /* ---------- claim flow (demo animation) ---------- */
@@ -1072,6 +1188,9 @@ function applyCreator(data){
   setCreatorToday(state.tz);
   state.schedule = (Array.isArray(c.schedule) && c.schedule.length === 7)
     ? c.schedule.map(Boolean) : [false,false,false,false,false,false,false];
+  var plat = c.platforms || {};
+  state.platforms = { ki: plat.kick || "", yt: plat.youtube || "" };
+  linkEditing = null;
   state.activity = {}; state.auto = {};
   var earliest = null;
   (data.activity || []).forEach(function(row){
@@ -1142,6 +1261,17 @@ function pushEdit(dateIso, pfShort, mins){
     })
   }).then(function(r){ if(!r.ok) showToast("Couldn't save that edit — try again."); })
     .catch(function(){ showToast("Couldn't save that edit — are you offline?"); });
+}
+function pushPlatforms(){
+  if(!state.token) return;
+  fetch(API, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      handle: state.handleLogin, claim_token: state.token,
+      platforms: { kick: state.platforms.ki, youtube: state.platforms.yt }
+    })
+  }).then(function(r){ if(!r.ok) showToast("Couldn't save the channel link — try again."); })
+    .catch(function(){ showToast("Couldn't save the channel link — are you offline?"); });
 }
 function pushSchedule(){
   if(!state.token) return;
@@ -1230,6 +1360,8 @@ go.addEventListener("click", function(){
     state.activity = gen.activity;
     state.auto = {};
     state.schedule = gen.schedule;
+    state.platforms = { ki:"", yt:"" };
+    linkEditing = null;
     state.token = gen.token;
     state.canEdit = true;
     resetLiveSim();

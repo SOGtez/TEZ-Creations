@@ -19,8 +19,13 @@ create table if not exists tracker_creators (
   claim_token   text not null,                   -- secret; NEVER exposed via anon reads
   schedule      jsonb not null default '[false,false,false,false,false,false,false]'::jsonb,  -- [Sun..Sat]
   live_state    jsonb,                           -- { started_at, last_offline_at, date, day_base } for merge logic
+  platforms     jsonb not null default '{}'::jsonb,  -- linked handles elsewhere: { kick, youtube }
   created_at    timestamptz default now()
 );
+
+-- Migration for deployments created before the platforms column existed
+-- (the whole file is safe to re-run; this line is what existing DBs need).
+alter table tracker_creators add column if not exists platforms jsonb not null default '{}'::jsonb;
 
 create table if not exists tracker_activity (
   creator_id  uuid references tracker_creators(id) on delete cascade,
@@ -46,7 +51,7 @@ create policy "anon read activity" on tracker_activity
 -- Public face of tracker_creators — everything EXCEPT claim_token + live_state.
 -- (View runs with owner rights, so it reads through the locked table by design.)
 create or replace view tracker_creators_public as
-  select id, handle, display_name, tz, schedule, created_at
+  select id, handle, display_name, tz, schedule, platforms, created_at
   from tracker_creators;
 grant select on tracker_creators_public to anon, authenticated;
 
