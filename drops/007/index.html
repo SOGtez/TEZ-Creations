@@ -1271,6 +1271,18 @@ function updateLiveChip(){
 }
 
 /* ---------- live mode: persist edits ---------- */
+// The server says our stored edit code is dead (page was unclaimed/reset) —
+// drop it and fall back to read-only instead of failing on every save.
+function dropStaleToken(){
+  try{ localStorage.removeItem(tokenKey(state.handleLogin)); }catch(e){}
+  state.token = null; state.canEdit = false; linkEditing = null;
+  applyEditMode(); renderLinks();
+  showToast("Edit access for this page was revoked — now viewing read-only.", 6000);
+}
+function afterSave(r, what){
+  if(r.status === 403){ dropStaleToken(); return; }
+  if(!r.ok) showToast("Couldn't save " + what + " — try again.");
+}
 function pushEdit(dateIso, pfShort, mins){
   if(!state.token) return;
   fetch(API, {
@@ -1279,7 +1291,7 @@ function pushEdit(dateIso, pfShort, mins){
       handle: state.handleLogin, claim_token: state.token,
       activity: [{ date: dateIso, platform: PF_FULL[pfShort], minutes: mins }]
     })
-  }).then(function(r){ if(!r.ok) showToast("Couldn't save that edit — try again."); })
+  }).then(function(r){ afterSave(r, "that edit"); })
     .catch(function(){ showToast("Couldn't save that edit — are you offline?"); });
 }
 function pushPlatforms(){
@@ -1290,7 +1302,7 @@ function pushPlatforms(){
       handle: state.handleLogin, claim_token: state.token,
       platforms: { kick: state.platforms.ki, youtube: state.platforms.yt }
     })
-  }).then(function(r){ if(!r.ok) showToast("Couldn't save the channel link — try again."); })
+  }).then(function(r){ afterSave(r, "the channel link"); })
     .catch(function(){ showToast("Couldn't save the channel link — are you offline?"); });
 }
 function pushSchedule(){
@@ -1298,7 +1310,7 @@ function pushSchedule(){
   fetch(API, {
     method: "PATCH", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ handle: state.handleLogin, claim_token: state.token, schedule: state.schedule })
-  }).then(function(r){ if(!r.ok) showToast("Couldn't save the schedule — try again."); })
+  }).then(function(r){ afterSave(r, "the schedule"); })
     .catch(function(){ showToast("Couldn't save the schedule — are you offline?"); });
 }
 
