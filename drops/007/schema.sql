@@ -15,6 +15,7 @@ create table if not exists tracker_creators (
   handle        text not null unique,            -- lowercase twitch login
   twitch_id     text not null unique,
   display_name  text,
+  avatar_url    text,                            -- twitch profile picture (self-heals if null)
   tz            text not null default 'UTC',     -- IANA tz from browser at claim
   claim_token   text not null,                   -- secret; NEVER exposed via anon reads.
                                                  -- '' = tracked but UNCLAIMED (track-only
@@ -26,9 +27,10 @@ create table if not exists tracker_creators (
   created_at    timestamptz default now()
 );
 
--- Migration for deployments created before the platforms column existed
--- (the whole file is safe to re-run; this line is what existing DBs need).
+-- Migrations for deployments created before these columns existed
+-- (the whole file is safe to re-run; these lines are what existing DBs need).
 alter table tracker_creators add column if not exists platforms jsonb not null default '{}'::jsonb;
+alter table tracker_creators add column if not exists avatar_url text;
 
 create table if not exists tracker_activity (
   creator_id  uuid references tracker_creators(id) on delete cascade,

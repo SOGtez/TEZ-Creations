@@ -144,6 +144,7 @@ function publicCreator(row) {
   const live = !!(ls.started_at && !ls.last_offline_at);
   return {
     id: row.id, handle: row.handle, display_name: row.display_name,
+    avatar_url: row.avatar_url || null,
     tz: row.tz, schedule: row.schedule, platforms: row.platforms || {},
     created_at: row.created_at, claimed: !!row.claim_token,
     live, live_started_at: live ? ls.started_at : null,
@@ -216,6 +217,7 @@ async function claim(req, res) {
     const ins = await sb('POST', 'tracker_creators', {
       body: {
         handle, twitch_id: String(user.id), display_name: user.display_name || handle,
+        avatar_url: user.profile_image_url || null,
         tz, claim_token: claimToken,
       },
       prefer: 'return=representation',
@@ -290,6 +292,19 @@ async function vodDays(userId, tz) {
 
 // The full public record for a claimed creator (shared by read + preview).
 async function respondFull(res, row) {
+  // rows created before the avatar column self-heal on first view
+  if (!row.avatar_url) {
+    try {
+      const u = await helix('users?login=' + encodeURIComponent(row.handle));
+      const usr = u.json && u.json.data && u.json.data[0];
+      if (usr && usr.profile_image_url) {
+        row.avatar_url = usr.profile_image_url;   // response gets it even if the persist fails
+        await sb('PATCH', 'tracker_creators?id=eq.' + row.id, {
+          body: { avatar_url: row.avatar_url }, prefer: 'return=minimal',
+        });
+      }
+    } catch (e) { /* avatar is cosmetic — never fail the read */ }
+  }
   const a = await sb('GET', 'tracker_activity?creator_id=eq.' + row.id +
     '&select=date,platform,minutes,source&order=date.asc&limit=5000');
   res.setHeader('Cache-Control', 'no-store');    // realtime pages want fresh live_state
@@ -319,8 +334,13 @@ async function search(req, res) {
   try {
     const pat = '*' + q + '*';
     const filter = encodeURIComponent('(handle.ilike.' + pat + ',display_name.ilike.' + pat + ')');
-    const r = await sb('GET', 'tracker_creators?or=' + filter +
-      '&select=handle,display_name&order=handle.asc&limit=10');
+    let r = await sb('GET', 'tracker_creators?or=' + filter +
+      '&select=handle,display_name,avatar_url&order=handle.asc&limit=10');
+    // avatar column not migrated yet → retry without it rather than break search
+    if (!r.ok) {
+      r = await sb('GET', 'tracker_creators?or=' + filter +
+        '&select=handle,display_name&order=handle.asc&limit=10');
+    }
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
     res.status(200).json({ results: r.json || [] });
   } catch (err) {
@@ -347,7 +367,8 @@ async function preview(req, res) {
     res.status(200).json({
       creator: {
         id: null, handle: String(user.login || handle).toLowerCase(),
-        display_name: user.display_name || handle, tz,
+        display_name: user.display_name || handle,
+        avatar_url: user.profile_image_url || null, tz,
         schedule: [false, false, false, false, false, false, false],
         platforms: {}, claimed: false,
         created_at: null, live: false, live_started_at: null, preview: true,
