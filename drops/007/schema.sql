@@ -50,7 +50,10 @@ create policy "anon read activity" on tracker_activity
 
 -- Public face of tracker_creators — everything EXCEPT claim_token + live_state.
 -- (View runs with owner rights, so it reads through the locked table by design.)
-create or replace view tracker_creators_public as
+-- drop+create, NOT "create or replace": replace can't add a column mid-view
+-- (42P16 "cannot change name of view column") when upgrading an existing DB.
+drop view if exists tracker_creators_public;
+create view tracker_creators_public as
   select id, handle, display_name, tz, schedule, platforms, created_at
   from tracker_creators;
 grant select on tracker_creators_public to anon, authenticated;
