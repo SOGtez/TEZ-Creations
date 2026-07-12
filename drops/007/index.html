@@ -809,10 +809,10 @@ function showErr(msg){
   err.textContent = msg; err.classList.add("show");
   input.classList.remove("shake"); void input.offsetWidth; input.classList.add("shake");
 }
-function showToast(msg){
+function showToast(msg, ms){
   toast.textContent = msg; toast.classList.add("on");
   clearTimeout(showToast.t);
-  showToast.t = setTimeout(function(){ toast.classList.remove("on"); }, 2400);
+  showToast.t = setTimeout(function(){ toast.classList.remove("on"); }, ms || 2400);
 }
 function flashRealtime(){
   var rt = $("rt");
@@ -1511,7 +1511,9 @@ $("simStream").addEventListener("click", function(){
 $("trackBtn").addEventListener("click", function(){
   if(DEMO || !state.preview || !state.handleLogin || !isOwner()) return;
   var btn = this, login = state.handleLogin;
+  var idle = btn.innerHTML;
   btn.disabled = true;
+  btn.textContent = "Arming auto-tracking…";
   fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ((window.TezAuth && TezAuth.token()) || "") },
@@ -1524,11 +1526,12 @@ $("trackBtn").addEventListener("click", function(){
   }).then(function(){
     return loadCreator(login);
   }).then(function(){
-    btn.disabled = false;
-    showToast("Tracking armed — every stream logs itself from now. The page stays claimable by " + state.handle + ".");
+    btn.disabled = false; btn.innerHTML = idle;   // hidden now, but reset for the next preview
+    flashRealtime();
+    showToast("✓ Tracking armed for " + state.handle + " — every stream logs itself from now. The page stays claimable by them.", 7000);
   }).catch(function(e){
-    btn.disabled = false;
-    showToast(String((e && e.message) || e));
+    btn.disabled = false; btn.innerHTML = idle;
+    showToast("✗ " + String((e && e.message) || e), 6000);
   });
 });
 
