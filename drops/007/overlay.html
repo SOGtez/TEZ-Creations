@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Consistency Tracker overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Plus+Jakarta+Sans:wght@500&display=swap" rel="stylesheet" />
+<style>
+/* OBS browser source — transparent, chrome-free */
+:root{
+  --text:#eaf2ec; --muted:#8fa394;
+  --accent-bright:#4ade80; --danger:#f78a8a;
+  --font-display:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-sans:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:transparent}
+body{
+  font-family:var(--font-sans);color:var(--text);
+  display:flex;align-items:flex-start;justify-content:flex-start;padding:8px;
+}
+.ovl-pill{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(10,15,11,0.75);border:1px solid rgba(43,212,106,0.35);
+  border-radius:999px;padding:10px 22px;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 0 30px rgba(43,212,106,0.14), inset 0 1px 0 rgba(255,255,255,0.08);
+  font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:-0.01em;
+}
+.ovl-pill .fl{font-size:20px}
+.ovl-pill .n{color:var(--accent-bright)}
+.ovl-pill .sm{font-family:var(--font-sans);font-weight:500;font-size:12px;color:var(--muted)}
+.ovl-bare{
+  font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:-0.01em;
+  text-shadow:0 0 30px rgba(43,212,106,0.4);
+}
+.ovl-bare .n{color:var(--accent-bright)}
+.ovl-live{
+  font-family:var(--font-sans);font-weight:700;font-size:10px;text-transform:uppercase;
+  letter-spacing:0.16em;color:#04160b;background:var(--danger);border-radius:999px;
+  padding:3px 9px;margin-left:10px;animation:blink 1.2s ease-in-out infinite;vertical-align:middle;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+"use strict";
+
+var API = "/api/tracker";
+// Supabase Realtime (anon/publishable key — safe in a browser source; read-only)
+var SB_URL = "https://taodbtlgpvaabvcnsekg.supabase.co";
+var SB_KEY = "sb_publishable_imq8qxgP3woB_umzNjMDSw_4CpBrgvp";
+var PF_SHORT = { twitch:"tw", kick:"ki", youtube:"yt" };
+
+var params = new URLSearchParams(location.search);
+var u = String(params.get("u") || "").trim().toLowerCase();
+var styleMode = params.get("style") === "bare" ? "bare" : "pill";
+var root = document.getElementById("root");
+
+/* ---------- date helpers + slot logic (lifted from index.html) ---------- */
+var DAY = 86400000;
+function iso(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function midnight(d){ var x = new Date(d); x.setHours(0,0,0,0); return x; }
+
+var today = midnight(new Date());
+var histStart = new Date(today.getFullYear() - 1, 0, 1);
+
+function setCreatorToday(tz){
+  try{
+    var p = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date()).split("-");
+    today = new Date(+p[0], +p[1]-1, +p[2]);
+  }catch(e){ today = midnight(new Date()); }
+  histStart = new Date(today.getFullYear() - 1, 0, 1);
+}
+
+var state = {
+  handle: null, handleLogin: null, creatorId: null, tz: "UTC",
+  activity: {},           // iso date -> {tw?:mins, ki?:mins, yt?:mins}
+  live: false,
+  schedule: [false,false,false,false,false,false,false]
+};
+function dayMins(k){
+  var d = state.activity[k]; if(!d) return 0;
+  return Math.max(d.tw || 0, d.ki || 0, d.yt || 0);
+}
+function effSchedule(){
+  return state.schedule.some(Boolean) ? state.schedule : [true,true,true,true,true,true,true];
+}
+function scheduledDates(){
+  var s = effSchedule(), out = [];
+  var d = new Date(histStart);
+  while(d <= today){
+    if(s[d.getDay()]) out.push(iso(d));
+    d = new Date(d.getTime() + DAY);
+  }
+  return out;
+}
+function computeStats(){
+  var sched = scheduledDates();
+  var todayIso = iso(today);
+  var hit = function(k){ return dayMins(k) > 0; };
+  // current streak: walk back; today's slot is pending, not a break, if unlogged
+  var cur = 0;
+  for(var i = sched.length - 1; i >= 0; i--){
+    var k = sched[i];
+    if(k === todayIso && !hit(k)) continue;  // pending today
+    if(hit(k)) cur++; else break;
+  }
+  return { cur: cur };
+}
+
+/* ---------- render (same markup as the demo's renderOverlay) ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+}); }
+function render(){
+  var s = computeStats();
+  var label = s.cur + "-slot streak";
+  var liveBadge = state.live ? '<span class="ovl-live">Live</span>' : "";
+  if(styleMode === "pill"){
+    root.innerHTML = '<div class="ovl-pill"><span class="fl">🔥</span><span><span class="n">' + label +
+      '</span> <span class="sm">· ' + esc(state.handle || u) + "</span></span>" + liveBadge + "</div>";
+  } else {
+    root.innerHTML = '<div class="ovl-bare">🔥 <span class="n">' + label + "</span>" + liveBadge + "</div>";
+  }
+}
+
+/* ---------- data ---------- */
+function apply(data){
+  var c = data.creator;
+  state.handle = c.display_name || c.handle;
+  state.handleLogin = c.handle;
+  state.creatorId = c.id;
+  state.tz = c.tz || "UTC";
+  setCreatorToday(state.tz);
+  state.schedule = (Array.isArray(c.schedule) && c.schedule.length === 7)
+    ? c.schedule.map(Boolean) : [false,false,false,false,false,false,false];
+  state.live = !!c.live;
+  state.activity = {};
+  var earliest = null;
+  (data.activity || []).forEach(function(row){
+    var pf = PF_SHORT[row.platform]; if(!pf) return;
+    var d = state.activity[row.date] || (state.activity[row.date] = {});
+    d[pf] = row.minutes | 0;
+    if(!earliest || row.date < earliest) earliest = row.date;
+  });
+  if(earliest){
+    var p = earliest.split("-");
+    var e0 = new Date(+p[0], +p[1]-1, +p[2]);
+    if(e0 < histStart) histStart = e0;
+  }
+  render();
+}
+function load(){
+  return fetch(API + "?u=" + encodeURIComponent(u))
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+    .then(function(res){ if(res.ok) apply(res.j); });
+}
+
+/* ---------- realtime + safety re-sync ---------- */
+function loadSb(cb){
+  if(window.supabase){ cb(); return; }
+  var s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+var reloadT = null;
+function reloadSoon(){ clearTimeout(reloadT); reloadT = setTimeout(load, 800); }
+function subscribe(){
+  if(!state.creatorId) return;
+  loadSb(function(){
+    if(!window.supabase) return;
+    var client = window.supabase.createClient(SB_URL, SB_KEY);
+    client.channel("tracker-ovl-" + state.creatorId)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tracker_activity", filter: "creator_id=eq." + state.creatorId },
+        reloadSoon)   // full re-read keeps activity + the live flag in sync
+      .subscribe();
+  });
+}
+
+if(!u){
+  root.innerHTML = '<div class="ovl-bare">🔥 <span class="n">add ?u=yourhandle</span></div>';
+} else {
+  load().then(subscribe);
+  setInterval(load, 60000);   // safety re-sync + rolls today over at midnight
+}
+})();
+</script>
+</body>
+</html>

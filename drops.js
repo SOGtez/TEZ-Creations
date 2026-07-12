@@ -12,6 +12,17 @@
 */
 const DROPS = [
   {
+    id: "007",
+    title: "Consistency Tracker",
+    description:
+      "A GitHub-style consistency graph for your streams — built around your schedule, not a punishing daily grind. Claim your handle once and every stream logs itself the moment you go live. Streak stats, backfill editing, and an OBS overlay that updates in real time.",
+    date: "2026-07-11",
+    type: "tool",
+    category: "Stream Tools",
+    image: "",
+    action: { kind: "use", url: "drops/007/index.html" }
+  },
+  {
     id: "006",
     title: "Handle Hunter",
     description:
