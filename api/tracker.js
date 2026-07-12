@@ -1,9 +1,13 @@
 // TEZ Creations — Drop #007 Consistency Tracker: claim + public read + backfill.
 //
-// POST  /api/tracker            { handle, tz }
+// POST  /api/tracker            { handle, tz, track? }
 //   Claim a Twitch channel: resolve it on Helix, create the creator row, arm
 //   stream.online/offline EventSub webhooks, import recent VODs as a head start.
 //   → { creator, claim_token }   (409 if already claimed, 404 if no such channel)
+//   track:true = start tracking WITHOUT claiming: same record + webhooks + VOD
+//   import, but no edit token is issued (claim_token stored as '') — the page
+//   stays claimable. Claiming a tracked-but-unclaimed channel later upgrades it:
+//   a fresh token is issued and all accumulated history is kept.
 //
 // GET   /api/tracker?u=handle
 //   Public read: creator public fields + all activity rows. The client computes
@@ -111,7 +115,7 @@ function publicCreator(row) {
   return {
     id: row.id, handle: row.handle, display_name: row.display_name,
     tz: row.tz, schedule: row.schedule, platforms: row.platforms || {},
-    created_at: row.created_at,
+    created_at: row.created_at, claimed: !!row.claim_token,
     live, live_started_at: live ? ls.started_at : null,
   };
 }
@@ -145,15 +149,36 @@ async function claim(req, res) {
   const handle = cleanLogin(body.handle);
   if (!validLogin(handle)) { res.status(400).json({ error: 'Handles are 3–25 letters, numbers or underscores.' }); return; }
   const tz = cleanTz(body.tz);
+  const track = !!body.track;   // start tracking without taking ownership
 
   try {
+    // 0. existing record? tracking is idempotent; claiming an unclaimed tracker
+    //    upgrades it in place (fresh token, history kept, webhooks already armed)
+    const q0 = await sb('GET', 'tracker_creators?handle=eq.' + encodeURIComponent(handle) + '&select=*&limit=1');
+    const existing = q0.json && q0.json[0];
+    if (existing) {
+      if (track) { res.status(200).json({ creator: publicCreator(existing), already: true }); return; }
+      if (existing.claim_token) { res.status(409).json({ error: 'That channel is already claimed.' }); return; }
+      const upToken = crypto.randomBytes(24).toString('base64url');
+      // claim_token=eq. (empty) makes the upgrade atomic — a concurrent claimer
+      // matches zero rows and falls through to the 409
+      const up = await sb('PATCH',
+        'tracker_creators?id=eq.' + existing.id + '&claim_token=eq.', {
+          body: { claim_token: upToken, tz },   // adopt the claimer's timezone going forward
+          prefer: 'return=representation',
+        });
+      if (!up.ok || !up.json || !up.json[0]) { res.status(409).json({ error: 'That channel is already claimed.' }); return; }
+      res.status(200).json({ creator: publicCreator(up.json[0]), claim_token: upToken });
+      return;
+    }
+
     // 1. resolve the channel on Twitch
     const u = await helix('users?login=' + encodeURIComponent(handle));
     const user = u.json && u.json.data && u.json.data[0];
     if (!user) { res.status(404).json({ error: 'No Twitch channel named "' + handle + '".' }); return; }
 
-    // 2–3. create the creator row with a fresh secret token
-    const claimToken = crypto.randomBytes(24).toString('base64url');
+    // 2–3. create the creator row — a fresh secret token, or '' for track-only
+    const claimToken = track ? '' : crypto.randomBytes(24).toString('base64url');
     const ins = await sb('POST', 'tracker_creators', {
       body: {
         handle, twitch_id: String(user.id), display_name: user.display_name || handle,
@@ -203,6 +228,7 @@ async function claim(req, res) {
       }
     } catch (e) { console.error('tracker vod import', e); }  // head start only — never fail the claim
 
+    if (track) { res.status(200).json({ creator: publicCreator(creator), tracking: true }); return; }
     res.status(200).json({ creator: publicCreator(creator), claim_token: claimToken });
   } catch (err) {
     console.error('tracker claim', err);
@@ -289,7 +315,7 @@ async function preview(req, res) {
         id: null, handle: String(user.login || handle).toLowerCase(),
         display_name: user.display_name || handle, tz,
         schedule: [false, false, false, false, false, false, false],
-        platforms: {},
+        platforms: {}, claimed: false,
         created_at: null, live: false, live_started_at: null, preview: true,
       },
       activity: days.map((d) => ({ date: d.date, platform: 'twitch', minutes: d.minutes, source: 'vod' })),
@@ -309,7 +335,8 @@ async function edit(req, res) {
     const q = await sb('GET', 'tracker_creators?handle=eq.' + encodeURIComponent(handle) + '&select=id,claim_token&limit=1');
     const row = q.json && q.json[0];
     if (!row) { res.status(404).json({ error: 'unknown handle' }); return; }
-    if (!safeEqual(body.claim_token, row.claim_token)) { res.status(403).json({ error: 'Bad edit token.' }); return; }
+    // unclaimed (track-only, claim_token '') rows have no owner — nobody can edit
+    if (!row.claim_token || !safeEqual(body.claim_token, row.claim_token)) { res.status(403).json({ error: 'Bad edit token.' }); return; }
 
     let saved = 0;
     const items = Array.isArray(body.activity) ? body.activity.slice(0, 100) : [];

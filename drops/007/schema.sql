@@ -16,7 +16,10 @@ create table if not exists tracker_creators (
   twitch_id     text not null unique,
   display_name  text,
   tz            text not null default 'UTC',     -- IANA tz from browser at claim
-  claim_token   text not null,                   -- secret; NEVER exposed via anon reads
+  claim_token   text not null,                   -- secret; NEVER exposed via anon reads.
+                                                 -- '' = tracked but UNCLAIMED (track-only
+                                                 -- mode): logging runs, nobody can edit,
+                                                 -- first claim upgrades it with a token
   schedule      jsonb not null default '[false,false,false,false,false,false,false]'::jsonb,  -- [Sun..Sat]
   live_state    jsonb,                           -- { started_at, last_offline_at, date, day_base } for merge logic
   platforms     jsonb not null default '{}'::jsonb,  -- linked handles elsewhere: { kick, youtube }

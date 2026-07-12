@@ -499,6 +499,7 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
           <div class="live-chip" id="liveChip" hidden><span class="ld"></span> Live <span class="lt" id="liveTime">0h 00m</span></div>
           <div class="rt" id="rt"><span class="rt-dot"></span> Realtime synced</div>
           <button class="btn btn-ghost" id="share">Copy public link</button>
+          <button class="btn btn-primary" id="trackBtn" hidden style="padding:10px 22px;font-size:14px">Start tracking <span class="arr">→</span></button>
           <button class="btn btn-primary" id="simStream" style="padding:10px 22px;font-size:14px">Simulate going live <span class="arr">→</span></button>
         </div>
       </div>
@@ -1184,6 +1185,7 @@ function applyCreator(data){
   state.handleLogin = c.handle;
   state.creatorId = c.id || null;
   state.preview = !!c.preview;
+  state.claimed = !!c.claimed;
   state.tz = c.tz || "UTC";
   setCreatorToday(state.tz);
   state.schedule = (Array.isArray(c.schedule) && c.schedule.length === 7)
@@ -1218,7 +1220,10 @@ function applyCreator(data){
   $("youName").textContent = state.handle;
   $("youMeta").textContent = state.preview
     ? "not claimed yet — preview from recent VODs"
-    : "tezcreations.com/drops/007?u=" + c.handle;
+    : (state.claimed
+      ? "tezcreations.com/drops/007?u=" + c.handle
+      : "auto-tracking on — page not claimed yet");
+  $("trackBtn").hidden = !state.preview;
   applyEditMode();
   updateLiveChip();
   refresh();
@@ -1229,7 +1234,9 @@ function applyCreator(data){
 function applyEditMode(){
   document.body.classList.toggle("readonly", !DEMO && !state.canEdit);
   if(state.preview){
-    $("graphTip").textContent = "Preview built from this channel's recent VODs only — claim the page to auto-track every stream, keep history forever, and edit.";
+    $("graphTip").textContent = "Preview built from this channel's recent VODs only — start tracking to auto-log every stream from now, or claim the page to own and edit it.";
+  } else if(!DEMO && !state.canEdit && !state.claimed){
+    $("graphTip").textContent = "This channel is being auto-tracked but the page is unclaimed — if it's yours, claim it above to take ownership and edit. All history carries over.";
   } else if(!DEMO && !state.canEdit){
     $("graphTip").textContent = "Viewing a public record — auto-tracked days carry a center dot; a corner notch marks multi-platform days. Claim your own handle to edit.";
   }
@@ -1487,6 +1494,30 @@ $("simStream").addEventListener("click", function(){
     }
   }
 });
+/* ---------- start tracking (no ownership) — shown on VOD previews ---------- */
+$("trackBtn").addEventListener("click", function(){
+  if(DEMO || !state.preview || !state.handleLogin) return;
+  var btn = this, login = state.handleLogin;
+  btn.disabled = true;
+  fetch(API, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ handle: login, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, track: true })
+  }).then(function(r){
+    return r.json().then(function(j){
+      if(!r.ok) throw new Error((j && j.error) || "Could not start tracking — try again.");
+      return j;
+    });
+  }).then(function(){
+    return loadCreator(login);
+  }).then(function(){
+    btn.disabled = false;
+    showToast("Tracking armed — every stream logs itself from now. The page stays claimable by " + state.handle + ".");
+  }).catch(function(e){
+    btn.disabled = false;
+    showToast(String((e && e.message) || e));
+  });
+});
+
 $("share").addEventListener("click", function(){
   if(DEMO){ showToast("Demo mode — live drop copies your public tracker link"); return; }
   if(!state.handleLogin) return;
