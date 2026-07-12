@@ -597,6 +597,50 @@
     font-family: "JetBrains Mono", monospace;
   }
 
+  /* ---------- mobile nav (hamburger + slide-in menu) ---------- */
+  .nav-burger { display: none; }
+  .nav-mobile { display: none; }
+  @media (max-width: 680px) {
+    /* the desktop "Browse drops" CTA lives inside the menu on mobile */
+    header .nav-right > a.cta { display: none; }
+    .nav-burger {
+      display: inline-flex; flex-direction: column; justify-content: center; gap: 5px;
+      width: 42px; height: 42px; padding: 0 10px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--line-2);
+      border-radius: 11px; -webkit-tap-highlight-color: transparent;
+      transition: background .2s var(--ease), border-color .2s var(--ease);
+    }
+    .nav-burger:hover { background: rgba(255,255,255,0.07); border-color: var(--accent-dim); }
+    .nav-burger span {
+      display: block; width: 100%; height: 2px; background: var(--text);
+      border-radius: 2px; transition: transform .28s var(--ease), opacity .2s ease;
+    }
+    body.nav-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .nav-burger span:nth-child(2) { opacity: 0; }
+    body.nav-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: block; position: fixed; inset: 0; z-index: 40;
+      background: rgba(6,8,7,0.92);
+      -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+      padding: 92px 20px 28px;
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: opacity .32s var(--ease), transform .32s var(--ease), visibility .32s;
+    }
+    body.nav-open { overflow: hidden; }
+    body.nav-open .nav-mobile { opacity: 1; visibility: visible; transform: none; }
+    .nav-mobile-inner { display: flex; flex-direction: column; }
+    .nav-mobile-inner a {
+      display: block; padding: 18px 6px; text-decoration: none; color: var(--text);
+      font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+      font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--line);
+      transition: color .18s var(--ease), padding-left .18s var(--ease);
+    }
+    .nav-mobile-inner a:hover, .nav-mobile-inner a:active { color: var(--accent); padding-left: 12px; }
+    .nav-mobile-cta { color: var(--accent) !important; border-bottom: none !important; margin-top: 8px; }
+  }
+
   /* ---------- responsive ---------- */
   @media (max-width: 900px) {
     :root { --t-4xl: 3.4rem; --t-3xl: 3rem; }
