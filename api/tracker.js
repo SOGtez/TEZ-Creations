@@ -9,6 +9,13 @@
 //   Public read: creator public fields + all activity rows. The client computes
 //   streaks — this endpoint stays dumb.
 //
+// GET   /api/tracker?search=query
+//   Find claimed trackers by handle/display name → { results:[{handle, display_name}] }
+//
+// GET   /api/tracker?preview=handle&tz=...
+//   Read-only look at ANY Twitch channel: if claimed → the real record; else a
+//   VOD-built preview (creator.preview=true, nothing written to the DB).
+//
 // PATCH /api/tracker             { handle, claim_token, activity?, schedule? }
 //   Owner edits (token from claim, verified timing-safe): manual backfill rows
 //   (minutes 0 ⇒ delete) and/or the 7-bool weekly schedule.
@@ -112,7 +119,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (!configured()) { res.status(503).json({ error: 'Tracker is not set up yet.' }); return; }
   if (req.method === 'POST') return claim(req, res);
-  if (req.method === 'GET') return read(req, res);
+  if (req.method === 'GET') {
+    if (req.query.search !== undefined) return search(req, res);
+    if (req.query.preview !== undefined) return preview(req, res);
+    return read(req, res);
+  }
   if (req.method === 'PATCH') return edit(req, res);
   res.status(405).json({ error: 'Method not allowed' });
 }
@@ -175,21 +186,11 @@ async function claim(req, res) {
 
     // 5. VOD head start — recent archives become activity rows (per-day totals)
     try {
-      const v = await helix('videos?user_id=' + encodeURIComponent(String(user.id)) + '&type=archive&first=20');
-      const vids = (v.json && v.json.data) || [];
-      const byDay = {};
-      for (const vid of vids) {
-        const mins = durMinutes(vid.duration);
-        if (mins < 1 || !vid.created_at) continue;
-        const day = localDay(vid.created_at, tz);          // VOD created_at ≈ stream start
-        if (!byDay[day]) byDay[day] = { minutes: 0, started_at: vid.created_at };
-        byDay[day].minutes += mins;
-        if (vid.created_at < byDay[day].started_at) byDay[day].started_at = vid.created_at;
-      }
-      const rows = Object.keys(byDay).map((day) => ({
-        creator_id: creator.id, date: day, platform: 'twitch',
-        minutes: byDay[day].minutes, source: 'vod',
-        started_at: byDay[day].started_at, updated_at: new Date().toISOString(),
+      const days = await vodDays(String(user.id), tz);
+      const rows = days.map((d) => ({
+        creator_id: creator.id, date: d.date, platform: 'twitch',
+        minutes: d.minutes, source: 'vod',
+        started_at: d.started_at, updated_at: new Date().toISOString(),
       }));
       if (rows.length) {
         await sb('POST', 'tracker_activity?on_conflict=creator_id,date,platform', {
@@ -205,6 +206,32 @@ async function claim(req, res) {
   }
 }
 
+// Recent archive VODs bucketed per local day → [{date, minutes, started_at}]
+async function vodDays(userId, tz) {
+  const v = await helix('videos?user_id=' + encodeURIComponent(userId) + '&type=archive&first=20');
+  const vids = (v.json && v.json.data) || [];
+  const byDay = {};
+  for (const vid of vids) {
+    const mins = durMinutes(vid.duration);
+    if (mins < 1 || !vid.created_at) continue;
+    const day = localDay(vid.created_at, tz);          // VOD created_at ≈ stream start
+    if (!byDay[day]) byDay[day] = { minutes: 0, started_at: vid.created_at };
+    byDay[day].minutes += mins;
+    if (vid.created_at < byDay[day].started_at) byDay[day].started_at = vid.created_at;
+  }
+  return Object.keys(byDay).map((day) => ({
+    date: day, minutes: byDay[day].minutes, started_at: byDay[day].started_at,
+  }));
+}
+
+// The full public record for a claimed creator (shared by read + preview).
+async function respondFull(res, row) {
+  const a = await sb('GET', 'tracker_activity?creator_id=eq.' + row.id +
+    '&select=date,platform,minutes,source&order=date.asc&limit=5000');
+  res.setHeader('Cache-Control', 'no-store');    // realtime pages want fresh live_state
+  res.status(200).json({ creator: publicCreator(row), activity: a.json || [] });
+}
+
 // ---- GET: public read ----
 async function read(req, res) {
   const handle = cleanLogin(req.query.u);
@@ -213,13 +240,58 @@ async function read(req, res) {
     const q = await sb('GET', 'tracker_creators?handle=eq.' + encodeURIComponent(handle) + '&select=*&limit=1');
     const row = q.json && q.json[0];
     if (!row) { res.status(404).json({ error: 'That channel has not been claimed yet.' }); return; }
-    const a = await sb('GET', 'tracker_activity?creator_id=eq.' + row.id +
-      '&select=date,platform,minutes,source&order=date.asc&limit=5000');
-    res.setHeader('Cache-Control', 'no-store');    // realtime pages want fresh live_state
-    res.status(200).json({ creator: publicCreator(row), activity: a.json || [] });
+    await respondFull(res, row);
   } catch (err) {
     console.error('tracker read', err);
     res.status(502).json({ error: 'Could not load the tracker.' });
+  }
+}
+
+// ---- GET ?search=: find claimed trackers by handle or display name ----
+async function search(req, res) {
+  const q = String(req.query.search || '').trim().toLowerCase()
+    .replace(/[^a-z0-9_ ]/g, '').slice(0, 25);
+  if (q.length < 2) { res.status(200).json({ results: [] }); return; }
+  try {
+    const pat = '*' + q + '*';
+    const filter = encodeURIComponent('(handle.ilike.' + pat + ',display_name.ilike.' + pat + ')');
+    const r = await sb('GET', 'tracker_creators?or=' + filter +
+      '&select=handle,display_name&order=handle.asc&limit=10');
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+    res.status(200).json({ results: r.json || [] });
+  } catch (err) {
+    console.error('tracker search', err);
+    res.status(502).json({ error: 'Search failed.' });
+  }
+}
+
+// ---- GET ?preview=: read-only look at ANY channel, claimed or not ----
+async function preview(req, res) {
+  const handle = cleanLogin(req.query.preview);
+  if (!validLogin(handle)) { res.status(400).json({ error: 'bad handle' }); return; }
+  const tz = cleanTz(req.query.tz);
+  try {
+    // already claimed → serve the real record, not a thinner VOD view
+    const q = await sb('GET', 'tracker_creators?handle=eq.' + encodeURIComponent(handle) + '&select=*&limit=1');
+    if (q.json && q.json[0]) return respondFull(res, q.json[0]);
+
+    const u = await helix('users?login=' + encodeURIComponent(handle));
+    const user = u.json && u.json.data && u.json.data[0];
+    if (!user) { res.status(404).json({ error: 'No Twitch channel named "' + handle + '".' }); return; }
+    const days = await vodDays(String(user.id), tz);   // nothing is written to the DB
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+    res.status(200).json({
+      creator: {
+        id: null, handle: String(user.login || handle).toLowerCase(),
+        display_name: user.display_name || handle, tz,
+        schedule: [false, false, false, false, false, false, false],
+        created_at: null, live: false, live_started_at: null, preview: true,
+      },
+      activity: days.map((d) => ({ date: d.date, platform: 'twitch', minutes: d.minutes, source: 'vod' })),
+    });
+  } catch (err) {
+    console.error('tracker preview', err);
+    res.status(502).json({ error: 'Lookup failed — try again.' });
   }
 }
 

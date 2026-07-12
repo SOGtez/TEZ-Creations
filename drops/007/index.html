@@ -151,6 +151,27 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
 .hint b{color:var(--muted);font-weight:600;cursor:pointer;border-bottom:1px dotted rgba(143,163,148,0.5)}
 .hint b:hover{color:var(--accent-bright);border-color:var(--accent-bright)}
 
+/* ---------- streamer search ---------- */
+.search-card{max-width:560px;margin:14px auto 0;padding:18px clamp(22px,4vw,32px) 20px}
+.find-label{font-size:11px;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);text-align:center;margin-bottom:12px}
+.find-results{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.find-row{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+  cursor:pointer;transition:border-color .2s ease, background .2s ease;
+}
+.find-row:hover{border-color:rgba(43,212,106,0.4);background:rgba(43,212,106,0.05)}
+.find-row .fr-ava{
+  width:26px;height:26px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;font-size:11px;color:#04160b;
+  background:linear-gradient(160deg,#4ade80,#16a34a);
+}
+.find-row .fr-name{font-weight:600;font-size:14px}
+.find-row .fr-sub{color:var(--muted);font-size:12px;margin-left:auto;white-space:nowrap}
+.find-row.is-preview .fr-ava{background:rgba(255,255,255,0.1);color:var(--muted)}
+.find-none{padding:10px 14px;font-size:12.5px;color:rgba(143,163,148,0.7);text-align:center}
+
 /* ---------- claim sequence ---------- */
 .scan{max-width:560px;margin:26px auto 0;display:none}
 .scan.on{display:block}
@@ -409,6 +430,12 @@ h1 .accent{font-style:italic;color:var(--accent-bright)}
       </div>
       <div class="err" id="err"></div>
       <div class="hint" id="claimHint">Enter your Twitch handle — no login needed. Recent VODs import automatically as a head start.</div>
+    </section>
+
+    <section class="card search-card rise d4" id="searchCard">
+      <div class="find-label">Or look up any streamer</div>
+      <input class="input" id="findInput" maxlength="25" placeholder="SEARCH A TWITCH CHANNEL" autocomplete="off" spellcheck="false" />
+      <div class="find-results" id="findResults" hidden></div>
     </section>
 
     <section class="scan" id="scan">
@@ -997,19 +1024,50 @@ function getToken(login){
 
 function loadCreator(login, justClaimed){
   return fetch(API + "?u=" + encodeURIComponent(login))
-    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
     .then(function(res){
-      if(!res.ok) throw new Error((res.j && res.j.error) || "Could not load that tracker.");
+      if(!res.ok){
+        var er = new Error((res.j && res.j.error) || "Could not load that tracker.");
+        er.status = res.status;
+        throw er;
+      }
       applyCreator(res.j);
       if(justClaimed) showToast("Page claimed — auto-tracking armed. Every stream logs itself from here.");
     });
+}
+
+// read-only look at any channel — claimed handles come back as the real record
+function loadPreview(login){
+  var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return fetch(API + "?preview=" + encodeURIComponent(login) + "&tz=" + encodeURIComponent(tz))
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
+    .then(function(res){
+      if(!res.ok){
+        var er = new Error((res.j && res.j.error) || "Could not look up that channel.");
+        er.status = res.status;
+        throw er;
+      }
+      applyCreator(res.j);
+      if(res.j.creator && res.j.creator.preview){
+        showToast("Preview from recent VODs — claim the page to auto-track everything.");
+      }
+    });
+}
+
+// ?u= boot + shared links: claimed → full record; unclaimed → VOD preview
+function bootLoad(login){
+  return loadCreator(login).catch(function(e){
+    if(e && e.status === 404) return loadPreview(login);
+    throw e;
+  });
 }
 
 function applyCreator(data){
   var c = data.creator;
   state.handle = c.display_name || c.handle;
   state.handleLogin = c.handle;
-  state.creatorId = c.id;
+  state.creatorId = c.id || null;
+  state.preview = !!c.preview;
   state.tz = c.tz || "UTC";
   setCreatorToday(state.tz);
   state.schedule = (Array.isArray(c.schedule) && c.schedule.length === 7)
@@ -1029,7 +1087,7 @@ function applyCreator(data){
     var e0 = new Date(+p[0], +p[1]-1, +p[2]);
     if(e0 < histStart) histStart = e0;
   }
-  state.token = getToken(c.handle);
+  state.token = state.preview ? null : getToken(c.handle);
   state.canEdit = !!state.token;
   state.live = !!c.live;
   state.liveStartedAt = c.live_started_at ? Date.parse(c.live_started_at) : null;
@@ -1039,7 +1097,9 @@ function applyCreator(data){
   buildChips();
   $("youAva").textContent = c.handle.slice(0,2).toUpperCase();
   $("youName").textContent = state.handle;
-  $("youMeta").textContent = "tezcreations.com/drops/007?u=" + c.handle;
+  $("youMeta").textContent = state.preview
+    ? "not claimed yet — preview from recent VODs"
+    : "tezcreations.com/drops/007?u=" + c.handle;
   applyEditMode();
   updateLiveChip();
   refresh();
@@ -1049,7 +1109,9 @@ function applyCreator(data){
 
 function applyEditMode(){
   document.body.classList.toggle("readonly", !DEMO && !state.canEdit);
-  if(!DEMO && !state.canEdit){
+  if(state.preview){
+    $("graphTip").textContent = "Preview built from this channel's recent VODs only — claim the page to auto-track every stream, keep history forever, and edit.";
+  } else if(!DEMO && !state.canEdit){
     $("graphTip").textContent = "Viewing a public record — auto-tracked days carry a center dot; a corner notch marks multi-platform days. Claim your own handle to edit.";
   }
 }
@@ -1100,7 +1162,13 @@ function loadSb(cb){
   document.head.appendChild(s);
 }
 function subscribeRealtime(){
-  if(DEMO || !state.creatorId) return;
+  if(DEMO) return;
+  if(!state.creatorId){
+    // previewing an unclaimed channel — drop any old subscription so another
+    // creator's events can't repaint this view
+    if(rtChannel && sbClient){ sbClient.removeChannel(rtChannel); rtChannel = null; }
+    return;
+  }
   loadSb(function(){
     if(!window.supabase) return;
     if(!sbClient) sbClient = window.supabase.createClient(SB_URL, SB_KEY);
@@ -1299,6 +1367,66 @@ $("copyOvl").addEventListener("click", function(){
     "Overlay URL copied — add it as an OBS browser source.");
 });
 
+/* ---------- streamer search ---------- */
+var findInput = $("findInput"), findResults = $("findResults");
+var findT = null, findSeq = 0;
+function escHtml(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+}); }
+function openResult(login, claimed){
+  findResults.hidden = true;
+  history.replaceState(null, "", location.pathname + "?u=" + login);
+  // the preview endpoint serves the real record for claimed handles, so it's
+  // always a safe fallback
+  var p = claimed ? loadCreator(login) : loadPreview(login);
+  p.then(function(){ if(!reduce) dash.scrollIntoView({ behavior: "smooth", block: "start" }); })
+   .catch(function(e){ showErr(String((e && e.message) || e)); });
+}
+function renderFind(rows, typed){
+  var html = "";
+  rows.forEach(function(r){
+    html += '<div class="find-row" data-login="' + escHtml(r.handle) + '" data-claimed="1">' +
+      '<span class="fr-ava">' + escHtml(r.handle.slice(0,2).toUpperCase()) + '</span>' +
+      '<span class="fr-name">' + escHtml(r.display_name || r.handle) + '</span>' +
+      '<span class="fr-sub">tracked · open →</span></div>';
+  });
+  var typedValid = /^[a-z0-9_]{3,25}$/.test(typed);
+  var inRows = rows.some(function(r){ return r.handle === typed; });
+  if(typedValid && !inRows){
+    html += '<div class="find-row is-preview" data-login="' + typed + '">' +
+      '<span class="fr-ava">' + typed.slice(0,2).toUpperCase() + '</span>' +
+      '<span class="fr-name">' + typed + '</span>' +
+      '<span class="fr-sub">look up from recent VODs →</span></div>';
+  }
+  if(!html) html = '<div class="find-none">Type a Twitch handle — 3–25 letters, numbers or underscores</div>';
+  findResults.innerHTML = html;
+  findResults.hidden = false;
+}
+if(findInput){
+  findInput.addEventListener("input", function(){
+    var q = findInput.value.trim().toLowerCase().replace(/^@/,"");
+    clearTimeout(findT);
+    if(q.length < 2){ findResults.hidden = true; return; }
+    findT = setTimeout(function(){
+      var seq = ++findSeq;
+      fetch(API + "?search=" + encodeURIComponent(q))
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if(seq === findSeq) renderFind((j && j.results) || [], q); })
+        .catch(function(){ if(seq === findSeq) renderFind([], q); });
+    }, 300);
+  });
+  findInput.addEventListener("keydown", function(e){
+    if(e.key !== "Enter") return;
+    var q = findInput.value.trim().toLowerCase().replace(/^@/,"");
+    if(/^[a-z0-9_]{3,25}$/.test(q)) openResult(q, false);
+  });
+  findResults.addEventListener("click", function(e){
+    var row = e.target.closest(".find-row");
+    if(!row) return;
+    openResult(row.getAttribute("data-login"), row.getAttribute("data-claimed") === "1");
+  });
+}
+
 buildYearTabs();
 buildGraph(selectedYear);
 attachGraphEvents();
@@ -1310,12 +1438,13 @@ if(DEMO){
     b.addEventListener("click", function(){ input.value = b.getAttribute("data-h"); go.click(); });
   });
   $("footNote").textContent = "TEZ Creations · Drop #007 · simulated data, nothing is saved";
+  $("searchCard").remove();   // search hits the real API — demo stays a sandbox
 } else {
   $("demoPill").remove();
   $("simStream").style.display = "none";
   var bootU = new URLSearchParams(location.search).get("u");
   if(bootU && /^[a-zA-Z0-9_]{3,25}$/.test(bootU)){
-    loadCreator(bootU.toLowerCase()).catch(function(e){
+    bootLoad(bootU.toLowerCase()).catch(function(e){
       showErr(String((e && e.message) || e));
     });
   }
