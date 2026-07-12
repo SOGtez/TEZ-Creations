@@ -188,6 +188,7 @@
     border: 1px solid transparent;
     transition: transform .2s var(--ease), box-shadow .2s var(--ease), background .2s;
     box-shadow: 0 6px 20px rgba(63,224,139,0.18);
+    white-space: nowrap;
   }
   .cta:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(63,224,139,0.28); }
   .cta.ghost {
@@ -653,6 +654,8 @@
     :root { --t-4xl: 2.7rem; --t-2xl: 1.9rem; }
     .hero { padding: 72px 0 48px; }
     .nav-links { display: none; }
+    /* section headers: the side-by-side CTA gets crushed at phone width */
+    .sec-head { flex-direction: column; align-items: flex-start; gap: 20px; }
     .grid { grid-template-columns: 1fr; gap: 16px; }
     .wordmark .sub { display: none; }
     .tile .tile-num { font-size: 4rem; }
