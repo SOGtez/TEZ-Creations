@@ -1,492 +1,10 @@
 {
   "meta": {
-    "sample": true,
+    "sample": false,
     "updated_at": "2026-07-13",
     "schema_version": 1
   },
   "opportunities": [
-    {
-      "id": "o01",
-      "type": "grant",
-      "title": "Signal Boost Microgrant",
-      "org": "Northlight Creator Fund",
-      "amount_text": "$5,000",
-      "amount": 5000,
-      "deadline": "2026-07-16",
-      "regions": [
-        "US"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [
-        "new",
-        "growing"
-      ],
-      "purposes": [
-        "project",
-        "gear"
-      ],
-      "identity": [],
-      "added": "2026-07-01",
-      "verified": "2026-07-09",
-      "blurb": "No-strings grant for early creators shipping something new this quarter — gear, editing help, or a first paid collab.",
-      "source_url": ""
-    },
-    {
-      "id": "o02",
-      "type": "contest",
-      "title": "Level Up Equipment Grant",
-      "org": "Deskside Collective",
-      "amount_text": "$2,000 in gear",
-      "amount": 2000,
-      "deadline": "2026-07-15",
-      "regions": [],
-      "states": [],
-      "platforms": [
-        "twitch",
-        "youtube"
-      ],
-      "mediums": [
-        "live",
-        "video"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "gear"
-      ],
-      "identity": [],
-      "added": "2026-06-23",
-      "verified": "2026-07-11",
-      "blurb": "Quarterly gear giveaway judged on a 60-second pitch video. Camera, lights, audio — winner picks the loadout.",
-      "source_url": ""
-    },
-    {
-      "id": "o03",
-      "type": "brand",
-      "title": "Emerging Streamers Program",
-      "org": "PixelForge Peripherals",
-      "amount_text": "$2,500 + gear",
-      "amount": 2500,
-      "deadline": "2026-07-22",
-      "regions": [],
-      "states": [],
-      "platforms": [
-        "twitch",
-        "kick"
-      ],
-      "mediums": [
-        "live"
-      ],
-      "niches": [
-        "gaming"
-      ],
-      "follower_min": 1000,
-      "stages": [
-        "new",
-        "growing"
-      ],
-      "purposes": [],
-      "identity": [],
-      "added": "2026-07-05",
-      "verified": "2026-07-10",
-      "blurb": "Season-long sponsorship for small gaming streamers: monthly stipend, product seeding, and a featured slot in brand campaigns.",
-      "source_url": ""
-    },
-    {
-      "id": "o04",
-      "type": "grant",
-      "title": "Creators of Color Catalyst",
-      "org": "Open Frame Foundation",
-      "amount_text": "$7,500 + mentorship",
-      "amount": 7500,
-      "deadline": "2026-07-25",
-      "regions": [
-        "US"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project"
-      ],
-      "identity": [
-        "black",
-        "latino",
-        "aapi"
-      ],
-      "added": "2026-06-28",
-      "verified": "2026-07-08",
-      "blurb": "Project funding plus a 12-week mentorship pod pairing awardees with established creators in their format.",
-      "source_url": ""
-    },
-    {
-      "id": "o05",
-      "type": "grant",
-      "title": "Women in Audio Grant",
-      "org": "Fader Society",
-      "amount_text": "$4,000",
-      "amount": 4000,
-      "deadline": "2026-08-12",
-      "regions": [],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "podcast",
-        "music"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project",
-        "gear"
-      ],
-      "identity": [
-        "woman"
-      ],
-      "added": "2026-07-07",
-      "verified": "2026-07-07",
-      "blurb": "For women producing podcasts or original music — covers studio time, distribution, or a season's production budget.",
-      "source_url": ""
-    },
-    {
-      "id": "o06",
-      "type": "accelerator",
-      "title": "Rising Voices Accelerator",
-      "org": "Signal Hill Media Lab",
-      "amount_text": "$15,000 + 6-wk program",
-      "amount": 15000,
-      "deadline": "2026-08-27",
-      "regions": [
-        "US",
-        "CA"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [],
-      "niches": [],
-      "follower_min": 10000,
-      "stages": [
-        "growing",
-        "established",
-        "fulltime"
-      ],
-      "purposes": [
-        "fulltime",
-        "business"
-      ],
-      "identity": [],
-      "added": "2026-07-10",
-      "verified": "2026-07-10",
-      "blurb": "Cohort-based accelerator for creators ready to go full-time: audience strategy, brand-deal coaching, and a capstone grant.",
-      "source_url": ""
-    },
-    {
-      "id": "o07",
-      "type": "contest",
-      "title": "Indie Clip Contest",
-      "org": "Shortwave Studios",
-      "amount_text": "$1,000",
-      "amount": 1000,
-      "deadline": "2026-07-18",
-      "regions": [],
-      "states": [],
-      "platforms": [
-        "tiktok",
-        "instagram"
-      ],
-      "mediums": [
-        "shortform"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [],
-      "identity": [],
-      "added": "2026-07-03",
-      "verified": "2026-07-09",
-      "blurb": "Best 30-second original clip on a monthly theme. This month: 'first attempt vs. now.' Judged on craft, not follower count.",
-      "source_url": ""
-    },
-    {
-      "id": "o08",
-      "type": "grant",
-      "title": "Hometown Stories Microgrant",
-      "org": "Local Lens Project",
-      "amount_text": "$500 – $1,500",
-      "amount": 1500,
-      "deadline": null,
-      "regions": [
-        "US"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "video",
-        "writing",
-        "photo"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project"
-      ],
-      "identity": [],
-      "added": "2026-06-13",
-      "verified": "2026-07-06",
-      "blurb": "Rolling microgrants for creators documenting their own towns — video essays, photo series, local journalism, oral history.",
-      "source_url": ""
-    },
-    {
-      "id": "o09",
-      "type": "brand",
-      "title": "GameCraft Co-Stream Program",
-      "org": "GameCraft League",
-      "amount_text": "Rewards pool",
-      "amount": 800,
-      "deadline": "2026-07-31",
-      "regions": [],
-      "states": [],
-      "platforms": [
-        "twitch",
-        "youtube",
-        "kick"
-      ],
-      "mediums": [
-        "live"
-      ],
-      "niches": [
-        "gaming"
-      ],
-      "follower_min": 1000,
-      "stages": [],
-      "purposes": [],
-      "identity": [],
-      "added": "2026-07-08",
-      "verified": "2026-07-11",
-      "blurb": "Co-stream sanctioned tournaments, complete missions, climb a battle pass: gift cards, gear, and event invites.",
-      "source_url": ""
-    },
-    {
-      "id": "o10",
-      "type": "grant",
-      "title": "Bright Palette Art Fund",
-      "org": "Chromatic Trust",
-      "amount_text": "$3,000",
-      "amount": 3000,
-      "deadline": "2026-09-11",
-      "regions": [
-        "UK",
-        "EU"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "visualart"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project"
-      ],
-      "identity": [],
-      "added": "2026-07-04",
-      "verified": "2026-07-04",
-      "blurb": "Funds a body of new visual work by digital or traditional artists building an audience online. Portfolio-judged.",
-      "source_url": ""
-    },
-    {
-      "id": "o11",
-      "type": "grant",
-      "title": "SoundStart Music Creator Grant",
-      "org": "Blue Room Collective",
-      "amount_text": "$2,500 – $10,000",
-      "amount": 10000,
-      "deadline": "2026-08-07",
-      "regions": [
-        "US"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "music"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project"
-      ],
-      "identity": [],
-      "added": "2026-06-29",
-      "verified": "2026-07-09",
-      "blurb": "Recording, mixing, and release support for independent musicians. Collaboration with another creator scores extra.",
-      "source_url": ""
-    },
-    {
-      "id": "o12",
-      "type": "fund",
-      "title": "Everyday Educators Fund",
-      "org": "Chalkline Initiative",
-      "amount_text": "$5,000",
-      "amount": 5000,
-      "deadline": null,
-      "regions": [],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "video",
-        "live",
-        "writing"
-      ],
-      "niches": [
-        "education",
-        "tech"
-      ],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "gear",
-        "project",
-        "education"
-      ],
-      "identity": [],
-      "added": "2026-06-03",
-      "verified": "2026-07-02",
-      "blurb": "Rolling fund for creators who teach — tutorials, explainers, courses. Pays for production upgrades and research time.",
-      "source_url": ""
-    },
-    {
-      "id": "o13",
-      "type": "accelerator",
-      "title": "First Mic Podcast Residency",
-      "org": "Talkhouse North",
-      "amount_text": "$6,000 + studio access",
-      "amount": 6000,
-      "deadline": "2026-08-20",
-      "regions": [
-        "CA"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [
-        "podcast"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [
-        "new",
-        "growing"
-      ],
-      "purposes": [
-        "project",
-        "education"
-      ],
-      "identity": [],
-      "added": "2026-07-06",
-      "verified": "2026-07-06",
-      "blurb": "Three-month residency for new podcasters: studio time, editing mentorship, and a launch budget for one show.",
-      "source_url": ""
-    },
-    {
-      "id": "o14",
-      "type": "fund",
-      "title": "Comeback Creator Fund",
-      "org": "Second Wind Foundation",
-      "amount_text": "$3,500",
-      "amount": 3500,
-      "deadline": "2026-07-27",
-      "regions": [],
-      "states": [],
-      "platforms": [],
-      "mediums": [],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [],
-      "identity": [],
-      "added": "2026-07-11",
-      "verified": "2026-07-12",
-      "blurb": "For creators returning after a break — burnout, health, life. Funds the relaunch: new setup, rebrand, or first month back.",
-      "source_url": ""
-    },
-    {
-      "id": "o15",
-      "type": "grant",
-      "title": "State Arts Career Grant",
-      "org": "Tri-State Arts Alliance",
-      "amount_text": "$2,000 – $8,000",
-      "amount": 8000,
-      "deadline": "2026-08-22",
-      "regions": [
-        "US"
-      ],
-      "states": [
-        "CA",
-        "NY",
-        "IL"
-      ],
-      "platforms": [],
-      "mediums": [
-        "visualart",
-        "music",
-        "writing"
-      ],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [],
-      "purposes": [
-        "project",
-        "education"
-      ],
-      "identity": [],
-      "added": "2026-07-09",
-      "verified": "2026-07-09",
-      "blurb": "State-council-style career development grant for working artists — project costs, professional development, or first studio rent.",
-      "source_url": ""
-    },
-    {
-      "id": "o16",
-      "type": "grant",
-      "title": "First Deployment Creator Grant",
-      "org": "Rally Point Media Fund",
-      "amount_text": "$5,000",
-      "amount": 5000,
-      "deadline": "2026-09-01",
-      "regions": [
-        "US"
-      ],
-      "states": [],
-      "platforms": [],
-      "mediums": [],
-      "niches": [],
-      "follower_min": 0,
-      "stages": [
-        "new",
-        "growing"
-      ],
-      "purposes": [
-        "gear",
-        "fulltime"
-      ],
-      "identity": [
-        "veteran"
-      ],
-      "added": "2026-07-12",
-      "verified": "2026-07-12",
-      "blurb": "Startup funding for veterans building a content channel — covers the first serious setup and three months of runway.",
-      "source_url": ""
-    },
     {
       "id": "o17",
       "type": "grant",
@@ -686,52 +204,522 @@
       "source_url": "https://contentisqueen.org/microgrants-for-podcasters-2025-new-year-new-format/"
     },
     {
-      "id": "x01",
-      "type": "grant",
-      "title": "Spring Creator Sprint",
-      "org": "Meadowline Fund",
-      "amount_text": "$4,000",
-      "amount": 4000,
-      "deadline": "2026-07-09",
+      "id": "o23",
+      "type": "contest",
+      "title": "Esports World Cup Creator Program",
+      "org": "Esports Foundation",
+      "amount_text": "$2M rewards pool",
+      "amount": 50000,
+      "deadline": null,
       "regions": [],
+      "states": [],
+      "platforms": [
+        "twitch",
+        "youtube",
+        "tiktok",
+        "kick"
+      ],
+      "mediums": [
+        "live"
+      ],
+      "niches": [
+        "gaming"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "growing",
+        "established"
+      ],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Co-stream Esports World Cup and Esports Nations Cup 2026 matches to earn from a $2,000,000 pool of rewards, with top performers winning a trip worth up to $50,000. Reward eligibility starts around 50 average concurrent viewers.",
+      "source_url": "https://esportsworldcup.com/en/creator-program"
+    },
+    {
+      "id": "o24",
+      "type": "brand",
+      "title": "Razer Creator Program",
+      "org": "Razer",
+      "amount_text": "Varies",
+      "amount": 0,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "gaming",
+        "tech"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Razer's always-open creator program: affiliate commission up to 5%, product discounts, an exclusive Discord, and quarterly gear giveaways, with tiers starting below 5,000 followers. No cash sponsorship is guaranteed at entry tiers; 18+.",
+      "source_url": "https://www.razer.com/creator-program"
+    },
+    {
+      "id": "o25",
+      "type": "grant",
+      "title": "AXS Film Fund 2026 Open Call",
+      "org": "AXS Film Fund",
+      "amount_text": "Up to $10,000",
+      "amount": 10000,
+      "deadline": "2026-07-31",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "video"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [
+        "disabled"
+      ],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Grants of up to $10,000 for documentary filmmakers and nonfiction new-media creators living with a disability, at any stage of production. The 2026 open call closes July 31; no letter of inquiry required.",
+      "source_url": "https://www.axsfilmfund.org/"
+    },
+    {
+      "id": "o26",
+      "type": "grant",
+      "title": "Artist Project Grant (Summer 2026)",
+      "org": "Salt Lick Incubator",
+      "amount_text": "Up to $15,000",
+      "amount": 15000,
+      "deadline": "2026-07-15",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "music"
+      ],
+      "niches": [
+        "music"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Project grants of up to $15,000 for emerging artists making melody- and lyric-driven music — alt-folk, americana, bluegrass, indie rock, R&B, soul. Applicants must be eligible to work in the US with no more than three full-length albums released.",
+      "source_url": "https://www.saltlickincubator.org/apply"
+    },
+    {
+      "id": "o27",
+      "type": "grant",
+      "title": "Gottlieb Emergency Grant",
+      "org": "Adolph & Esther Gottlieb Foundation",
+      "amount_text": "Up to $15,000",
+      "amount": 15000,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "established"
+      ],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "One-time emergency assistance for painters, printmakers, and sculptors hit by a catastrophic event like fire, flood, or a medical emergency. Requires at least ten years working in a mature phase of your art; a $5,000 award is typical.",
+      "source_url": "https://www.gottliebfoundation.org/emergency-grant"
+    },
+    {
+      "id": "o28",
+      "type": "fund",
+      "title": "Craft Emergency Relief Fund",
+      "org": "CERF+",
+      "amount_text": "$3,000",
+      "amount": 3000,
+      "deadline": null,
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Rolling emergency relief grants of $3,000 for craft artists who make original three-dimensional work by hand — pottery, glass, textiles, jewelry, wood, metal. Requires a US-based, public-facing practice for at least the last two years.",
+      "source_url": "https://cerfplus.org/get-relief/apply-for-help/craft-emergency-relief-fund/"
+    },
+    {
+      "id": "o29",
+      "type": "grant",
+      "title": "Investigative Reporting Grants",
+      "org": "Fund for Investigative Journalism",
+      "amount_text": "Up to $10,000",
+      "amount": 10000,
+      "deadline": "2026-09-14",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "writing"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Grants of up to $10,000 for freelance journalists and outlets pursuing investigative stories, plus $1,000–$2,500 seed grants for early-stage reporting. Full proposals need a letter of commitment from a news outlet; seed proposals don't.",
+      "source_url": "https://fij.org/apply-for-a-grant/"
+    },
+    {
+      "id": "o30",
+      "type": "grant",
+      "title": "Visual Arts Grant (Summer 2026)",
+      "org": "Café Royal Cultural Foundation",
+      "amount_text": "Up to $10,000",
+      "amount": 10000,
+      "deadline": "2026-08-03",
+      "regions": [
+        "US"
+      ],
+      "states": [
+        "NY"
+      ],
+      "platforms": [],
+      "mediums": [
+        "visualart",
+        "photo"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Project grants of up to $10,000 for visual artists, including photographers, who have lived in New York City for at least one year. The cycle closes August 3, 2026 or once 40 applications arrive — whichever comes first.",
+      "source_url": "https://caferoyalculturalfoundation.org/visual-page-info"
+    },
+    {
+      "id": "o31",
+      "type": "grant",
+      "title": "Open Fund for Individuals",
+      "org": "Creative Scotland",
+      "amount_text": "£500 – £50,000",
+      "amount": 63000,
+      "deadline": null,
+      "regions": [
+        "UK"
+      ],
       "states": [],
       "platforms": [],
       "mediums": [],
       "niches": [],
       "follower_min": 0,
       "stages": [],
-      "purposes": [],
+      "purposes": [
+        "project"
+      ],
       "identity": [],
-      "added": "2026-05-24",
-      "verified": "2026-06-23",
-      "blurb": "",
-      "source_url": ""
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Rolling fund for freelance and self-employed artists, writers, producers, and other creative practitioners living in Scotland. Supports research, development, or delivery of creative projects lasting up to 24 months.",
+      "source_url": "https://www.creativescotland.com/funding/funding-programmes/open-funding/open-fund-for-individuals"
     },
     {
-      "id": "x02",
-      "type": "contest",
-      "title": "Solstice Short-Form Contest",
-      "org": "Longest Day Media",
-      "amount_text": "$1,500",
-      "amount": 1500,
-      "deadline": "2026-07-02",
+      "id": "o32",
+      "type": "grant",
+      "title": "PPL Momentum Music Fund",
+      "org": "PRS Foundation",
+      "amount_text": "£5,000 – £15,000",
+      "amount": 19000,
+      "deadline": "2026-08-10",
+      "regions": [
+        "UK"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "music"
+      ],
+      "niches": [
+        "music"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "growing"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Grants for UK-based artists and bands ready to break through to the next career level. Funds recording, touring, and marketing activity; the current round closes August 10.",
+      "source_url": "https://prsfoundation.com/funding-support/funding-music-creators/all-career-levels/ppl-momentum-music-fund/"
+    },
+    {
+      "id": "o33",
+      "type": "grant",
+      "title": "Research & Development Award (Individuals)",
+      "org": "Arts Council of Wales",
+      "amount_text": "Up to £30,000",
+      "amount": 38000,
+      "deadline": "2026-09-09",
+      "regions": [
+        "UK"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project",
+        "education"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Research and development awards for artists and creative professionals whose work happens mostly in Wales. Small awards run to £10,000 and large awards to £30,000, covering up to 90% of costs.",
+      "source_url": "https://arts.wales/funding/individuals/research-and-development-0"
+    },
+    {
+      "id": "o34",
+      "type": "grant",
+      "title": "Music Project Award 2027",
+      "org": "The Arts Council / An Chomhairle Ealaíon",
+      "amount_text": "Up to €40,000",
+      "amount": 47000,
+      "deadline": "2026-07-23",
+      "regions": [
+        "EU"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "music"
+      ],
+      "niches": [
+        "music"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Supports specific artistic projects in music for individual artists and organisations in Ireland. Part of the Arts Council's Project Award 2027 round; applications close July 23.",
+      "source_url": "https://artscouncil.ie/funding-opportunities/project-award/music-project-award/"
+    },
+    {
+      "id": "o35",
+      "type": "grant",
+      "title": "UK–IRL Culture Connects Grant",
+      "org": "British Council + Arts Council Ireland",
+      "amount_text": "Up to €3,000",
+      "amount": 3500,
+      "deadline": "2026-07-31",
+      "regions": [
+        "UK",
+        "EU"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Helps emerging artists in the UK and Ireland collaborate in person and develop new work across the two countries. Individual artists apply through the British Council Ireland site.",
+      "source_url": "https://artscouncil.ie/funding-opportunities/uk-irl-culture-connects-grant/"
+    },
+    {
+      "id": "o36",
+      "type": "fund",
+      "title": "FACTOR Live Performance Program",
+      "org": "FACTOR",
+      "amount_text": "Up to CA$37,500/yr",
+      "amount": 27000,
+      "deadline": null,
+      "regions": [
+        "CA"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "music",
+        "live"
+      ],
+      "niches": [
+        "music"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Tour and showcase support for Canadian artists with a FACTOR profile and a recent or upcoming release. Support ranges from CA$7,500 in showcase funding up to CA$37,500 combined for top-rated artists.",
+      "source_url": "https://www.factor.ca/programs/artist-programs/live-performance/"
+    },
+    {
+      "id": "o37",
+      "type": "grant",
+      "title": "BIPOC Deaf Arts Grant",
+      "org": "Deaf Spotlight",
+      "amount_text": "$1,000",
+      "amount": 1000,
+      "deadline": "2026-08-28",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [
+        "disabled"
+      ],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Five $1,000 grants for US-based BIPOC artists who identify as Deaf, DeafBlind, DeafDisabled, or Hard of Hearing, across literary, media, performing, tactile, and visual work. Applicants must be 18 or older.",
+      "source_url": "https://www.deafspotlight.org/grants/bipoc"
+    },
+    {
+      "id": "o38",
+      "type": "fund",
+      "title": "RE:Focus Fund Post-Production Grants",
+      "org": "Inside Out 2SLGBTQ+ Film Festival",
+      "amount_text": "Up to CA$3,000",
+      "amount": 3000,
+      "deadline": "2026-07-22",
       "regions": [],
       "states": [],
-      "platforms": [
-        "tiktok"
-      ],
+      "platforms": [],
       "mediums": [
-        "shortform"
+        "video"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [
+        "woman",
+        "lgbtq"
+      ],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Post-production grants of up to CA$2,000 for shorts and CA$3,000 for features written and directed by women, non-binary, and/or trans creators telling 2SLGBTQ+ stories. Rough-cut stage projects are eligible worldwide.",
+      "source_url": "https://insideout.ca/initiatives/re-focus-fund/"
+    },
+    {
+      "id": "o39",
+      "type": "contest",
+      "title": "Sony World Photography Awards 2027",
+      "org": "World Photography Organisation",
+      "amount_text": "$25,000 first prize",
+      "amount": 25000,
+      "deadline": "2027-01-12",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "photo"
       ],
       "niches": [],
       "follower_min": 0,
       "stages": [],
       "purposes": [],
       "identity": [],
-      "added": "2026-05-14",
-      "verified": "2026-06-13",
-      "blurb": "",
-      "source_url": ""
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Free-to-enter global photography awards across Series ($25,000), Single Image ($5,000), Student, and Youth competitions. The 2027 edition is open now; the professional Series competition closes January 12, 2027.",
+      "source_url": "https://www.worldphoto.org/sony-world-photography-awards"
+    },
+    {
+      "id": "o40",
+      "type": "contest",
+      "title": "CEWE Photo Award 2027",
+      "org": "CEWE",
+      "amount_text": "Prizes up to €17,500",
+      "amount": 17500,
+      "deadline": "2027-05-31",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "photo"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Free worldwide photo contest open to everyone from smartphone shooters to professionals — enter up to 100 images across 10 categories. Around 1,000 winners share roughly €250,000 in prizes; entries close May 31, 2027.",
+      "source_url": "https://www.cewe.co.uk/cewe-photo-award.html"
     }
   ]
 }
