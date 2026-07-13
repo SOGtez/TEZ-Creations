@@ -488,6 +488,204 @@
       "source_url": ""
     },
     {
+      "id": "o17",
+      "type": "grant",
+      "title": "Awesome Foundation Micro-Grant",
+      "org": "The Awesome Foundation",
+      "amount_text": "$1,000",
+      "amount": 1000,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Local volunteer chapters worldwide give out $1,000, no-strings grants to any project they find worth funding. Apply anytime — no deadline, no niche restriction.",
+      "source_url": "https://www.awesomefoundation.org/en/submissions/new"
+    },
+    {
+      "id": "o18",
+      "type": "grant",
+      "title": "Pollock-Krasner Foundation Grant",
+      "org": "The Pollock-Krasner Foundation",
+      "amount_text": "Up to $50,000",
+      "amount": 50000,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "established",
+        "fulltime"
+      ],
+      "purposes": [
+        "project",
+        "business"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Unrestricted funding for professional, actively-exhibiting painters, sculptors, and artists working on paper — materials, studio rent, or living expenses. Rolling applications open worldwide; review takes 9–12 months.",
+      "source_url": "https://www.pkf.org/apply/how-to-apply/"
+    },
+    {
+      "id": "o19",
+      "type": "contest",
+      "title": "PhotoVogue Global Open Call 2026: Brave New Visions",
+      "org": "PhotoVogue (Condé Nast)",
+      "amount_text": "$6,000 top grant ($12,000 total across 3 grants)",
+      "amount": 6000,
+      "deadline": "2026-09-11",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "web"
+      ],
+      "mediums": [
+        "photo",
+        "video"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing",
+        "established"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Free global photo and video open call from Condé Nast's PhotoVogue, judged on original visual storytelling. Three cash grants from $2,000–$6,000, plus festival presentation and a shot at Vogue publication.",
+      "source_url": "https://site.picter.com/photovogue-brave-new-visions-global-open-call-2026"
+    },
+    {
+      "id": "o20",
+      "type": "grant",
+      "title": "FCA Emergency Grants",
+      "org": "Foundation for Contemporary Arts",
+      "amount_text": "$500 – $3,000",
+      "amount": 3000,
+      "deadline": null,
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart",
+        "writing"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "growing",
+        "established",
+        "fulltime"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Rolling grants for US-based experimental visual artists, poets, and performers with a confirmed but unfunded upcoming show. Apply 6–10 weeks before your presentation date.",
+      "source_url": "https://www.foundationforcontemporaryarts.org/grants/emergency-grants/guidelines/"
+    },
+    {
+      "id": "o21",
+      "type": "grant",
+      "title": "Illuminations Grant for Black Trans Women Visual Artists",
+      "org": "Queer|Art",
+      "amount_text": "$10,000",
+      "amount": 10000,
+      "deadline": "2026-07-20",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart"
+      ],
+      "niches": [
+        "art"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "growing",
+        "established"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [
+        "black",
+        "lgbtq"
+      ],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "A $10,000 award, plus four $1,250 finalist prizes, for self-identified Black trans women and trans femmes working in visual art in the US. Application fee is waived.",
+      "source_url": "https://www.queer-art.org/illuminations-grant"
+    },
+    {
+      "id": "o22",
+      "type": "grant",
+      "title": "Monthly Micro-Grants for Podcasters",
+      "org": "Content is Queen",
+      "amount_text": "Up to £1,000",
+      "amount": 1000,
+      "deadline": "2026-07-31",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "podcast"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project",
+        "gear"
+      ],
+      "identity": [
+        "lgbtq",
+        "disabled"
+      ],
+      "added": "2026-07-13",
+      "verified": "2026-07-13",
+      "blurb": "Monthly grants up to £1,000 for individual podcasters worldwide, with priority for disabled, LGBTQIA+, and racially minoritized creators. The current window opens July 17 and closes July 31, 2026.",
+      "source_url": "https://contentisqueen.org/microgrants-for-podcasters-2025-new-year-new-format/"
+    },
+    {
       "id": "x01",
       "type": "grant",
       "title": "Spring Creator Sprint",
