@@ -1,131 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEZ Creations — Drops</title>
-  <meta name="description" content="Random creations, dropped for you to use." />
-  <meta name="theme-color" content="#050806" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="auth.css" />
+<meta charset="UTF-8" />
+<script>/* soft gate */if(!sessionStorage.getItem("tez_access"))location.replace("/");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEZ Creations — Tools, overlays & experiments for streamers &amp; creators</title>
+<meta name="description" content="Random creations, tools, and experiments — dropped for anyone to use. Stream overlays and small web apps, built by one person." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<!-- real account system (sign up / log in / profile) -->
+<link rel="stylesheet" href="/auth.css" />
+<link rel="stylesheet" href="/tez.css" />
 </head>
-<body class="page app-shell fade-in" data-auth-greet>
-  <div class="grid-wrap"><div class="grid"></div></div>
-  <div class="grain"></div>
+<body>
+  <div class="bg-field" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="glows" aria-hidden="true">
+    <span class="star s1"></span>
+    <span class="star s2"></span>
+    <span class="star s3"></span>
+    <span class="star s4"></span>
+    <span class="star s5"></span>
+  </div>
 
-  <main class="shell-main">
-    <header class="shell-head">
-      <div>
-        <h1 class="shell-title">Drops</h1>
-        <p class="shell-sub">random creations, dropped for you</p>
+  <!-- HEADER -->
+  <header>
+    <div class="container nav">
+      <a class="lockup" href="#top" aria-label="TEZ Creations home">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="#3fe08b">
+            <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+          </svg>
+        </span>
+        <span class="wordmark">
+          <span class="name">TEZ Creations</span>
+          <span class="sub">Studio</span>
+        </span>
+      </a>
+      <div class="nav-right">
+        <nav class="nav-links">
+          <a href="#drops">Drops</a>
+          <a href="/about">About</a>
+          <a href="/ak9awards">AK9 Awards</a>
+          <a href="/ai">TEZ AI</a>
+        </nav>
+        <div id="acctSlot"></div>
+        <a class="cta" href="#drops">Browse drops</a>
       </div>
-    </header>
-    <div class="feed" id="feed"></div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow reveal d1">
+          <span class="dot"></span>
+          <span class="mono"><span id="statPill">6</span> drops shipped</span>
+        </span>
+        <h1 class="display reveal d2">
+          Small tools,<br />
+          dropped for <span class="accent">anyone</span> to use.
+        </h1>
+        <p class="lede reveal d3">
+          TEZ Creations is a one-person studio for <b>random creations, tools, and experiments</b> —
+          stream overlays and small web apps, built in the open for streamers and creators.
+        </p>
+        <div class="hero-actions reveal d4">
+          <a class="cta lg" href="#drops">
+            See all drops
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="link-arrow" href="#manifesto">
+            What is this?
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CREDIBILITY BAND -->
+    <div class="band" id="about">
+      <div class="container">
+        <div class="stats">
+          <div class="stat">
+            <div class="num"><span class="g" id="statDrops">6</span></div>
+            <div class="lbl">Drops shipped</div>
+          </div>
+          <div class="stat">
+            <div class="num">2</div>
+            <div class="lbl">Stream tools + web apps</div>
+          </div>
+          <div class="stat">
+            <div class="num"><span class="g">24/7</span></div>
+            <div class="lbl">Runs live in OBS &amp; the browser</div>
+          </div>
+          <div class="stat">
+            <div class="num">1</div>
+            <div class="lbl">Person, building in the open</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DROPS -->
+    <section class="drops" id="drops">
+      <div class="container">
+        <div class="sec-head">
+          <div>
+            <p class="kicker">The Feed</p>
+            <h2>Every drop, newest first.</h2>
+            <p>Overlays for your stream and small apps for the browser. Pick one, take it, use it.</p>
+          </div>
+          <a class="cta ghost" href="/home#drops">All drops →</a>
+        </div>
+
+        <div id="feed"></div>
+      </div>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto" id="manifesto">
+      <div class="container">
+        <div class="manifesto-inner">
+          <div>
+            <p class="m-kicker">The Studio</p>
+            <blockquote>
+              Built with care, no filler, no gimmicks. Just genuinely useful things,
+              <b>dropped when they're ready</b> — the tools I'd want to use myself.
+            </blockquote>
+          </div>
+          <div class="m-side">
+            <div class="m-point">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="txt"><strong>Built by one person</strong><span>Designed, coded, and shipped solo.</span></span>
+            </div>
+            <div class="m-point">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="txt"><strong>Runs where you already are</strong><span>OBS overlays and browser apps — no installs.</span></span>
+            </div>
+            <div class="m-point">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="txt"><strong>Your data stays yours</strong><span>Privacy-first — much of it runs on-device.</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <script src="drops.js"></script>
-  <script src="sidebar.js"></script>
-  <script src="auth.js"></script>
-  <script>
-    /* Soft gate: bounce to the front door if they haven't entered the password */
-    if (!sessionStorage.getItem("tez_access")) {
-      location.replace("index.html");
-    }
-
-    /* ---- Render the feed (newest first, latest drop featured) ---- */
-    const feed = document.getElementById("feed");
-    const sorted = [...DROPS].sort((a, b) => Number(b.id) - Number(a.id));
-
-    function fmtDate(iso) {
-      return new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      });
-    }
-
-    function coverHTML(drop) {
-      if (drop.image) {
-        return `<img class="cover-img" src="${drop.image}" alt="${drop.title}" loading="lazy" />`;
-      }
-      // auto-generated cover when there's no image yet
-      return `<div class="cover-gen"><span>#${drop.id}</span></div>`;
-    }
-
-    feed.innerHTML = sorted
-      .map((drop, i) => {
-        const featured = i === 0 ? " featured" : "";
-        const fresh = i === 0 ? `<span class="fresh">Latest drop</span>` : "";
-        return `
-        <a class="card${featured}" href="drop.html?id=${drop.id}" style="--tilt:${(i % 2 ? 1 : -1) * 0.4}deg">
-          <div class="cover">${coverHTML(drop)}${fresh}</div>
-          <div class="card-body">
-            <span class="num">#${drop.id}</span>
-            <h3>${drop.title}</h3>
-            <p>${drop.description}</p>
-            <time>${fmtDate(drop.date)}</time>
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <a class="lockup" href="#top" aria-label="TEZ Creations home">
+            <span class="mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="#3fe08b">
+                <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+              </svg>
+            </span>
+            <span class="wordmark">
+              <span class="name">TEZ Creations</span>
+              <span class="sub">Studio</span>
+            </span>
+          </a>
+          <p>Random creations, tools, and experiments — dropped for anyone to use. Built by one person.</p>
+        </div>
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h4>Drops</h4>
+            <a href="/drop?id=006">Handle Hunter</a>
+            <a href="/drop?id=005">Ghosted</a>
+            <a href="/drop?id=004">Game Gauntlet</a>
+            <a href="/drop?id=003">Live Map</a>
+            <a href="/drop?id=002">Sub Goal Tracker</a>
+            <a href="/drop?id=001">Sports Tracker</a>
           </div>
-        </a>`;
-      })
-      .join("");
-
-    /* ---- Subtle card tilt toward the cursor ---- */
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduce) {
-      document.querySelectorAll(".card").forEach((card) => {
-        card.addEventListener("mousemove", (e) => {
-          const r = card.getBoundingClientRect();
-          const x = (e.clientX - r.left) / r.width - 0.5;
-          const y = (e.clientY - r.top) / r.height - 0.5;
-          card.style.transform = `perspective(900px) rotateX(${(-y * 2.4).toFixed(2)}deg) rotateY(${(x * 2.4).toFixed(2)}deg) translateY(-3px)`;
-        });
-        card.addEventListener("mouseleave", () => {
-          card.style.transform = "";
-        });
-      });
+          <div class="foot-col">
+            <h4>Studio</h4>
+            <a href="#about">What is this</a>
+            <a href="#manifesto">The studio</a>
+            <a href="/home#drops">All drops</a>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 TEZ Creations</span>
+        <span>Made solo · in the open</span>
+      </div>
+    </div>
+  </footer>
+<!-- real account system: sign up / log in / profile via /api/auth -->
+<script src="/nav.js" defer></script>
+<script src="/auth.js"></script>
+<script>
+  (function () {
+    var slot = document.getElementById('acctSlot');
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    function render() {
+      if (!slot || !window.TezAuth) return;
+      if (TezAuth.isLoggedIn()) {
+        var u = TezAuth.currentUser() || {};
+        var initial = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+        slot.innerHTML = '<button type="button" class="acct-chip"><span class="acct-av">' + esc(initial) +
+          '</span><span class="acct-nm">' + esc(u.name || u.email || '') + '</span></button>';
+        slot.querySelector('.acct-chip').addEventListener('click', function () { TezAuth.openProfile(); });
+      } else {
+        slot.innerHTML = '<a class="cta ghost" href="#">Sign in</a>';
+        slot.querySelector('a').addEventListener('click', function (e) { e.preventDefault(); TezAuth.open({ mode: 'login' }); });
+      }
     }
-
-    /* ---- Grid mouse warp (same as the front door) ---- */
-    const grid = document.querySelector(".grid");
-    if (grid && !reduce) {
-      let tx = 0, ty = 0, cx = 0, cy = 0;
-      window.addEventListener("mousemove", (e) => {
-        tx = (e.clientX / window.innerWidth - 0.5) * 2;
-        ty = (e.clientY / window.innerHeight - 0.5) * 2;
-      });
-      // Mobile: tilt the phone to warp the grid (same feel as the cursor)
-      (function () {
-        let b0 = null, g0 = null;
-        const clamp = (v) => Math.max(-1.6, Math.min(1.6, v)); // mobile leans harder than the cursor
-        function onTilt(e) {
-          if (e.gamma == null || e.beta == null) return;
-          if (g0 === null) { g0 = e.gamma; b0 = e.beta; }
-          tx = clamp((e.gamma - g0) / 18);
-          ty = clamp((e.beta - b0) / 18);
-        }
-        const D = window.DeviceOrientationEvent;
-        if (D && typeof D.requestPermission === "function") {
-          const ask = () =>
-            D.requestPermission()
-              .then((s) => { if (s === "granted") window.addEventListener("deviceorientation", onTilt); })
-              .catch(() => {});
-          window.addEventListener("touchend", ask, { once: true });
-          window.addEventListener("click", ask, { once: true });
-        } else if (D) {
-          window.addEventListener("deviceorientation", onTilt);
-        }
-      })();
-      (function tick() {
-        cx += (tx - cx) * 0.06;
-        cy += (ty - cy) * 0.06;
-        grid.style.transform =
-          `perspective(1200px) rotateX(${(-cy * 1.6).toFixed(3)}deg) rotateY(${(cx * 1.6).toFixed(3)}deg) translate(${(-cx * 8).toFixed(2)}px, ${(-cy * 8).toFixed(2)}px) scale(1.08)`;
-        requestAnimationFrame(tick);
-      })();
-    }
-  </script>
+    function start() { if (!window.TezAuth) return; TezAuth.onChange(render); render(); }
+    if (window.TezAuth) start(); else window.addEventListener('load', start);
+  })();
+</script>
+<!-- homepage feed built from the real catalog (/drops.js) so new drops appear automatically -->
+<script src="/drops.js"></script>
+<script>
+(function () {
+  var feed = document.getElementById('feed');
+  if (!feed || typeof DROPS === 'undefined') return;
+  var nDrops = DROPS.length;
+  var sp = document.getElementById('statPill'); if (sp) sp.textContent = nDrops;
+  var sd = document.getElementById('statDrops'); if (sd) sd.textContent = nDrops;
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  var ARROW = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0-3.5-3.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SUB = { 'Apps': 'in the browser', 'Creator Apps': 'in the browser', 'Stream Tools': 'overlays for OBS' };
+  function pad(n){ n = String(n); while (n.length < 3) n = '0' + n; return n; }
+  function card(d){
+    var id = String(d.id);
+    var media = d.image
+      ? '<div class="cover"><span class="badge mono">#' + esc(id) + '</span><img src="/' + esc(String(d.image).replace(/^\/+/, '')) + '" alt="' + esc(d.title) + ' cover" loading="lazy"></div>'
+      : '<div class="tile"><span class="tile-num">' + esc(id) + '</span><span class="tile-glyph">' + esc(d.title) + '</span></div>';
+    var open = /app/i.test(d.category || '') ? 'Open tool' : 'Open overlay';
+    return '<a class="card" href="/drop?id=' + esc(id) + '">' + media +
+      '<div class="card-body"><div class="card-meta"><span class="n mono">#' + esc(id) + '</span><span class="tag">' + esc(d.category) + '</span></div>' +
+      '<h3>' + esc(d.title) + '</h3><p>' + esc(d.description) + '</p>' +
+      '<span class="card-cta">' + open + ARROW + '</span></div></a>';
+  }
+  var byCat = {};
+  DROPS.forEach(function (d) { (byCat[d.category] = byCat[d.category] || []).push(d); });
+  function maxId(list){ return list.reduce(function (m, d) { return Math.max(m, +d.id); }, 0); }
+  var cats = Object.keys(byCat).sort(function (a, b) { return maxId(byCat[b]) - maxId(byCat[a]); });
+  var html = '';
+  cats.forEach(function (cat) {
+    var list = byCat[cat].slice().sort(function (a, b) { return (+b.id) - (+a.id); });
+    var ids = list.map(function (d) { return +d.id; });
+    var range = pad(Math.min.apply(null, ids)) + ' \u2013 ' + pad(Math.max.apply(null, ids));
+    html += '<div class="cat-row"><span class="cat-name"><b>' + esc(cat) + '</b> \u00b7 ' + esc(SUB[cat] || '') + '</span><span class="cat-line"></span><span class="cat-name mono">' + range + '</span></div>';
+    html += '<div class="grid">' + list.map(card).join('') + '</div>';
+  });
+  feed.innerHTML = html;
+})();
+</script>
 </body>
 </html>
