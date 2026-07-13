@@ -1,0 +1,25 @@
+# Bag Radar (Drop #008) — schema validation.
+# The merge gate that makes curation-agent PRs safe: any PR or push touching the
+# dataset must pass scripts/validate-bagradar.js.
+name: bag-radar validate
+
+on:
+  pull_request:
+    paths:
+      - "drops/008/data.json"
+      - "scripts/validate-bagradar.js"
+  push:
+    paths:
+      - "drops/008/data.json"
+      - "scripts/validate-bagradar.js"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate drops/008/data.json
+        run: node scripts/validate-bagradar.js

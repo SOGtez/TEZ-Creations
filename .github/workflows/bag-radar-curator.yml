@@ -1,0 +1,45 @@
+# Bag Radar (Drop #008) — scheduled curation agent.
+# Weekly, Claude verifies existing entries and researches new ones, then opens a
+# PR for review. It never pushes to main; bag-radar-validate.yml gates the PR.
+#
+# Auth: subscription OAuth only. Run `claude setup-token` locally and add the
+# result as the CLAUDE_CODE_OAUTH_TOKEN repo secret. There is deliberately no
+# ANTHROPIC_API_KEY in this repo — do not add one.
+#
+# The agent's instructions live in drops/008/curator-prompt.md (versioned,
+# editable without touching this workflow).
+name: bag-radar curator
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # Mondays 13:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+  id-token: write
+
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run the curation agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read drops/008/curator-prompt.md and follow it exactly. It defines
+            your entire job for this run: verify existing Bag Radar entries,
+            research new opportunities, validate the dataset, and open a single
+            PR (or no PR if nothing changed). Never commit or push to main.
+          claude_args: |
+            --allowedTools "Bash(git:*),Bash(gh:*),Bash(node:*),Read,Edit,Write,Glob,Grep,WebFetch,WebSearch"
+            --max-turns 80
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

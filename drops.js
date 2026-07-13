@@ -12,6 +12,17 @@
 */
 const DROPS = [
   {
+    id: "008",
+    title: "Bag Radar",
+    description:
+      "Grants, creator funds, brand programs, and contests — structured, verified, and matched to you. A 30-second fit quiz turns the directory into a personal list, deadline countdowns keep the urgent stuff on top, and expired opportunities remove themselves automatically.",
+    date: "2026-07-13",
+    type: "tool",
+    category: "Creator Apps",
+    image: "",
+    action: { kind: "use", url: "drops/008/index.html" }
+  },
+  {
     id: "007",
     title: "Consistency Tracker",
     description:

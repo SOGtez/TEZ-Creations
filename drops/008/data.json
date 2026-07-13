@@ -1,0 +1,539 @@
+{
+  "meta": {
+    "sample": true,
+    "updated_at": "2026-07-13",
+    "schema_version": 1
+  },
+  "opportunities": [
+    {
+      "id": "o01",
+      "type": "grant",
+      "title": "Signal Boost Microgrant",
+      "org": "Northlight Creator Fund",
+      "amount_text": "$5,000",
+      "amount": 5000,
+      "deadline": "2026-07-16",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project",
+        "gear"
+      ],
+      "identity": [],
+      "added": "2026-07-01",
+      "verified": "2026-07-09",
+      "blurb": "No-strings grant for early creators shipping something new this quarter — gear, editing help, or a first paid collab.",
+      "source_url": ""
+    },
+    {
+      "id": "o02",
+      "type": "contest",
+      "title": "Level Up Equipment Grant",
+      "org": "Deskside Collective",
+      "amount_text": "$2,000 in gear",
+      "amount": 2000,
+      "deadline": "2026-07-15",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "twitch",
+        "youtube"
+      ],
+      "mediums": [
+        "live",
+        "video"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "gear"
+      ],
+      "identity": [],
+      "added": "2026-06-23",
+      "verified": "2026-07-11",
+      "blurb": "Quarterly gear giveaway judged on a 60-second pitch video. Camera, lights, audio — winner picks the loadout.",
+      "source_url": ""
+    },
+    {
+      "id": "o03",
+      "type": "brand",
+      "title": "Emerging Streamers Program",
+      "org": "PixelForge Peripherals",
+      "amount_text": "$2,500 + gear",
+      "amount": 2500,
+      "deadline": "2026-07-22",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "twitch",
+        "kick"
+      ],
+      "mediums": [
+        "live"
+      ],
+      "niches": [
+        "gaming"
+      ],
+      "follower_min": 1000,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-05",
+      "verified": "2026-07-10",
+      "blurb": "Season-long sponsorship for small gaming streamers: monthly stipend, product seeding, and a featured slot in brand campaigns.",
+      "source_url": ""
+    },
+    {
+      "id": "o04",
+      "type": "grant",
+      "title": "Creators of Color Catalyst",
+      "org": "Open Frame Foundation",
+      "amount_text": "$7,500 + mentorship",
+      "amount": 7500,
+      "deadline": "2026-07-25",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [
+        "black",
+        "latino",
+        "aapi"
+      ],
+      "added": "2026-06-28",
+      "verified": "2026-07-08",
+      "blurb": "Project funding plus a 12-week mentorship pod pairing awardees with established creators in their format.",
+      "source_url": ""
+    },
+    {
+      "id": "o05",
+      "type": "grant",
+      "title": "Women in Audio Grant",
+      "org": "Fader Society",
+      "amount_text": "$4,000",
+      "amount": 4000,
+      "deadline": "2026-08-12",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "podcast",
+        "music"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project",
+        "gear"
+      ],
+      "identity": [
+        "woman"
+      ],
+      "added": "2026-07-07",
+      "verified": "2026-07-07",
+      "blurb": "For women producing podcasts or original music — covers studio time, distribution, or a season's production budget.",
+      "source_url": ""
+    },
+    {
+      "id": "o06",
+      "type": "accelerator",
+      "title": "Rising Voices Accelerator",
+      "org": "Signal Hill Media Lab",
+      "amount_text": "$15,000 + 6-wk program",
+      "amount": 15000,
+      "deadline": "2026-08-27",
+      "regions": [
+        "US",
+        "CA"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 10000,
+      "stages": [
+        "growing",
+        "established",
+        "fulltime"
+      ],
+      "purposes": [
+        "fulltime",
+        "business"
+      ],
+      "identity": [],
+      "added": "2026-07-10",
+      "verified": "2026-07-10",
+      "blurb": "Cohort-based accelerator for creators ready to go full-time: audience strategy, brand-deal coaching, and a capstone grant.",
+      "source_url": ""
+    },
+    {
+      "id": "o07",
+      "type": "contest",
+      "title": "Indie Clip Contest",
+      "org": "Shortwave Studios",
+      "amount_text": "$1,000",
+      "amount": 1000,
+      "deadline": "2026-07-18",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "tiktok",
+        "instagram"
+      ],
+      "mediums": [
+        "shortform"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-03",
+      "verified": "2026-07-09",
+      "blurb": "Best 30-second original clip on a monthly theme. This month: 'first attempt vs. now.' Judged on craft, not follower count.",
+      "source_url": ""
+    },
+    {
+      "id": "o08",
+      "type": "grant",
+      "title": "Hometown Stories Microgrant",
+      "org": "Local Lens Project",
+      "amount_text": "$500 – $1,500",
+      "amount": 1500,
+      "deadline": null,
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "video",
+        "writing",
+        "photo"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-06-13",
+      "verified": "2026-07-06",
+      "blurb": "Rolling microgrants for creators documenting their own towns — video essays, photo series, local journalism, oral history.",
+      "source_url": ""
+    },
+    {
+      "id": "o09",
+      "type": "brand",
+      "title": "GameCraft Co-Stream Program",
+      "org": "GameCraft League",
+      "amount_text": "Rewards pool",
+      "amount": 800,
+      "deadline": "2026-07-31",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "twitch",
+        "youtube",
+        "kick"
+      ],
+      "mediums": [
+        "live"
+      ],
+      "niches": [
+        "gaming"
+      ],
+      "follower_min": 1000,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-08",
+      "verified": "2026-07-11",
+      "blurb": "Co-stream sanctioned tournaments, complete missions, climb a battle pass: gift cards, gear, and event invites.",
+      "source_url": ""
+    },
+    {
+      "id": "o10",
+      "type": "grant",
+      "title": "Bright Palette Art Fund",
+      "org": "Chromatic Trust",
+      "amount_text": "$3,000",
+      "amount": 3000,
+      "deadline": "2026-09-11",
+      "regions": [
+        "UK",
+        "EU"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "visualart"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-04",
+      "verified": "2026-07-04",
+      "blurb": "Funds a body of new visual work by digital or traditional artists building an audience online. Portfolio-judged.",
+      "source_url": ""
+    },
+    {
+      "id": "o11",
+      "type": "grant",
+      "title": "SoundStart Music Creator Grant",
+      "org": "Blue Room Collective",
+      "amount_text": "$2,500 – $10,000",
+      "amount": 10000,
+      "deadline": "2026-08-07",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "music"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-06-29",
+      "verified": "2026-07-09",
+      "blurb": "Recording, mixing, and release support for independent musicians. Collaboration with another creator scores extra.",
+      "source_url": ""
+    },
+    {
+      "id": "o12",
+      "type": "fund",
+      "title": "Everyday Educators Fund",
+      "org": "Chalkline Initiative",
+      "amount_text": "$5,000",
+      "amount": 5000,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "video",
+        "live",
+        "writing"
+      ],
+      "niches": [
+        "education",
+        "tech"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "gear",
+        "project",
+        "education"
+      ],
+      "identity": [],
+      "added": "2026-06-03",
+      "verified": "2026-07-02",
+      "blurb": "Rolling fund for creators who teach — tutorials, explainers, courses. Pays for production upgrades and research time.",
+      "source_url": ""
+    },
+    {
+      "id": "o13",
+      "type": "accelerator",
+      "title": "First Mic Podcast Residency",
+      "org": "Talkhouse North",
+      "amount_text": "$6,000 + studio access",
+      "amount": 6000,
+      "deadline": "2026-08-20",
+      "regions": [
+        "CA"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "podcast"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project",
+        "education"
+      ],
+      "identity": [],
+      "added": "2026-07-06",
+      "verified": "2026-07-06",
+      "blurb": "Three-month residency for new podcasters: studio time, editing mentorship, and a launch budget for one show.",
+      "source_url": ""
+    },
+    {
+      "id": "o14",
+      "type": "fund",
+      "title": "Comeback Creator Fund",
+      "org": "Second Wind Foundation",
+      "amount_text": "$3,500",
+      "amount": 3500,
+      "deadline": "2026-07-27",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-11",
+      "verified": "2026-07-12",
+      "blurb": "For creators returning after a break — burnout, health, life. Funds the relaunch: new setup, rebrand, or first month back.",
+      "source_url": ""
+    },
+    {
+      "id": "o15",
+      "type": "grant",
+      "title": "State Arts Career Grant",
+      "org": "Tri-State Arts Alliance",
+      "amount_text": "$2,000 – $8,000",
+      "amount": 8000,
+      "deadline": "2026-08-22",
+      "regions": [
+        "US"
+      ],
+      "states": [
+        "CA",
+        "NY",
+        "IL"
+      ],
+      "platforms": [],
+      "mediums": [
+        "visualart",
+        "music",
+        "writing"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "project",
+        "education"
+      ],
+      "identity": [],
+      "added": "2026-07-09",
+      "verified": "2026-07-09",
+      "blurb": "State-council-style career development grant for working artists — project costs, professional development, or first studio rent.",
+      "source_url": ""
+    },
+    {
+      "id": "o16",
+      "type": "grant",
+      "title": "First Deployment Creator Grant",
+      "org": "Rally Point Media Fund",
+      "amount_text": "$5,000",
+      "amount": 5000,
+      "deadline": "2026-09-01",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "gear",
+        "fulltime"
+      ],
+      "identity": [
+        "veteran"
+      ],
+      "added": "2026-07-12",
+      "verified": "2026-07-12",
+      "blurb": "Startup funding for veterans building a content channel — covers the first serious setup and three months of runway.",
+      "source_url": ""
+    },
+    {
+      "id": "x01",
+      "type": "grant",
+      "title": "Spring Creator Sprint",
+      "org": "Meadowline Fund",
+      "amount_text": "$4,000",
+      "amount": 4000,
+      "deadline": "2026-07-09",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-05-24",
+      "verified": "2026-06-23",
+      "blurb": "",
+      "source_url": ""
+    },
+    {
+      "id": "x02",
+      "type": "contest",
+      "title": "Solstice Short-Form Contest",
+      "org": "Longest Day Media",
+      "amount_text": "$1,500",
+      "amount": 1500,
+      "deadline": "2026-07-02",
+      "regions": [],
+      "states": [],
+      "platforms": [
+        "tiktok"
+      ],
+      "mediums": [
+        "shortform"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-05-14",
+      "verified": "2026-06-13",
+      "blurb": "",
+      "source_url": ""
+    }
+  ]
+}
