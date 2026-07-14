@@ -273,6 +273,14 @@
 .result-pill.unknown{color:var(--muted-dim)}
 .result-pill.unknown .status-dot{background:rgba(255,255,255,0.18)}
 .result-pill.unknown .tag{font-size:0.62rem;color:var(--muted-dim);margin-left:8px;font-style:italic}
+/* Generator pills (Instagram): tap-to-check, self-marked open/taken */
+.result-pill.gen{cursor:pointer}
+.result-pill.gen .status-dot{background:rgba(255,255,255,0.14)}
+.result-pill.gen.open{color:var(--accent);border-color:rgba(63,224,139,0.4);background:rgba(63,224,139,0.06)}
+.result-pill.gen.open .status-dot{background:var(--accent);box-shadow:0 0 8px rgba(63,224,139,0.6)}
+.result-pill.gen.taken{opacity:.5}
+.result-pill.gen.taken>span:first-child{text-decoration:line-through}
+.result-pill.gen.taken .status-dot{background:rgba(255,255,255,0.12)}
 .result-pill .go{margin-left:8px;color:var(--accent);text-decoration:none;font-weight:700;flex-shrink:0}
 .result-pill .go:hover{text-decoration:underline}
 .result-pill.checking{color:var(--muted);animation:pulse-row 1.2s ease-in-out infinite}
@@ -445,12 +453,12 @@
           TikTok
           <span class="badge">Live</span>
         </button>
-        <!-- Roadmap platforms (one-by-one; shown as coming soon) -->
-        <button class="platform-btn soon" data-platform="instagram" disabled title="Instagram blocks automated checks from cloud servers — needs a proxy path, coming later">
+        <button class="platform-btn" data-platform="instagram" title="Instagram blocks automated checks — we generate names and you check each in one tap">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
           Instagram
-          <span class="badge soon-badge">Soon</span>
+          <span class="badge" style="background:rgba(255,255,255,0.09);color:var(--muted)">Generator</span>
         </button>
+        <!-- Roadmap platforms (one-by-one; shown as coming soon) -->
         <button class="platform-btn soon" data-platform="twitter" disabled title="Coming soon">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           Twitter
@@ -507,7 +515,7 @@
       <!-- CTA row -->
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <button class="btn-primary" id="goBtn">
-          Hunt handles <span class="arrow">→</span>
+          <span id="goLabel">Hunt handles</span> <span class="arrow">→</span>
         </button>
         <button class="btn-stop" id="stopBtn" style="display:none">
           ■ Stop
@@ -796,9 +804,12 @@ const proNoteBtn=document.getElementById('proNoteBtn');
 // Instagram/TikTok are checked one HTTP request per name and rate-limit by IP, so
 // their caps + batch sizes are smaller than Twitch's single batched GraphQL call.
 const PLATFORM_CFG={
-  twitch:   { label:'Twitch',    url:u=>'https://www.twitch.tv/'+u,     batch:100, freeCap:40, proCap:200, vault:true  },
-  instagram:{ label:'Instagram', url:u=>'https://www.instagram.com/'+u, batch:20,  freeCap:15, proCap:50,  vault:false },
-  tiktok:   { label:'TikTok',    url:u=>'https://www.tiktok.com/@'+u,   batch:20,  freeCap:15, proCap:50,  vault:false },
+  twitch:   { label:'Twitch',    url:u=>'https://www.twitch.tv/'+u,      batch:100, freeCap:40, proCap:200, vault:true  },
+  // Instagram blocks automated checks from our servers, so it's a GENERATOR: we
+  // produce candidate names + a one-tap check link, the user verifies each. No
+  // API call, so caps are generous.
+  instagram:{ label:'Instagram', url:u=>'https://www.instagram.com/'+u+'/', freeCap:24, proCap:100, vault:false, generateOnly:true },
+  tiktok:   { label:'TikTok',    url:u=>'https://www.tiktok.com/@'+u,    batch:20,  freeCap:15, proCap:50,  vault:false },
 };
 function pcfg(){ return PLATFORM_CFG[state.platform] || PLATFORM_CFG.twitch; }
 
@@ -842,6 +853,8 @@ function applyPlatformUI(){
   const vc=document.getElementById('verifyCard');
   if(vc) vc.style.display = isTwitch ? '' : 'none';
   if(!isTwitch){ if(reportBar) reportBar.classList.remove('show'); state.selected.clear(); }
+  const gl=document.getElementById('goLabel');
+  if(gl) gl.textContent = pcfg().generateOnly ? 'Generate names' : 'Hunt handles';
 }
 
 // Platform picker
@@ -912,6 +925,19 @@ resultsGrid.addEventListener('click',e=>{
   if(state.selected.has(u)){ state.selected.delete(u); pill.classList.remove('selected'); }
   else { state.selected.add(u); pill.classList.add('selected'); }
   updateReportBar();
+});
+
+// Generator pills (Instagram): tap the name to self-mark as you check each —
+// cycles generated → open → taken → generated. The "check ↗" link is excluded.
+resultsGrid.addEventListener('click',e=>{
+  if(e.target.closest('a')) return;                 // let the check link work
+  const pill=e.target.closest('.result-pill.gen');
+  if(!pill) return;
+  const rec=state.results.find(r=>r.username===pill.dataset.username);
+  if(!rec) return;
+  rec.status = rec.status==='generated' ? 'open' : rec.status==='open' ? 'taken' : 'generated';
+  pill.className='result-pill gen'+(rec.status!=='generated'?' '+rec.status:'');
+  genRefreshCounts();
 });
 
 // Report bar actions
@@ -1004,8 +1030,57 @@ verifyCopyBtn.addEventListener('click',()=>{
 });
 verifyBtn.addEventListener('click',runVerify);
 
+// Generator mode (Instagram): produce candidate names + one-tap check links, no
+// automated checking. The user taps to verify each on the platform, and can
+// self-mark them open/taken as they go so they don't lose their place in a list.
+function runGenerator(cfg){
+  setError('');
+  state.results=[];
+  state.selected.clear();
+  updateReportBar();
+  resultsGrid.innerHTML='';
+  resultsSection.classList.remove('visible');
+  progressSection.classList.remove('visible');
+  copyAvailBtn.style.display='none';
+  copyAllBtn.style.display='none';
+
+  const cap=hunterIsPro()?cfg.proCap:cfg.freeCap;
+  const cands=generateCandidates(state.length,state.filters,cap,state.seen);
+  if(!cands.length){
+    setError('No candidates generated — turn on “Made-up names” or a word filter.');
+    return;
+  }
+  state.results=cands.map(u=>({username:u,status:'generated'}));
+  for(const u of cands) resultsGrid.appendChild(makeGenPill(u,cfg));
+  resultsSection.classList.add('visible');
+  genRefreshCounts();
+  if(!reduceMotionHH()) resultsSection.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function reduceMotionHH(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+function makeGenPill(username,cfg){
+  const div=document.createElement('div');
+  div.className='result-pill gen';
+  div.dataset.username=username;
+  div.innerHTML='<span>'+username+'</span>'+
+    '<a class="go" href="'+cfg.url(username)+'" target="_blank" rel="noopener" title="Open on '+cfg.label+' to check">check ↗</a>'+
+    '<span class="status-dot"></span>';
+  return div;
+}
+function genRefreshCounts(){
+  const total=state.results.length;
+  const open=state.results.filter(r=>r.status==='open').length;
+  const taken=state.results.filter(r=>r.status==='taken').length;
+  resultsTitle.textContent=total+' name'+(total!==1?'s':'')+' generated';
+  resultsMeta.textContent='Tap “check ↗” to open each on '+pcfg().label+', then tap the name to mark it'
+    +(open?' · '+open+' open':'')+(taken?' · '+taken+' taken':'')+' · '+state.length+'-char';
+  copyAllBtn.style.display=total>0?'inline-flex':'none';
+  copyAvailBtn.style.display=open>0?'inline-flex':'none';
+}
+
 async function startHunt(){
   if(state.running) return;
+  const cfg0=pcfg();
+  if(cfg0.generateOnly){ runGenerator(cfg0); return; }
   setError('');
   state.aborted=false;
   state.results=[];
