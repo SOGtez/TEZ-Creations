@@ -81,7 +81,7 @@ function bcBanner() {
   el.innerHTML = ok
     ? '<b class="ok">✓ Channel connected.</b> Follower checks are ready — the status below should now show connected.'
     : '<b class="bad">✗ Channel connect didn’t complete.</b> ' + esc(msg) +
-      '<div class="sub" style="margin:6px 0 0">Make sure you’re logged into Twitch as <b>@aleksk9_</b> and press <b>Authorize</b> on the “View followers” permission, then try “Connect channel” again.</div>';
+      '<div class="sub" style="margin:6px 0 0">Log into Twitch as <b>@aleksk9_</b> — or as any <b>moderator</b> of the channel — and press <b>Authorize</b> on the “View followers” permission, then try “Connect channel” again.</div>';
   const wrap = document.querySelector('.wrap');
   wrap.insertBefore(el, document.getElementById('gate'));
 }
@@ -243,14 +243,20 @@ function toLocalInput(iso) {
 function fmtWhen(iso) { try { return new Date(iso).toLocaleString(); } catch (e) { return ''; } }
 function broadcasterStatus() {
   const dg = DATA.broadcasterDiag || {};
+  const fa = dg.followerApi || {};
   const chan = esc(dg.expectedChannel || 'aleksk9_');
   const who = esc(dg.storedLogin || '');
-  // fully working
-  if (dg.refreshOk && dg.loginMatches)
-    return { html: 'Connected as <b class="ok">@' + who + '</b> — follower checks are working. ✓', connected: true };
-  // connected, but to the wrong Twitch account
-  if (dg.refreshOk && !dg.loginMatches)
-    return { html: '<b class="bad">Connected as @' + who + ', but that isn’t the AK9 channel (@' + chan + ').</b> Reconnect while logged into Twitch as <b>@' + chan + '</b>.', connected: true };
+  // fully working — proven by a live call to the follower API
+  if (dg.refreshOk && fa.ok)
+    return { html: 'Connected via <b class="ok">@' + who + '</b> — follower checks <b class="ok">verified working</b> ✓' +
+      (typeof fa.total === 'number' ? ' <span class="sub">(' + fa.total + ' followers visible)</span>' : ''), connected: true };
+  // token works but Twitch refuses the follower endpoint → the account isn't a mod
+  if (dg.refreshOk && fa.reason === 'not-a-moderator')
+    return { html: '<b class="bad">@' + who + '’s login works, but that account isn’t a moderator of @' + chan + ',</b> so Twitch refuses the follower check. ' +
+      'Have Aleks type <b>/mod ' + who + '</b> in his chat (5 seconds), then hit <b>Re-check status</b> — no reconnect needed.', connected: true };
+  // token works but the probe failed for another reason
+  if (dg.refreshOk)
+    return { html: '<b class="bad">Connected via @' + who + ' but the live follower check failed' + (fa.status ? ' (Twitch said ' + fa.status + ')' : '') + '.</b> Try Re-check; if it persists, reconnect.', connected: true };
   // the table itself couldn’t be read → schema not run
   if (dg.tableOk === false)
     return { html: '<b class="bad">Couldn’t read the broadcaster table.</b> The <b>ak9awards/schema.sql</b> setup likely wasn’t run in Supabase — run it, then reconnect.', connected: false };
@@ -260,7 +266,7 @@ function broadcasterStatus() {
       ' but Twitch rejected its token.</b> Reconnect. If it keeps failing, the <b>TWITCH_CLIENT_SECRET</b> env var is likely wrong.' +
       (dg.scopeOk ? '' : ' <br><span class="bad">Also: the saved permission is missing the follower scope.</span>'), connected: false };
   // nothing saved at all
-  return { html: '<b class="bad">No channel connection has been saved yet.</b> Aleks must click the button below, log in as <b>@' + chan + '</b>, and press <b>Authorize</b> on the “View followers” permission. If he did and it still shows this, the authorization didn’t complete — watch for a red error when he returns.', connected: false };
+  return { html: '<b class="bad">No channel connection has been saved yet.</b> <b>Aleks — or any moderator of @' + chan + '</b> (including you, if you’re modded) — clicks the button below, logs into their own Twitch, and presses <b>Authorize</b> on the “View followers” permission.', connected: false };
 }
 function renderSettings() {
   const s = DATA.settings || {};
@@ -275,9 +281,9 @@ function renderSettings() {
     '<button class="btn ghost" onclick="ak9ClearDeadline()">Clear deadline</button></div></div>' +
 
     '<div class="panel"><h3>Follower verification</h3><div class="sub">Voting is limited to followers of the channel. ' +
-    'Twitch requires the broadcaster to connect once so the server can check followers.<br><br>' +
+    'Twitch lets <b>the broadcaster or any channel moderator</b> connect once so the server can check followers.<br><br>' +
     bstat.html +
-    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (AleksK9_)') + '</button> ' +
+    '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (Aleks or a mod)') + '</button> ' +
     '<button class="btn ghost" onclick="ak9Recheck()">Re-check status</button></div>' +
 
     '<div class="panel"><h3>Danger zone</h3><div class="sub">Clear every vote to start a fresh month. Awards/settings are kept. This cannot be undone.</div>' +

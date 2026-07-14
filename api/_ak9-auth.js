@@ -8,7 +8,7 @@
 // calls (identity-only, no sensitive scope). The broadcaster's refresh token is the
 // only sensitive one and it never leaves the server.
 
-import { CLIENT_ID, ALLOWED_REDIRECTS, env, configured, isAdminLogin, sb,
+import { CLIENT_ID, ALLOWED_REDIRECTS, CHANNEL_LOGIN, env, configured, isAdminLogin, sb,
   getProfile, cors, readBody } from './_ak9.js';
 
 export default async function handler(req, res) {
@@ -47,7 +47,9 @@ export default async function handler(req, res) {
     if (!val.ok || !vj.user_id) { res.status(502).json({ error: 'Could not read your Twitch account.' }); return; }
 
     if (role === 'broadcaster') {
-      // store the refresh token for follower verification (needs moderator:read:followers)
+      // Follower verification accepts a token from the BROADCASTER or any MODERATOR
+      // of the channel (Twitch allows both on /helix/channels/followers). Whoever
+      // authorizes, the stored broadcaster_id is pinned to the AK9 channel itself.
       if (!tj.refresh_token) {
         console.error('ak9-auth broadcaster: Twitch returned no refresh_token for', vj.login);
         res.status(400).json({ error: 'Twitch did not return a refresh token — try again.' }); return;
@@ -57,8 +59,21 @@ export default async function handler(req, res) {
         console.error('ak9-auth broadcaster: missing follower scope for', vj.login, '— granted:', scope);
         res.status(400).json({ error: 'Missing the follower-read permission — reconnect and approve it.' }); return;
       }
+      // resolve the AK9 channel's id (the authorizer may be a mod, not the channel)
+      let channelId = vj.user_id;
+      if ((vj.login || '').toLowerCase() !== CHANNEL_LOGIN) {
+        const cr = await fetch('https://api.twitch.tv/helix/users?login=' + encodeURIComponent(CHANNEL_LOGIN),
+          { headers: { Authorization: 'Bearer ' + tj.access_token, 'Client-Id': CLIENT_ID } });
+        const cjj = await cr.json().catch(() => null);
+        const chan = cjj && cjj.data && cjj.data[0];
+        if (!chan) {
+          console.error('ak9-auth broadcaster: could not resolve channel', CHANNEL_LOGIN);
+          res.status(502).json({ error: 'Could not resolve the AK9 channel on Twitch — try again.' }); return;
+        }
+        channelId = chan.id;
+      }
       const up = await sb('POST', 'ak9_broadcaster', {
-        body: [{ id: 1, broadcaster_id: vj.user_id, login: vj.login,
+        body: [{ id: 1, broadcaster_id: channelId, login: vj.login,
           refresh_token: tj.refresh_token, scope, updated_at: new Date().toISOString() }],
         prefer: 'resolution=merge-duplicates,return=minimal',
       });

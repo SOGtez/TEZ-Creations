@@ -8,7 +8,7 @@
 //   save_settings { month_label, deadline, voting_open }
 //   reset_votes   { confirm:true }   ← clears ALL votes (new month)
 
-import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody } from './_ak9.js';
+import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi } from './_ak9.js';
 
 async function requireAdmin(req, res) {
   const id = await validateToken(bearer(req));
@@ -69,6 +69,7 @@ export default async function handler(req, res) {
           scopeOk: /moderator:read:followers/.test(raw.scope || ''),
           loginMatches: (raw.login || '').toLowerCase() === CHANNEL_LOGIN,
           expectedChannel: CHANNEL_LOGIN,
+          followerApi: await probeFollowerApi(),   // live end-to-end probe
         },
         you: { login: admin.login },
       });

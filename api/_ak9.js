@@ -134,6 +134,23 @@ export async function checkFollows(userId) {
   return Array.isArray(j.data) && j.data.length > 0;
 }
 
+// Live self-test: can the stored token actually read the channel's followers?
+// Twitch requires the token's user to BE the broadcaster or a MODERATOR of the
+// channel — a 401/403 here means the connected account isn't a mod.
+export async function probeFollowerApi() {
+  const bc = await getBroadcaster();
+  if (!bc || !bc.broadcaster_id) return { ok: false, reason: 'not-connected' };
+  const r = await fetch('https://api.twitch.tv/helix/channels/followers?first=1&broadcaster_id=' +
+    encodeURIComponent(bc.broadcaster_id),
+    { headers: { Authorization: 'Bearer ' + bc.access_token, 'Client-Id': CLIENT_ID } });
+  if (r.ok) {
+    const j = await r.json().catch(() => ({}));
+    return { ok: true, total: typeof j.total === 'number' ? j.total : null };
+  }
+  return { ok: false, status: r.status,
+    reason: (r.status === 401 || r.status === 403) ? 'not-a-moderator' : 'api-error' };
+}
+
 // Twitch profile (display name + avatar) for a verified user.
 export async function getProfile(accessToken, userId) {
   try {
