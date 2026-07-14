@@ -865,9 +865,11 @@ document.getElementById('platformGrid').addEventListener('click',e=>{
   document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   state.platform=btn.dataset.platform;
-  // a previous platform's results don't apply to the new one — clear the board
+  // a previous platform's results don't apply to the new one — clear the board.
+  // Hide via the .visible class, NOT an inline display:none (an inline style would
+  // override the class the next hunt adds and keep results permanently hidden).
   state.results=[]; state.seen.clear(); state.selected.clear();
-  if(resultsSection) resultsSection.style.display='none';
+  if(resultsSection){ resultsSection.classList.remove('visible'); resultsGrid.innerHTML=''; }
   applyPlatformUI();
 });
 
