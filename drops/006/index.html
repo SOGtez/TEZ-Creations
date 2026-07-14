@@ -92,6 +92,7 @@
   box-shadow:0 0 16px rgba(63,224,139,0.12);
 }
 .platform-btn .badge{
+  position:static;top:auto;left:auto;backdrop-filter:none;-webkit-backdrop-filter:none;border:none;
   font-family:var(--font-mono);font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
   padding:2px 6px;border-radius:999px;background:rgba(63,224,139,0.18);color:var(--accent);
 }
@@ -273,6 +274,23 @@
 .result-pill.unknown{color:var(--muted-dim)}
 .result-pill.unknown .status-dot{background:rgba(255,255,255,0.18)}
 .result-pill.unknown .tag{font-size:0.62rem;color:var(--muted-dim);margin-left:8px;font-style:italic}
+/* Check one specific handle */
+.single-check{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.single-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.single-input{
+  flex:1;min-width:180px;font-family:var(--font-sans);font-size:0.9rem;
+  color:var(--text);background:var(--input-fill);
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);
+  padding:11px 14px;outline:none;transition:border-color .18s var(--ease);
+}
+.single-input:focus{border-color:rgba(63,224,139,0.45)}
+.single-result{margin-top:12px}
+.single-result:empty{display:none}
+.single-result .result-pill{max-width:420px}
+.single-tag{margin-left:auto;font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted-dim)}
+.result-pill.open .single-tag{color:var(--accent)}
+.result-pill.taken .single-tag,.result-pill.blocked .single-tag,.result-pill.unclaimable .single-tag{color:var(--muted)}
+
 /* Generator pills (Instagram): tap-to-check, self-marked open/taken */
 .result-pill.gen{cursor:pointer}
 .result-pill.gen .status-dot{background:rgba(255,255,255,0.14)}
@@ -526,6 +544,16 @@
       <p class="pro-note" id="proNote" style="display:none">
         Free checks 40 names, raw availability · <button type="button" id="proNoteBtn">Pro finds 200+ &amp; flags verified can’t-claim names →</button>
       </p>
+
+      <!-- Check one specific handle -->
+      <div class="single-check">
+        <p class="section-label" id="singleLabel">Or check one handle</p>
+        <div class="single-row">
+          <input class="single-input" id="singleInput" type="text" spellcheck="false" autocomplete="off" placeholder="type a username…" maxlength="30" />
+          <button class="btn-ghost" id="singleBtn">Search <span class="arrow">→</span></button>
+        </div>
+        <div class="single-result" id="singleResult"></div>
+      </div>
 
       <!-- Progress -->
       <div class="progress-section" id="progressSection">
@@ -797,19 +825,25 @@ const reportClear=document.getElementById('reportClear');
 const toastEl=document.getElementById('toast');
 const proNote=document.getElementById('proNote');
 const proNoteBtn=document.getElementById('proNoteBtn');
+const singleInput=document.getElementById('singleInput');
+const singleBtn=document.getElementById('singleBtn');
+const singleResult=document.getElementById('singleResult');
+const singleLabel=document.getElementById('singleLabel');
 
 // ── Per-platform config ─────────────────────────────────────
 // url: verify-link builder · batch: names per API call · freeCap/proCap: names
 // checked per hunt · vault: Twitch-only community can't-claim overlay + flagging.
 // Instagram/TikTok are checked one HTTP request per name and rate-limit by IP, so
 // their caps + batch sizes are smaller than Twitch's single batched GraphQL call.
+const CLEAN_TW=u=>String(u).trim().toLowerCase().replace(/^@/,'').replace(/[^a-z0-9_]/g,'');
+const CLEAN_DOT=u=>String(u).trim().toLowerCase().replace(/^@/,'').replace(/[^a-z0-9._]/g,'');
 const PLATFORM_CFG={
-  twitch:   { label:'Twitch',    url:u=>'https://www.twitch.tv/'+u,      batch:100, freeCap:40, proCap:200, vault:true  },
+  twitch:   { label:'Twitch',    url:u=>'https://www.twitch.tv/'+u,      batch:100, freeCap:40, proCap:200, vault:true,  clean:CLEAN_TW  },
   // Instagram blocks automated checks from our servers, so it's a GENERATOR: we
   // produce candidate names + a one-tap check link, the user verifies each. No
   // API call, so caps are generous.
-  instagram:{ label:'Instagram', url:u=>'https://www.instagram.com/'+u+'/', freeCap:24, proCap:100, vault:false, generateOnly:true },
-  tiktok:   { label:'TikTok',    url:u=>'https://www.tiktok.com/@'+u,    batch:20,  freeCap:15, proCap:50,  vault:false },
+  instagram:{ label:'Instagram', url:u=>'https://www.instagram.com/'+u+'/', freeCap:24, proCap:100, vault:false, generateOnly:true, clean:CLEAN_DOT },
+  tiktok:   { label:'TikTok',    url:u=>'https://www.tiktok.com/@'+u,    batch:20,  freeCap:15, proCap:50,  vault:false, clean:CLEAN_DOT },
 };
 function pcfg(){ return PLATFORM_CFG[state.platform] || PLATFORM_CFG.twitch; }
 
@@ -855,6 +889,9 @@ function applyPlatformUI(){
   if(!isTwitch){ if(reportBar) reportBar.classList.remove('show'); state.selected.clear(); }
   const gl=document.getElementById('goLabel');
   if(gl) gl.textContent = pcfg().generateOnly ? 'Generate names' : 'Hunt handles';
+  if(singleLabel) singleLabel.textContent = 'Or check one '+pcfg().label+' handle';
+  if(singleResult) singleResult.innerHTML='';
+  if(singleInput) singleInput.placeholder = pcfg().generateOnly ? 'type a handle to open on '+pcfg().label+'…' : 'type a '+pcfg().label+' username…';
 }
 
 // Platform picker
@@ -918,7 +955,7 @@ copyAllBtn.addEventListener('click',()=>{
 });
 
 // Flag toggle on open pills (delegated) → build the "report unclaimable" set
-resultsGrid.addEventListener('click',e=>{
+function onFlagClick(e){
   const flag=e.target.closest('.flag');
   if(!flag) return;
   const pill=flag.closest('.result-pill');
@@ -927,7 +964,8 @@ resultsGrid.addEventListener('click',e=>{
   if(state.selected.has(u)){ state.selected.delete(u); pill.classList.remove('selected'); }
   else { state.selected.add(u); pill.classList.add('selected'); }
   updateReportBar();
-});
+}
+resultsGrid.addEventListener('click',onFlagClick);
 
 // Generator pills (Instagram): tap the name to self-mark as you check each —
 // cycles generated → open → taken → generated. The "check ↗" link is excluded.
@@ -949,6 +987,52 @@ reportClear.addEventListener('click',()=>{
   updateReportBar();
 });
 reportSubmit.addEventListener('click',submitUnclaimable);
+
+// ── Check one specific handle ────────────────────────────────
+const SINGLE_TAG={open:'available',taken:'taken',blocked:'can’t register',unclaimable:'can’t claim',unknown:'couldn’t check',generated:'open to check'};
+function renderSingleResult(name,status,cfg,info){
+  const pill=document.createElement('div');
+  pill.className='result-pill '+(status==='generated'?'':status);
+  pill.dataset.username=name;
+  let tag=SINGLE_TAG[status]||status;
+  if(status==='unclaimable'&&info){ tag=info.confirmed?'verified · can’t claim':(info.reports?info.reports+' report'+(info.reports!==1?'s':''):'can’t claim'); }
+  let html='<span>'+name+'</span><span class="single-tag">'+tag+'</span>';
+  if(status==='open'||status==='generated'){
+    html+='<a class="go" href="'+cfg.url(name)+'" target="_blank" rel="noopener" title="Open on '+cfg.label+'">↗</a>';
+    if(cfg.vault&&status==='open') html+='<button class="flag" type="button" title="Tried it and '+cfg.label+' won’t let you claim it? Flag it.">⚑</button>';
+  }
+  html+='<span class="status-dot"></span>';
+  pill.innerHTML=html;
+  singleResult.innerHTML='';
+  singleResult.appendChild(pill);
+}
+async function checkSingle(){
+  const cfg=pcfg();
+  const name=cfg.clean(singleInput.value);
+  if(!name){ singleResult.innerHTML=''; return; }
+  singleInput.value=name;
+  // Instagram = generator: open the profile so the user sees it, + show a check row.
+  if(cfg.generateOnly){
+    try{ window.open(cfg.url(name),'_blank','noopener'); }catch(e){}
+    renderSingleResult(name,'generated',cfg,null);
+    return;
+  }
+  // Twitch / TikTok = live server check.
+  const pill=makePill(name,'checking'); singleResult.innerHTML=''; singleResult.appendChild(pill);
+  singleBtn.disabled=true;
+  try{
+    const r=await fetch('/api/usercheck?platform='+state.platform+'&usernames='+encodeURIComponent(name),{headers:authHeaders()});
+    if(!r.ok&&r.status!==429) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    const res=(d.results||[])[0];
+    if(res) renderSingleResult(res.username,res.status,cfg,res);
+    else renderSingleResult(name,'unknown',cfg,null);
+  }catch(e){ renderSingleResult(name,'unknown',cfg,null); }
+  singleBtn.disabled=false;
+}
+singleBtn.addEventListener('click',checkSingle);
+singleInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); checkSingle(); } });
+singleResult.addEventListener('click',onFlagClick);
 
 // Stop
 stopBtn.addEventListener('click',()=>{ state.aborted=true; });
