@@ -102,17 +102,18 @@ function winnerBlock(n, total) {
     '<span class="trophy">🏆</span></div>';
 }
 
-function awardCard(a, i) {
+function nomAv(n) {
+  return n.image ? '<span class="av" style="background-image:url(\'' + esc(n.image) + '\')"></span>'
+    : '<span class="av">' + esc((n.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+}
+function winHtml(a) {
   const winners = (a.nominees || []).filter(n => a.winnerIds.indexOf(n.id) !== -1);
+  if (!winners.length) return '<div class="nowin">No votes were cast for this award.</div>';
+  return '<div class="winlbl">' + (winners.length > 1 ? 'Winners · tie' : 'And the winner is…') + '</div>' +
+    winners.map(n => winnerBlock(n, a.total)).join('');
+}
+function breakdownHtml(a) {
   const max = (a.nominees[0] && a.nominees[0].votes) || 0;
-  let winHtml;
-  if (!winners.length) {
-    winHtml = '<div class="nowin">No votes were cast for this award.</div>';
-  } else {
-    winHtml = '<div class="winlbl">' + (winners.length > 1 ? 'Winners · tie' : 'And the winner is…') + '</div>' +
-      winners.map(n => winnerBlock(n, a.total)).join('');
-  }
-  // full breakdown (every nominee, ranked)
   const rows = (a.nominees || []).map(n => {
     const w = max > 0 ? Math.round((n.votes / max) * 100) : 0;
     const isWin = a.winnerIds.indexOf(n.id) !== -1;
@@ -121,12 +122,15 @@ function awardCard(a, i) {
       '<div class="bval">' + n.votes + ' · ' + (a.total > 0 ? Math.round((n.votes / a.total) * 100) : 0) + '%</div>' +
       '<div class="track"><i style="--w:' + w + '%"></i></div></div>';
   }).join('');
+  return rows ? '<div class="breakdown">' + rows + '</div>' : '';
+}
+function awardCard(a, i) {
   return '<div class="award" style="animation-delay:' + (i * 0.16).toFixed(2) + 's">' +
     '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
     '<div class="atitle">' + esc(a.title) + '</div>' +
     (a.description ? '<div class="adesc">' + esc(a.description) + '</div>' : '') +
-    winHtml +
-    (rows ? '<div class="breakdown">' + rows + '</div>' : '') +
+    winHtml(a) +
+    breakdownHtml(a) +
     '</div>';
 }
 
@@ -141,25 +145,61 @@ function renderResults(data) {
   const voters = data.totalVoters || 0;
   const teaser = voters + ' ballot' + (voters === 1 ? '' : 's') + ' cast · ' + awards.length + ' award' + (awards.length === 1 ? '' : 's');
 
+  // the finale: every award at once, bars growing
+  const showAll = () => {
+    view.innerHTML =
+      '<div class="awards" id="awards">' + awards.map((a, i) => awardCard(a, i)).join('') + '</div>' +
+      '<div class="btnrow" style="margin-top:28px"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
+    requestAnimationFrame(() => requestAnimationFrame(() => $('#awards').classList.add('go')));
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  // the ceremony: one award at a time — contenders first, reveal, then next
+  const step = (idx, revealed) => {
+    const a = awards[idx];
+    const dots = awards.map((_, j) =>
+      '<span class="cdot' + (j < idx ? ' done' : j === idx ? ' cur' : '') + '"></span>').join('');
+    const body = revealed
+      ? winHtml(a) + breakdownHtml(a)
+      : '<div class="winlbl">The nominees</div><div class="contenders">' +
+        (a.nominees || []).map((n, k) =>
+          '<div class="cont" style="animation-delay:' + (k * 0.09).toFixed(2) + 's">' +
+          nomAv(n) + '<span class="cn">' + esc(n.name) + '</span></div>').join('') + '</div>';
+    const btnLabel = !revealed ? '🏆 Reveal the winner'
+      : (idx < awards.length - 1 ? 'Next award →' : 'See all results →');
+    view.innerHTML =
+      '<div class="ceremony">' +
+        '<div class="cprog">' + dots + '</div>' +
+        '<div class="awards" id="cAw"><div class="award">' +
+          '<div class="anum">AWARD ' + pad(idx + 1) + ' OF ' + pad(awards.length) + '</div>' +
+          '<div class="atitle">' + esc(a.title) + '</div>' +
+          (a.description ? '<div class="adesc">' + esc(a.description) + '</div>' : '') +
+          body +
+        '</div></div>' +
+        '<div class="cbtnrow">' +
+          '<button class="btn reveal-btn' + (!revealed ? ' pulse' : '') + '" id="cBtn" type="button">' + btnLabel + '</button>' +
+          '<button class="cskip" id="cSkip" type="button">skip the ceremony · show everything</button>' +
+        '</div>' +
+      '</div>';
+    if (revealed) requestAnimationFrame(() => requestAnimationFrame(() => $('#cAw').classList.add('go')));
+    $('#cBtn').addEventListener('click', () => {
+      if (!revealed) { step(idx, true); return; }
+      if (idx < awards.length - 1) {
+        step(idx + 1, false);
+        window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+      } else { showAll(); }
+    });
+    $('#cSkip').addEventListener('click', showAll);
+  };
+
+  if (reduceMotion) { showAll(); return; }   // no drama needed — just show it
+
   view.innerHTML =
     '<div class="reveal-cta" id="revealCta">' +
       '<div class="tally-teaser">' + esc(teaser) + '</div>' +
-      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🏆 Reveal the winners</button>' +
-    '</div>' +
-    '<div id="stage" class="hidden">' +
-      '<div class="awards" id="awards">' + awards.map((a, i) => awardCard(a, i)).join('') + '</div>' +
-      '<div class="btnrow" style="margin-top:28px"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>' +
+      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🏆 Begin the reveal</button>' +
     '</div>';
-
-  const reveal = () => {
-    $('#revealCta').classList.add('hidden');
-    const stage = $('#stage');
-    stage.classList.remove('hidden');
-    // grow the breakdown bars once the stage is painted
-    requestAnimationFrame(() => requestAnimationFrame(() => $('#awards').classList.add('go')));
-  };
-  $('#revealBtn').addEventListener('click', reveal);
-  if (reduceMotion) reveal(); // no drama needed — just show it
+  $('#revealBtn').addEventListener('click', () => step(0, false));
 }
 
 /* ---------- living grid warp (same as the voter page) ---------- */

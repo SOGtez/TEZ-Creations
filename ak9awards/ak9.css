@@ -305,3 +305,22 @@ td .mini{color:var(--muted);font-size:12px}
   .count{gap:7px}.cbox{min-width:0;flex:1;padding:11px 4px}.cbox b{font-size:26px}
   .btn{padding:13px 20px}
 }
+
+/* ---------- winners ceremony (one award at a time) ---------- */
+.ceremony{max-width:640px;margin:26px auto 0}
+.cprog{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:18px}
+.cdot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.14);transition:transform .3s ease,background .3s ease,box-shadow .3s ease}
+.cdot.done{background:rgba(255,255,255,.55)}
+.cdot.cur{background:#fff;box-shadow:0 0 10px rgba(255,255,255,.5);transform:scale(1.3)}
+.contenders{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.cont{display:flex;align-items:center;gap:12px;border:1px solid var(--card-bd);border-radius:13px;
+  padding:11px 14px;background:rgba(255,255,255,.02);animation:fadeUp .5s ease backwards}
+.cont .av{width:38px;height:38px;border-radius:10px;flex:none;background-color:rgba(255,255,255,.06);
+  border:1px solid var(--card-bd);background-size:cover;background-position:center;
+  display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:14px;color:var(--faint)}
+.cont .cn{font-family:var(--fd);font-weight:600;font-size:15px}
+.cbtnrow{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:26px}
+.cskip{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.08em;cursor:pointer;
+  background:none;border:none;border-bottom:1px dotted rgba(255,255,255,.25);padding:0 0 2px;transition:color .2s ease}
+.cskip:hover{color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ .cont{animation:none} }
