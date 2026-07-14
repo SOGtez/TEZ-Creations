@@ -135,20 +135,28 @@ async function instagramOne(login) {
   } catch (_) { return 'unknown'; }
 }
 
-// TikTok: the profile page is a SPA, but its embedded JSON carries a statusCode —
-// 0 = the account loads (taken), 10221/10222 = "couldn't find this account" (open).
+// TikTok: the profile page is a SPA carrying embedded JSON. The reliable signal is
+// the PRESENCE of the profile object ("uniqueId":"<handle>") — it's there for BOTH
+// public and PRIVATE accounts. Private accounts report a "not found" statusCode
+// (10222) even though they exist, so the status code alone falsely reads them as
+// open; the uniqueId check must win. Only a not-found code WITHOUT a matching
+// uniqueId means the handle is actually free.
+function reEsc(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 async function tiktokOne(login) {
   try {
     const r = await fetch('https://www.tiktok.com/@' + encodeURIComponent(login), {
       headers: { 'User-Agent': BROWSER_UA, 'Accept': 'text/html' } });
     if (!r.ok && r.status !== 404) return 'unknown';
     const html = await r.text();
+    // Positive existence proof — covers public AND private accounts.
+    if (new RegExp('"uniqueId":"' + reEsc(login) + '"', 'i').test(html)) return 'taken';
     const m = html.match(/"statusCode":\s*(\d+)/);
-    if (!m) return r.status === 404 ? 'open' : 'unknown';
-    const code = parseInt(m[1], 10);
-    if (code === 0) return 'taken';
-    if (code === 10221 || code === 10222 || code === 10202) return 'open';
-    return 'unknown';
+    if (m) {
+      const code = parseInt(m[1], 10);
+      if (code === 0) return 'taken';                             // a profile loaded
+      if (code === 10221 || code === 10222 || code === 10202) return 'open';  // no such account
+    }
+    return r.status === 404 ? 'open' : 'unknown';
   } catch (_) { return 'unknown'; }
 }
 
