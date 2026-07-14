@@ -95,6 +95,9 @@
   font-family:var(--font-mono);font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
   padding:2px 6px;border-radius:999px;background:rgba(63,224,139,0.18);color:var(--accent);
 }
+.platform-btn.soon{opacity:.4;cursor:not-allowed}
+.platform-btn.soon:hover{color:var(--muted);border-color:var(--line-2)}
+.platform-btn .soon-badge{background:rgba(255,255,255,0.07);color:var(--muted)}
 
 /* Length picker */
 .length-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
@@ -267,6 +270,9 @@
 .result-pill.open .status-dot{background:var(--accent);box-shadow:0 0 8px rgba(63,224,139,0.6)}
 .result-pill.taken .status-dot{background:rgba(255,255,255,0.12)}
 .result-pill.blocked .status-dot{background:#d6a86a}
+.result-pill.unknown{color:var(--muted-dim)}
+.result-pill.unknown .status-dot{background:rgba(255,255,255,0.18)}
+.result-pill.unknown .tag{font-size:0.62rem;color:var(--muted-dim);margin-left:8px;font-style:italic}
 .result-pill .go{margin-left:8px;color:var(--accent);text-decoration:none;font-weight:700;flex-shrink:0}
 .result-pill .go:hover{text-decoration:underline}
 .result-pill.checking{color:var(--muted);animation:pulse-row 1.2s ease-in-out infinite}
@@ -434,16 +440,36 @@
           Twitch
           <span class="badge">Live</span>
         </button>
-        <!-- Future platforms (disabled, shown as coming soon) -->
-        <button class="platform-btn" data-platform="github" disabled style="opacity:.4;cursor:not-allowed" title="Coming soon">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-          GitHub
-          <span class="badge" style="background:rgba(255,255,255,0.07);color:var(--muted)">Soon</span>
+        <button class="platform-btn" data-platform="instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          Instagram
+          <span class="badge">Live</span>
         </button>
-        <button class="platform-btn" data-platform="reddit" disabled style="opacity:.4;cursor:not-allowed" title="Coming soon">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
-          Reddit
-          <span class="badge" style="background:rgba(255,255,255,0.07);color:var(--muted)">Soon</span>
+        <button class="platform-btn" data-platform="tiktok">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          TikTok
+          <span class="badge">Live</span>
+        </button>
+        <!-- Roadmap platforms (one-by-one; shown as coming soon) -->
+        <button class="platform-btn soon" data-platform="twitter" disabled title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Twitter
+          <span class="badge soon-badge">Soon</span>
+        </button>
+        <button class="platform-btn soon" data-platform="snapchat" disabled title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.319.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015l-.164.015c-1.468 0-2.442-.689-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.179-.434-.868-.658-1.317-.809-.135-.045-.255-.09-.344-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z"/></svg>
+          Snapchat
+          <span class="badge soon-badge">Soon</span>
+        </button>
+        <button class="platform-btn soon" data-platform="roblox" disabled title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.086 12.22l-4.612-1.243-1.243 4.612 4.613 1.243z"/></svg>
+          Roblox
+          <span class="badge soon-badge">Soon</span>
+        </button>
+        <button class="platform-btn soon" data-platform="discord" disabled title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+          Discord
+          <span class="badge soon-badge">Soon</span>
         </button>
       </div>
 
@@ -764,9 +790,20 @@ const toastEl=document.getElementById('toast');
 const proNote=document.getElementById('proNote');
 const proNoteBtn=document.getElementById('proNoteBtn');
 
+// ── Per-platform config ─────────────────────────────────────
+// url: verify-link builder · batch: names per API call · freeCap/proCap: names
+// checked per hunt · vault: Twitch-only community can't-claim overlay + flagging.
+// Instagram/TikTok are checked one HTTP request per name and rate-limit by IP, so
+// their caps + batch sizes are smaller than Twitch's single batched GraphQL call.
+const PLATFORM_CFG={
+  twitch:   { label:'Twitch',    url:u=>'https://www.twitch.tv/'+u,     batch:100, freeCap:40, proCap:200, vault:true  },
+  instagram:{ label:'Instagram', url:u=>'https://www.instagram.com/'+u, batch:20,  freeCap:15, proCap:50,  vault:false },
+  tiktok:   { label:'TikTok',    url:u=>'https://www.tiktok.com/@'+u,   batch:20,  freeCap:15, proCap:50,  vault:false },
+};
+function pcfg(){ return PLATFORM_CFG[state.platform] || PLATFORM_CFG.twitch; }
+
 // ── Tier gating (free vs Pro/Exclusive) ─────────────────────
 const PRO_FILTERS=['animals','nature','leetspeak']; // locked for free users
-const FREE_HUNT=40, PRO_HUNT=200;                   // candidates checked per run
 function hunterIsPro(){ return !!(window.TezAuth && TezAuth.isPro && TezAuth.isPro()); }
 
 // Attach the session token so the server can apply the Pro verified-vault
@@ -798,13 +835,27 @@ function applyTierUI(){
   if(proNote) proNote.style.display = pro ? 'none' : '';
 }
 
+// The vault / flagging / "verify a list" tools are Twitch-only (they overlay the
+// community can't-claim vault). Show/hide them as the platform changes.
+function applyPlatformUI(){
+  const isTwitch = state.platform === 'twitch';
+  const vc=document.getElementById('verifyCard');
+  if(vc) vc.style.display = isTwitch ? '' : 'none';
+  if(!isTwitch){ if(reportBar) reportBar.classList.remove('show'); state.selected.clear(); }
+}
+
 // Platform picker
 document.getElementById('platformGrid').addEventListener('click',e=>{
   const btn=e.target.closest('.platform-btn');
-  if(!btn || btn.disabled) return;
+  if(!btn || btn.disabled || btn.classList.contains('soon')) return;
+  if(btn.dataset.platform===state.platform) return;
   document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   state.platform=btn.dataset.platform;
+  // a previous platform's results don't apply to the new one — clear the board
+  state.results=[]; state.seen.clear(); state.selected.clear();
+  if(resultsSection) resultsSection.style.display='none';
+  applyPlatformUI();
 });
 
 // Length picker
@@ -883,6 +934,7 @@ if(proNoteBtn) proNoteBtn.addEventListener('click',()=>{
 });
 if(window.TezAuth && TezAuth.onChange) TezAuth.onChange(applyTierUI);
 applyTierUI(); // set initial locks/note from cached tier (updates on revalidate)
+applyPlatformUI(); // hide Twitch-only vault tools if a non-Twitch platform is preselected
 
 // ── Pro tool: verify a pasted list against the vault ─────────
 const verifyBtn=document.getElementById('verifyBtn');
@@ -965,14 +1017,15 @@ async function startHunt(){
   copyAllBtn.style.display='none';
 
   // Free tier checks fewer names per run; Pro/Exclusive get the full batch.
-  const cap=hunterIsPro()?PRO_HUNT:FREE_HUNT;
+  // Caps + batch size are per-platform (IG/TikTok check one request per name).
+  const cfg=pcfg();
+  const cap=hunterIsPro()?cfg.proCap:cfg.freeCap;
   const candidates=generateCandidates(state.length,state.filters,cap,state.seen);
   if(!candidates.length){
     setError('No candidates generated — turn on “Made-up names” or a word filter.');
     return;
   }
 
-  // Twitch batch size: 100 per request (the API max).
   const toCheck=candidates.slice(0,cap);
   const total=toCheck.length;
 
@@ -983,8 +1036,8 @@ async function startHunt(){
   progressSection.classList.add('visible');
   setProgress(0,total,'Generating candidates…');
 
-  // Batch check
-  const BATCH=100; // Twitch allows 100 per call
+  // Batch check — Twitch allows 100 per call; IG/TikTok use smaller batches.
+  const BATCH=cfg.batch;
   let done=0;
 
   for(let i=0;i<toCheck.length;i+=BATCH){
@@ -1031,9 +1084,9 @@ async function startHunt(){
     }
 
     if(!batchResults){
-      // Mark unchecked pills as error state
+      // Couldn't check this batch — show 'unknown', never a false 'open'/'taken'.
       for(const u of batch){
-        if(pillMap[u]) pillMap[u].className='result-pill taken';
+        if(pillMap[u]) fillPill(pillMap[u],'unknown',u,null);
       }
       break;
     }
@@ -1070,7 +1123,7 @@ async function startHunt(){
     progressFill.style.width='100%';
     progressLabel.textContent='Done';
     progressCount.textContent=`${checkedCount} checked`;
-    progressStatus.textContent=`Found ${openCount} open. “Open” = no active account — Twitch reserves some names, so verify the ↗ link (and flag any that won’t let you register).`;
+    progressStatus.textContent=`Found ${openCount} open. “Open” = no active ${pcfg().label} account — some names are reserved or held, so verify the ↗ link before you grab it.`;
   }
 
   // Update results header + actions
@@ -1116,11 +1169,14 @@ function fillPill(pill,status,username,info){
   pill.className='result-pill '+status;
   pill.dataset.username=username;
   if(status==='open'){
-    // open = no active account → verify link + a flag to report it's unclaimable
+    const cfg=pcfg();
+    // open = no active account → verify link. The ⚑ flag (community vault) is Twitch-only.
     pill.innerHTML='<span>'+username+'</span>'+
-      '<a class="go" href="https://www.twitch.tv/'+username+'" target="_blank" rel="noopener" title="Open on Twitch to verify">↗</a>'+
-      '<button class="flag" type="button" title="Tried it and Twitch won’t let you claim it? Flag it.">⚑</button>';
+      '<a class="go" href="'+cfg.url(username)+'" target="_blank" rel="noopener" title="Open on '+cfg.label+' to verify">↗</a>'+
+      (cfg.vault?'<button class="flag" type="button" title="Tried it and '+cfg.label+' won’t let you claim it? Flag it.">⚑</button>':'');
     if(state.selected.has(username)) pill.classList.add('selected');
+  } else if(status==='unknown'){
+    pill.innerHTML='<span>'+username+'</span><span class="tag">couldn’t check</span><span class="status-dot"></span>';
   } else if(status==='unclaimable'){
     let tag='can’t claim';
     if(info){

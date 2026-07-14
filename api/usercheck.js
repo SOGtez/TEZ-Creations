@@ -1,29 +1,54 @@
-// Vercel serverless — Twitch username checker for Handle Hunter.
+// Vercel serverless — multi-platform username checker for Handle Hunter.
 //
-// ⚠️ Twitch locked the TRUE "is this registerable?" check (the GraphQL
-// `isUsernameAvailable` query) behind a Kasada / integrity bot-wall, so it can't
-// be called from a server. That means a banned / held / reserved name can't be
-// detected as such from here. What we CAN do reliably:
-//   • TAKEN  — an active Twitch account exists (public GQL `userResultByLogin`)
-//   • BLOCKED — Twitch's own rules forbid it (under 4 chars / bad pattern)
+// Supported platforms (?platform=): twitch, instagram, tiktok.
+// Each reports one of:
+//   • TAKEN  — an active account exists on that platform
 //   • OPEN   — no active account (likely free)
-//   • UNCLAIMABLE — looks open here, but our community flagged it as not actually
-//                   registerable (they tried and Twitch refused). This is the
-//                   crowd-sourced layer that fills Twitch's deliberate blind spot.
+//   • BLOCKED — the platform's own rules forbid the name (length / bad chars)
+//   • UNKNOWN — the platform wouldn't give a clear answer (rate-limited / error);
+//               NEVER shown as "open" so we don't send someone chasing a dead name
+//   • UNCLAIMABLE — (Twitch only) looks open here, but our community flagged it as
+//                   not actually registerable. Crowd-sourced layer for Twitch's blind spot.
+//
+// ⚠️ Twitch locked the TRUE "is this registerable?" check (GraphQL
+// `isUsernameAvailable`) behind a Kasada bot-wall, so banned/held/reserved names
+// can't be told apart from free ones server-side — hence the community vault.
+// Instagram + TikTok have no ban-vs-free distinction either; "open = no live
+// account". Both rate-limit by IP, so per-run counts are capped lower than Twitch's.
 //
 // GET  /api/usercheck?platform=twitch&usernames=a&usernames=b...
-//   → { results:[ { username, status, available } ], note }
-//   status: 'taken' | 'open' | 'blocked' | 'unclaimable'
+//   → { results:[ { username, status, available } ], platform, note }
+//   status: 'taken' | 'open' | 'blocked' | 'unclaimable' | 'unknown'
 //
 // POST /api/usercheck            (Authorization: Bearer <tez token>)
-//   body { handles:["foo","bar"] }  → { ok, count }
-//   Records handles a signed-in user discovered are unclaimable. Stored in
-//   tez_unclaimable so future hunts stop showing them as "open".
+//   body { handles:["foo","bar"] }  → { ok, count }   (Twitch community reports)
+//   body { import:[...] }           → { ok, imported } (owner-only vault seed)
 
 import crypto from 'node:crypto';
 
 // Twitch's public web Client-ID (same one twitch.tv uses; safe, no secret needed).
 const GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
+
+// A browser-ish UA so Instagram/TikTok serve their normal responses.
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
+  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+// Instagram's public web app id — required header for web_profile_info.
+const IG_APP_ID = '936619743392459';
+
+// Run async work over items with a bounded concurrency (keeps us from hammering
+// a platform with 100 parallel requests from one IP).
+async function pool(items, concurrency, worker) {
+  const out = new Array(items.length);
+  let idx = 0;
+  async function run() {
+    while (idx < items.length) {
+      const i = idx++;
+      out[i] = await worker(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, run));
+  return out;
+}
 
 // Supabase (service role bypasses RLS) — shares the project the accounts use.
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -66,15 +91,96 @@ function bearer(req) {
   return m ? m[1].trim() : '';
 }
 
-// Twitch won't let you register a NEW name under 4 chars, over 25, or with
-// anything outside [a-z0-9_]. Those can never be claimed → flag them.
-function ruleBlocked(login) {
-  if (login.length < 4 || login.length > 25) return true;
-  if (!/^[a-z0-9_]+$/.test(login)) return true;
-  return false;
+// ---- per-platform username checking ----
+// Each platform: clean() normalizes a raw handle, blocked() is true when the
+// platform's own rules forbid registering it, and check() resolves a batch of
+// already-cleaned logins to 'taken' | 'open' | 'unknown'.
+
+// Twitch: batched public GQL. __typename 'User' = taken, else no active account.
+async function twitchCheck(logins) {
+  const query = 'query{' +
+    logins.map((l, i) => `u${i}:userResultByLogin(login:"${l}"){__typename}`).join(' ') +
+    '}';
+  const r = await fetch('https://gql.twitch.tv/gql', {
+    method: 'POST',
+    headers: { 'Client-Id': GQL_CLIENT_ID, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!r.ok) {
+    if (r.status === 429) { const e = new Error('rate'); e.rate = true; throw e; }
+    throw new Error('Twitch GQL error: ' + r.status);
+  }
+  const j = await r.json();
+  const data = (j && j.data) || {};
+  return logins.map((login, i) => {
+    const node = data['u' + i];
+    return node && node.__typename === 'User' ? 'taken' : 'open';
+  });
 }
 
+// Instagram: web_profile_info returns 200 for a real profile, 404 when the
+// handle has no account. 429/anything else → unknown (never a false "open").
+async function instagramOne(login) {
+  try {
+    const r = await fetch(
+      'https://www.instagram.com/api/v1/users/web_profile_info/?username=' + encodeURIComponent(login),
+      { headers: {
+        'User-Agent': BROWSER_UA, 'x-ig-app-id': IG_APP_ID, 'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9', 'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'https://www.instagram.com/', 'sec-fetch-site': 'same-origin',
+      } });
+    if (r.status === 200) return 'taken';
+    if (r.status === 404) return 'open';
+    return 'unknown';
+  } catch (_) { return 'unknown'; }
+}
+
+// TikTok: the profile page is a SPA, but its embedded JSON carries a statusCode —
+// 0 = the account loads (taken), 10221/10222 = "couldn't find this account" (open).
+async function tiktokOne(login) {
+  try {
+    const r = await fetch('https://www.tiktok.com/@' + encodeURIComponent(login), {
+      headers: { 'User-Agent': BROWSER_UA, 'Accept': 'text/html' } });
+    if (!r.ok && r.status !== 404) return 'unknown';
+    const html = await r.text();
+    const m = html.match(/"statusCode":\s*(\d+)/);
+    if (!m) return r.status === 404 ? 'open' : 'unknown';
+    const code = parseInt(m[1], 10);
+    if (code === 0) return 'taken';
+    if (code === 10221 || code === 10222 || code === 10202) return 'open';
+    return 'unknown';
+  } catch (_) { return 'unknown'; }
+}
+
+// The community "can't-claim" vault is Twitch-only, so its handle cleaning follows
+// Twitch's rules (used by the POST report/import paths below).
 const cleanLogin = (u) => String(u).trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+const PLATFORMS = {
+  twitch: {
+    min: 4, max: 25,
+    clean: (u) => String(u).trim().toLowerCase().replace(/[^a-z0-9_]/g, ''),
+    blocked: (l) => l.length < 4 || l.length > 25 || !/^[a-z0-9_]+$/.test(l),
+    batchCap: 100, concurrency: 1, hasVault: true,
+    check: twitchCheck,
+  },
+  instagram: {
+    // IG allows letters, numbers, periods, underscores; up to 30 chars.
+    min: 1, max: 30,
+    clean: (u) => String(u).trim().toLowerCase().replace(/^@/, '').replace(/[^a-z0-9._]/g, ''),
+    blocked: (l) => l.length < 1 || l.length > 30 || !/^[a-z0-9._]+$/.test(l),
+    batchCap: 25, concurrency: 6,
+    check: (logins) => pool(logins, 6, instagramOne),
+  },
+  tiktok: {
+    // TikTok allows letters, numbers, periods, underscores; 2–24 chars.
+    min: 2, max: 24,
+    clean: (u) => String(u).trim().toLowerCase().replace(/^@/, '').replace(/[^a-z0-9._]/g, ''),
+    blocked: (l) => l.length < 2 || l.length > 24 || !/^[a-z0-9._]+$/.test(l),
+    batchCap: 25, concurrency: 5,
+    check: (logins) => pool(logins, 5, tiktokOne),
+  },
+};
 
 // Look up the community "can't-claim" info for these logins, keyed by handle:
 //   { reports, confirmed }.  Only names that clear the threshold (or are
@@ -121,11 +227,12 @@ export default async function handler(req, res) {
   return check(req, res);
 }
 
-// ---- GET: check availability (with community overlay) ----
+// ---- GET: check availability (per platform, + Twitch community overlay) ----
 async function check(req, res) {
-  const platform = (req.query.platform || '').toLowerCase();
-  if (platform !== 'twitch') {
-    res.status(400).json({ error: 'Only platform=twitch is supported right now.' });
+  const platform = (req.query.platform || 'twitch').toLowerCase();
+  const P = PLATFORMS[platform];
+  if (!P) {
+    res.status(400).json({ error: 'Unsupported platform. Try twitch, instagram, or tiktok.' });
     return;
   }
 
@@ -134,52 +241,36 @@ async function check(req, res) {
   const rawParam = req.query.usernames;
   const rawList = Array.isArray(rawParam) ? rawParam : String(rawParam || '').split(',');
   const logins = [...new Set(
-    rawList.map(cleanLogin).filter((u) => u.length >= 1 && u.length <= 25)
-  )].slice(0, 100);
+    rawList.map(P.clean).filter((u) => u.length >= 1 && u.length <= P.max)
+  )].slice(0, P.batchCap);
 
   if (logins.length === 0) { res.status(400).json({ results: [] }); return; }
 
-  // The verified "can't-claim" vault is a Pro perk — resolve tier first.
+  // The verified "can't-claim" vault is a Pro perk (Twitch only) — resolve tier first.
   const tier = await callerTier(req);
   const isPro = tier === 'pro' || tier === 'exclusive';
 
+  // Blocked names never hit the network — resolve them from rules up front and
+  // only send the plausibly-registerable ones to the platform.
+  const blocked = new Set();
+  const toQuery = [];
+  for (const l of logins) { if (P.blocked(l)) blocked.add(l); else toQuery.push(l); }
+
   try {
-    // One batched GQL request, aliased per login. __typename is "User" when an
-    // active account exists, "UserDoesNotExist" when it doesn't.
-    const query = 'query{' +
-      logins.map((l, i) => `u${i}:userResultByLogin(login:"${l}"){__typename}`).join(' ') +
-      '}';
-
-    const r = await fetch('https://gql.twitch.tv/gql', {
-      method: 'POST',
-      headers: { 'Client-Id': GQL_CLIENT_ID, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-
-    if (!r.ok) {
-      if (r.status === 429) { res.status(429).json({ error: 'Rate limited by Twitch.' }); return; }
-      throw new Error('Twitch GQL error: ' + r.status);
+    let live = new Map();
+    if (toQuery.length) {
+      const statuses = await P.check(toQuery);
+      toQuery.forEach((l, i) => live.set(l, statuses[i] || 'unknown'));
     }
 
-    const j = await r.json();
-    const data = (j && j.data) || {};
+    const base = logins.map((login) => ({
+      username: login,
+      status: blocked.has(login) ? 'blocked' : (live.get(login) || 'unknown'),
+    }));
 
-    // First pass: taken / blocked / open from Twitch + our rules.
-    const base = logins.map((login, i) => {
-      const node = data['u' + i];
-      const exists = node && node.__typename === 'User';
-      let status;
-      if (exists) status = 'taken';
-      else if (ruleBlocked(login)) status = 'blocked';
-      else status = 'open';
-      return { username: login, status };
-    });
-
-    // Second pass (Pro only): overlay the verified "can't-claim" vault + its
-    // confidence (report count / owner-confirmed) onto the open names. Free and
-    // anonymous callers get the raw open/taken/blocked result.
+    // Twitch-only overlay: cross-check open names against the verified vault (Pro).
     const openLogins = base.filter((r) => r.status === 'open').map((r) => r.username);
-    const info = isPro ? await unclaimableInfo(openLogins) : new Map();
+    const info = (P.hasVault && isPro) ? await unclaimableInfo(openLogins) : new Map();
 
     const results = base.map((r) => {
       if (r.status === 'open' && info.has(r.username)) {
@@ -189,20 +280,22 @@ async function check(req, res) {
       return { username: r.username, status: r.status, available: r.status === 'open' };
     });
 
-    // A per-tier response must never be shared-cached (the token is in a header,
-    // not the URL), so only cache anonymous/no-token checks at the edge.
+    // A per-tier response must never be shared-cached (token is in a header, not
+    // the URL), so only cache anonymous/no-token checks at the edge.
     if (bearer(req)) res.setHeader('Cache-Control', 'private, no-store');
     else res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
+    const label = platform === 'twitch' ? 'Twitch' : platform === 'instagram' ? 'Instagram' : 'TikTok';
     res.status(200).json({
-      results, tier, pro: isPro,
-      note: isPro
-        ? 'open = no active Twitch account. unclaimable = in the verified can’t-claim vault. Twitch still reserves some names, so verify before relying on it.'
-        : 'open = no active Twitch account. Twitch reserves some names — Pro cross-checks the verified can’t-claim vault so you don’t chase dead names.',
+      results, tier, pro: isPro, platform,
+      note: (P.hasVault && isPro)
+        ? 'open = no active ' + label + ' account. unclaimable = in the verified can’t-claim vault. ' + label + ' still reserves some names, so verify before relying on it.'
+        : 'open = no active ' + label + ' account. Some names are reserved or held — verify the ↗ link before you rely on it.',
     });
   } catch (err) {
-    console.error('usercheck', err);
-    res.status(502).json({ error: 'Could not reach Twitch — try again.' });
+    if (err && err.rate) { res.status(429).json({ error: 'Rate limited — wait a moment and try fewer names.' }); return; }
+    console.error('usercheck', platform, err);
+    res.status(502).json({ error: 'Could not reach ' + platform + ' — try again.' });
   }
 }
 
