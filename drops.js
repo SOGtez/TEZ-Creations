@@ -19,7 +19,7 @@ const DROPS = [
     date: "2026-07-13",
     type: "tool",
     category: "Creator Apps",
-    image: "",
+    image: "drops/008/cover.png",
     action: { kind: "use", url: "drops/008/index.html" }
   },
   {
@@ -30,7 +30,7 @@ const DROPS = [
     date: "2026-07-11",
     type: "tool",
     category: "Stream Tools",
-    image: "",
+    image: "drops/007/cover.png",
     action: { kind: "use", url: "drops/007/index.html" }
   },
   {
@@ -41,7 +41,7 @@ const DROPS = [
     date: "2026-06-29",
     type: "tool",
     category: "Apps",
-    image: "",
+    image: "drops/006/cover.png",
     action: { kind: "use", url: "drops/006/index.html" }
   },
   {
