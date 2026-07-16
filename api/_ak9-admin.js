@@ -11,7 +11,29 @@
 //   reset_nominations  { confirm:true }   ← clears ALL phase-1 nominations
 //   reset_voter        { twitch_user_id }
 
-import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi } from './_ak9.js';
+import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi, twitchProfiles } from './_ak9.js';
+
+// Best-effort: fill each nominee's avatar from Twitch. A nominee's login is its
+// explicit twitch_login, else its name if that looks like a Twitch handle
+// ([a-z0-9_], 3–25). Only fills a MISSING image; a manually-set image is kept.
+async function enrichNomineeAvatars(nominees) {
+  const loginOf = (n) => {
+    const explicit = String(n.twitch_login || '').trim().toLowerCase().replace(/^@/, '');
+    if (/^[a-z0-9_]{3,25}$/.test(explicit)) return explicit;
+    const fromName = String(n.name || '').trim().toLowerCase().replace(/^@/, '');
+    return /^[a-z0-9_]{3,25}$/.test(fromName) ? fromName : '';
+  };
+  const need = nominees.filter(n => !n.image).map(loginOf).filter(Boolean);
+  if (!need.length) return;
+  let map;
+  try { map = await twitchProfiles(need); } catch (_) { return; }   // never block a save
+  nominees.forEach(n => {
+    if (n.image) return;
+    const login = loginOf(n);
+    const p = login && map.get(login);
+    if (p) { n.image = p.profile_image_url || ''; if (!n.twitch_login) n.twitch_login = p.login; }
+  });
+}
 
 async function requireAdmin(req, res) {
   const id = await validateToken(bearer(req));
@@ -132,6 +154,7 @@ export default async function handler(req, res) {
           nominees: cleanNominees(a.nominees),
         };
         if (!row.title) { res.status(400).json({ error: 'Award needs a title.' }); return; }
+        await enrichNomineeAvatars(row.nominees);   // auto-fill Twitch pfps
         if (a.id) {
           const u = await sb('PATCH', 'ak9_awards?id=eq.' + encodeURIComponent(a.id),
             { body: row, prefer: 'return=representation' });

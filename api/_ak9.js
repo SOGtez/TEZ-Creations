@@ -49,6 +49,41 @@ export async function sb(method, path, { body, prefer } = {}) {
   return { ok: r.ok, status: r.status, json, text };
 }
 
+// ---- Twitch app token (client credentials) for public lookups, cached warm ----
+let appTok = null;   // { token, exp(ms) }
+async function appToken() {
+  const now = Date.now();
+  if (appTok && appTok.exp - 60000 > now) return appTok.token;
+  const e = env();
+  const r = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: CLIENT_ID, client_secret: e.secret, grant_type: 'client_credentials' }),
+  });
+  const j = await r.json();
+  if (!r.ok || !j.access_token) throw new Error('ak9 app token ' + r.status);
+  appTok = { token: j.access_token, exp: now + (j.expires_in || 3600) * 1000 };
+  return appTok.token;
+}
+
+// Resolve Twitch logins → profile pictures. Returns Map(login → { login,
+// display_name, profile_image_url }). Invalid/unknown logins simply aren't in
+// the map. Best-effort — throws are the caller's to swallow.
+export async function twitchProfiles(logins) {
+  const clean = [...new Set(logins.map(l => String(l || '').trim().toLowerCase().replace(/^@/, ''))
+    .filter(l => /^[a-z0-9_]{3,25}$/.test(l)))].slice(0, 100);
+  if (!clean.length) return new Map();
+  const tok = await appToken();
+  const qs = clean.map(l => 'login=' + encodeURIComponent(l)).join('&');
+  const r = await fetch('https://api.twitch.tv/helix/users?' + qs,
+    { headers: { 'Client-Id': CLIENT_ID, Authorization: 'Bearer ' + tok } });
+  if (!r.ok) return new Map();
+  const j = await r.json().catch(() => null);
+  const map = new Map();
+  (j && j.data || []).forEach(u => map.set((u.login || '').toLowerCase(),
+    { login: u.login, display_name: u.display_name, profile_image_url: u.profile_image_url }));
+  return map;
+}
+
 // ---- Twitch token validation (identity), cached briefly on warm instances ----
 const valCache = {};   // accessToken -> { user_id, login, exp(ms) }
 export async function validateToken(accessToken) {
