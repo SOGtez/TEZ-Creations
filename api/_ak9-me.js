@@ -22,6 +22,11 @@ export default async function handler(req, res) {
       encodeURIComponent(id.user_id) + '&select=choices,created_at&limit=1')).json;
     const existing = (voteRow || [])[0] || null;
 
+    // already nominated (phase 1)?
+    const nomRow = (await sb('GET', 'ak9_nominations?twitch_user_id=eq.' +
+      encodeURIComponent(id.user_id) + '&select=choices,created_at&limit=1')).json;
+    const nom = (nomRow || [])[0] || null;
+
     // follower check (admins bypass — you can't follow your own channel)
     let isFollower, broadcasterReady = true;
     if (admin) { isFollower = true; }
@@ -31,8 +36,8 @@ export default async function handler(req, res) {
       else isFollower = f;
     }
 
-    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open&limit=1')).json;
-    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true };
+    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open,phase,nominate_deadline&limit=1')).json;
+    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null };
 
     res.status(200).json({
       user: { id: id.user_id, login: id.login },
@@ -41,6 +46,8 @@ export default async function handler(req, res) {
       broadcasterReady,
       hasVoted: !!existing,
       choices: existing ? existing.choices : null,
+      hasNominated: !!nom,
+      nominateChoices: nom ? nom.choices : null,
       settings,
     });
   } catch (err) {

@@ -16,6 +16,8 @@ import { configured, sb, cors } from './_ak9.js';
 
 function isClosed(s) {
   if (!s) return false;
+  if (s.phase === 'closed') return true;
+  if (s.phase === 'nominate') return false;   // phase 1 — never reveal results
   if (s.voting_open === false) return true;
   if (s.deadline && Date.now() > new Date(s.deadline).getTime()) return true;
   return false;

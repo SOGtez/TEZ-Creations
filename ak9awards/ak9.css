@@ -324,3 +324,22 @@ td .mini{color:var(--muted);font-size:12px}
   background:none;border:none;border-bottom:1px dotted rgba(255,255,255,.25);padding:0 0 2px;transition:color .2s ease}
 .cskip:hover{color:var(--muted)}
 @media (prefers-reduced-motion: reduce){ .cont{animation:none} }
+
+/* ---------- phase 1: nomination form ---------- */
+.nom-intro{max-width:640px;margin:0 auto 24px;color:var(--muted);font-size:14.5px;line-height:1.6;text-align:center}
+.award .nom-input{margin-top:4px;font-size:15px}
+.award .nom-input:disabled{opacity:.7;cursor:default}
+
+/* ---------- admin: phase segment + nomination tally ---------- */
+.phase-seg{display:inline-flex;gap:6px;flex-wrap:wrap;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:5px}
+.phase-opt{font-family:var(--fs);font-weight:600;font-size:13px;color:var(--muted);background:transparent;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;transition:.18s var(--ease)}
+.phase-opt:hover{color:var(--ink)}
+.phase-opt.on{background:var(--plat);color:#0a0a0b;box-shadow:0 6px 18px -8px rgba(255,255,255,.4)}
+.nom-tally{display:flex;flex-wrap:wrap;gap:8px}
+.nom-chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--fs);font-size:13.5px;color:var(--ink);
+  background:rgba(255,255,255,.04);border:1px solid var(--line-2);border-radius:999px;padding:8px 8px 8px 14px;cursor:pointer;transition:.16s var(--ease)}
+.nom-chip:hover{border-color:#fff}
+.nom-chip .c{font-family:var(--fm);font-size:11px;color:var(--faint);background:rgba(0,0,0,.35);border-radius:999px;padding:2px 8px;min-width:22px;text-align:center}
+.nom-chip.on{background:var(--plat);color:#0a0a0b;border-color:#fff}
+.nom-chip.on .c{background:rgba(0,0,0,.12);color:#333}
+.btn.sm{padding:10px 16px;font-size:13.5px}

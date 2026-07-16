@@ -19,8 +19,8 @@ export default async function handler(req, res) {
   if (!configured()) { res.status(503).json({ error: 'AK9 Awards is not set up yet.' }); return; }
 
   try {
-    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open&limit=1')).json;
-    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true };
+    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open,phase,nominate_deadline&limit=1')).json;
+    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null };
     const aw = (await sb('GET', 'ak9_awards?select=id,title,description,sort,nominees&order=sort.asc,created_at.asc')).json || [];
     const awards = aw.map(a => ({
       id: a.id, title: a.title, description: a.description || '',

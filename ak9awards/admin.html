@@ -21,10 +21,12 @@
     <div id="app" class="hidden">
       <div class="tabs">
         <div class="tab on" data-tab="results">Results</div>
+        <div class="tab" data-tab="noms">Nominations</div>
         <div class="tab" data-tab="manage">Manage awards</div>
         <div class="tab" data-tab="settings">Settings</div>
       </div>
       <div id="tab-results"></div>
+      <div id="tab-noms" class="hidden"></div>
       <div id="tab-manage" class="hidden"></div>
       <div id="tab-settings" class="hidden"></div>
     </div>
@@ -95,7 +97,7 @@ async function load() {
   DATA = r.json;
   $('#acct').innerHTML = '<span>@' + esc((DATA.you || {}).login || '') + '</span><span class="out" onclick="ak9Logout()">log out</span>';
   $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
-  renderResults(); renderManage(); renderSettings();
+  renderResults(); renderNoms(); renderManage(); renderSettings();
 }
 
 /* ---------- results ---------- */
@@ -164,6 +166,67 @@ window.ak9Export = function () {
 
 /* ---------- manage awards ---------- */
 let editing = {};  // local working copies keyed by award id (or 'new')
+/* ---------- nominations (phase 1 tally → finalists) ---------- */
+let NOM_SEL = {};   // { awardId: Set(name) }
+function renderNoms() {
+  const awards = DATA.awards || [];
+  const tally = DATA.nominationTally || {};
+  let html = '<div class="panel"><h3>Phase 1 · nominations</h3><div class="sub">' +
+    '<b>' + (DATA.totalNominators || 0) + '</b> people nominated. Each award below lists the names people submitted, ranked by votes ' +
+    '(similar spellings like <i>aleksk9 / AleksK9 / @aleksk9</i> are merged). The <b>top 3 are pre-selected</b> — tap names to ' +
+    'adjust, then <b>Set as finalists</b> to make them the voting ballot. Add photos/Twitch logins afterward in Manage awards.</div></div>';
+  if (!awards.length) { $('#tab-noms').innerHTML = html + '<div class="panel">Add awards first (Manage awards).</div>'; return; }
+  awards.forEach(a => {
+    const ranked = tally[a.id] || [];
+    if (!NOM_SEL[a.id]) NOM_SEL[a.id] = new Set(ranked.slice(0, 3).map(r => r.name));
+    const sel = NOM_SEL[a.id];
+    const chips = ranked.length
+      ? ranked.map(r => '<button type="button" class="nom-chip' + (sel.has(r.name) ? ' on' : '') +
+          '" data-award="' + esc(a.id) + '" data-name="' + esc(r.name) + '" onclick="ak9ToggleNom(this)">' +
+          esc(r.name) + '<span class="c">' + r.count + '</span></button>').join('')
+      : '<div class="sub">No nominations yet.</div>';
+    html += '<div class="award-res"><h4>' + esc(a.title) + '</h4>' +
+      '<div class="nom-tally" id="tally-' + esc(a.id) + '">' + chips + '</div>' +
+      (ranked.length ? '<div class="row" style="margin-top:14px;align-items:center;gap:12px">' +
+        '<button class="btn sm" onclick="ak9SetFinalists(this,\'' + esc(a.id) + '\')">Set as finalists →</button>' +
+        '<span class="sub" id="selcount-' + esc(a.id) + '" style="margin:0"></span></div>' : '') +
+      '</div>';
+  });
+  $('#tab-noms').innerHTML = html;
+  awards.forEach(a => updateSelCount(a.id));
+}
+function updateSelCount(awardId) {
+  const el = document.getElementById('selcount-' + awardId);
+  if (el) { const n = (NOM_SEL[awardId] || new Set()).size; el.textContent = n + ' selected'; }
+}
+window.ak9ToggleNom = function (btn) {
+  const awardId = btn.dataset.award, name = btn.dataset.name;
+  const set = NOM_SEL[awardId] || (NOM_SEL[awardId] = new Set());
+  if (set.has(name)) { set.delete(name); btn.classList.remove('on'); }
+  else { set.add(name); btn.classList.add('on'); }
+  updateSelCount(awardId);
+};
+window.ak9SetFinalists = async function (btn, awardId) {
+  const award = (DATA.awards || []).find(a => String(a.id) === String(awardId));
+  if (!award) return;
+  const ranked = (DATA.nominationTally || {})[awardId] || [];
+  const sel = NOM_SEL[awardId] || new Set();
+  // keep tally order for the chosen names
+  const names = ranked.filter(r => sel.has(r.name)).map(r => r.name);
+  if (!names.length) { toast('Pick at least one name.', true); return; }
+  if ((award.nominees || []).length && !confirm('Replace the current finalists for “' + award.title + '” with these ' + names.length + ' name(s)?')) return;
+  const body = { action: 'save_award', award: {
+    id: award.id, title: award.title, description: award.description || '', sort: award.sort || 0,
+    nominees: names.map(n => ({ name: n })),
+  } };
+  btn.disabled = true;
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body });
+  btn.disabled = false;
+  if (!r.ok) { toast(r.json.error || 'Could not save.', true); return; }
+  toast('Finalists set for “' + award.title + '” — polish them in Manage awards');
+  await reload();
+};
+
 function renderManage() {
   const awards = DATA.awards || [];
   let html = '<div class="panel"><h3>Awards</h3><div class="sub">Create the awards and their nominees. ' +
@@ -272,40 +335,62 @@ function renderSettings() {
   const s = DATA.settings || {};
   const bc = DATA.broadcaster;
   const bstat = broadcasterStatus();
+  const phase = s.phase || 'vote';
+  const seg = (v, label) => '<button type="button" class="phase-opt' + (phase === v ? ' on' : '') +
+    '" data-phase="' + v + '" onclick="ak9SetPhase(this)">' + label + '</button>';
   $('#tab-settings').innerHTML =
-    '<div class="panel"><h3>Voting settings</h3><div class="sub">Set the month, the deadline, and open or close voting.</div>' +
-    '<div class="row"><div class="field"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
-    '<div class="field"><label>Deadline (your local time)</label><input id="s-deadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.deadline) + '"></div></div>' +
-    '<label class="switch" style="margin:6px 0 16px"><input type="checkbox" id="s-open" ' + (s.voting_open !== false ? 'checked' : '') + '> Voting open</label>' +
-    '<div><button class="btn" onclick="ak9SaveSettings(this)">Save settings</button> ' +
-    '<button class="btn ghost" onclick="ak9ClearDeadline()">Clear deadline</button></div></div>' +
+    '<div class="panel"><h3>Phase</h3><div class="sub">The awards run in two phases. <b>Nominate</b> lets followers suggest names; ' +
+    'close it, promote the top names to finalists (Nominations tab), then switch to <b>Vote</b>. <b>Closed</b> ends everything and reveals results.</div>' +
+    '<div class="phase-seg" id="phaseSeg">' + seg('nominate', '1 · Nominate') + seg('vote', '2 · Vote') + seg('closed', 'Closed') + '</div></div>' +
 
-    '<div class="panel"><h3>Follower verification</h3><div class="sub">Voting is limited to followers of the channel. ' +
+    '<div class="panel"><h3>Deadlines & month</h3><div class="sub">Set the month label and each phase’s deadline.</div>' +
+    '<div class="field" style="margin-bottom:12px"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
+    '<div class="row"><div class="field"><label>Nomination deadline (phase 1)</label><input id="s-nomdeadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.nominate_deadline) + '"></div>' +
+    '<div class="field"><label>Voting deadline (phase 2)</label><input id="s-deadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.deadline) + '"></div></div>' +
+    '<label class="switch" style="margin:6px 0 16px"><input type="checkbox" id="s-open" ' + (s.voting_open !== false ? 'checked' : '') + '> Voting open</label>' +
+    '<div><button class="btn" onclick="ak9SaveSettings(this)">Save settings</button></div></div>' +
+
+    '<div class="panel"><h3>Follower verification</h3><div class="sub">Nominating and voting are limited to followers of the channel. ' +
     'Twitch lets <b>the broadcaster or any channel moderator</b> connect once so the server can check followers.<br><br>' +
     bstat.html +
     '</div><button class="btn" onclick="ak9Login(\'broadcaster\')">' + (bstat.connected ? 'Reconnect channel' : 'Connect channel (Aleks or a mod)') + '</button> ' +
     '<button class="btn ghost" onclick="ak9Recheck()">Re-check status</button></div>' +
 
-    '<div class="panel"><h3>Danger zone</h3><div class="sub">Clear every vote to start a fresh month. Awards/settings are kept. This cannot be undone.</div>' +
+    '<div class="panel"><h3>Danger zone</h3><div class="sub">Start a fresh cycle. These cannot be undone.</div>' +
+    '<button class="btn danger" onclick="ak9ResetNominations()">Reset all nominations</button> ' +
     '<button class="btn danger" onclick="ak9ResetVotes()">Reset all votes</button></div>';
 }
+let pendingPhase = null;
+window.ak9SetPhase = function (btn) {
+  pendingPhase = btn.dataset.phase;
+  document.querySelectorAll('#phaseSeg .phase-opt').forEach(b => b.classList.toggle('on', b === btn));
+};
 window.ak9SaveSettings = async function (btn) {
-  const dl = $('#s-deadline').value;
+  const dl = $('#s-deadline').value, nomdl = $('#s-nomdeadline').value;
   const body = { action: 'save_settings', month_label: $('#s-month').value.trim(),
-    voting_open: $('#s-open').checked, deadline: dl ? new Date(dl).toISOString() : null };
+    voting_open: $('#s-open').checked,
+    deadline: dl ? new Date(dl).toISOString() : null,
+    nominate_deadline: nomdl ? new Date(nomdl).toISOString() : null,
+    phase: pendingPhase || (DATA.settings && DATA.settings.phase) || 'vote' };
   btn.disabled = true;
   const r = await api('/api/ak9?route=admin', { method: 'POST', body });
   btn.disabled = false;
   if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
+  pendingPhase = null;
   toast('Settings saved'); await reload();
 };
-window.ak9ClearDeadline = function () { $('#s-deadline').value = ''; toast('Deadline cleared — click Save settings.'); };
 window.ak9ResetVotes = async function () {
   if (!confirm('Delete ALL votes? This cannot be undone.')) return;
   if (!confirm('Really reset? Every voter will be able to vote again.')) return;
   const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'reset_votes', confirm: true } });
   if (!r.ok) { toast(r.json.error || 'Reset failed.', true); return; }
   toast('All votes cleared'); await reload();
+};
+window.ak9ResetNominations = async function () {
+  if (!confirm('Delete ALL phase-1 nominations? This cannot be undone.')) return;
+  const r = await api('/api/ak9?route=admin', { method: 'POST', body: { action: 'reset_nominations', confirm: true } });
+  if (!r.ok) { toast(r.json.error || 'Reset failed.', true); return; }
+  toast('All nominations cleared'); await reload();
 };
 window.ak9ResetVoter = async function (uid, login) {
   if (!uid) { toast('Can’t reset — missing voter id.', true); return; }
@@ -315,7 +400,7 @@ window.ak9ResetVoter = async function (uid, login) {
   toast('@' + login + ' can vote again'); await reload();
 };
 
-async function reload() { const r = await api('/api/ak9?route=admin'); if (r.ok) { DATA = r.json; renderResults(); renderManage(); renderSettings(); } return r.ok; }
+async function reload() { const r = await api('/api/ak9?route=admin'); if (r.ok) { DATA = r.json; renderResults(); renderNoms(); renderManage(); renderSettings(); } return r.ok; }
 // Explicit refresh of the shared connection/vote state (re-fetches from the server).
 window.ak9Recheck = async function () { toast('Re-checking…'); const ok = await reload(); toast(ok ? 'Status updated' : 'Couldn’t refresh — try again', !ok); };
 
@@ -323,7 +408,7 @@ window.ak9Recheck = async function () { toast('Re-checking…'); const ok = awai
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
   t.classList.add('on');
-  ['results', 'manage', 'settings'].forEach(n => $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
+  ['results', 'noms', 'manage', 'settings'].forEach(n => $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
 }));
 
 // Auto-refresh the shared status when an admin returns to the tab — but ONLY on

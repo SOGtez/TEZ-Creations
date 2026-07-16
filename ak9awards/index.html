@@ -60,7 +60,7 @@ let USER = null; try { USER = JSON.parse(sessionStorage.getItem('ak9_user') || '
 let BALLOT = null;          // { settings, awards }
 let ME = null;             // status from /api/ak9?route=me
 let selection = {};        // awardId -> nomineeId
-let deadlineMs = null, countTimer = null;
+let deadlineMs = null, countTimer = null, countPhase = 'vote';
 
 /* ---------- helpers ---------- */
 function toast(msg, isErr) {
@@ -123,9 +123,9 @@ function startCountdown() {
     const diff = deadlineMs - Date.now();
     if (diff <= 0) {
       boxes.forEach(b => b.querySelector('b').textContent = '00');
-      $('#countLbl').textContent = 'Voting has ended';
+      $('#countLbl').textContent = countPhase === 'nominate' ? 'Nominations have ended' : 'Voting has ended';
       clearInterval(countTimer);
-      if (ME && !ME.hasVoted) boot();   // flip to closed state
+      boot();   // flip to the next state
       return;
     }
     const vals = [Math.floor(diff / 86400000), Math.floor(diff % 86400000 / 3600000),
@@ -137,7 +137,7 @@ function startCountdown() {
         boxes[i].classList.remove('tick'); void boxes[i].offsetWidth; boxes[i].classList.add('tick');
       }
     });
-    $('#countLbl').textContent = 'until voting closes';
+    $('#countLbl').textContent = countPhase === 'nominate' ? 'until nominations close' : 'until voting closes';
   };
   tick(); countTimer = setInterval(tick, 1000);
 }
@@ -218,11 +218,21 @@ function renderGuest() {
   if (awards.length) html += '<div class="awards">' + awards.map((a, i) => awardCard(a, i, true, {})).join('') + '</div>';
   view.innerHTML = html;
 }
-function renderFollow() {
-  renderMessage('➕', 'Follow to vote',
-    'AK9 AWARDS voting is open to followers of <b>@' + esc(CHANNEL) + '</b>. Follow the channel, then come back and re-check.',
+function renderFollow(mode) {
+  const nom = mode === 'nominate';
+  renderMessage('➕', nom ? 'Follow to nominate' : 'Follow to vote',
+    'AK9 AWARDS ' + (nom ? 'nominations are' : 'voting is') + ' open to followers of <b>@' + esc(CHANNEL) + '</b>. Follow the channel, then come back and re-check.',
     '<a class="btn" href="https://twitch.tv/' + esc(CHANNEL) + '" target="_blank" rel="noopener">Follow @' + esc(CHANNEL) + '</a>' +
     '<button class="btn ghost" type="button" onclick="ak9Recheck()">I’m following — re-check</button>');
+}
+function renderGuestNominate() {
+  const awards = BALLOT.awards || [];
+  let html = '<div class="panel center"><div class="msg-h">Log in to nominate</div>' +
+    '<div class="msg-p">Sign in with Twitch and follow <b>@' + esc(CHANNEL) + '</b> to nominate for the AK9 AWARDS. One submission per account.</div>' +
+    '<div class="btnrow">' + twitchBtn('Log in with Twitch') + '</div></div>';
+  if (awards.length) html += '<div class="nom-intro">This month’s awards:</div><div class="awards">' +
+    awards.map((a, i) => nominateCard(a, i, '', true)).join('') + '</div>';
+  view.innerHTML = html;
 }
 window.ak9Recheck = async function () { toast('Checking…'); await loadMe(); boot(); };
 
@@ -256,6 +266,57 @@ function renderClosed() {
     '<div class="btnrow"><a class="btn" href="/ak9awards/results">See the winners →</a></div></div>';
 }
 
+/* ---------- phase 1: nominations ---------- */
+function nominateCard(award, i, value, readonly) {
+  return '<div class="award" data-award="' + esc(award.id) + '" style="animation-delay:' + (i * 0.07) + 's">' +
+    '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
+    '<div class="atitle">' + esc(award.title) + '</div>' +
+    (award.description ? '<div class="adesc">' + esc(award.description) + '</div>' : '') +
+    '<input class="nom-input" data-award="' + esc(award.id) + '" type="text" maxlength="60" ' +
+      'autocomplete="off" spellcheck="false" placeholder="Who deserves this? Type a name…"' +
+      (readonly ? ' value="' + esc(value || '') + '" disabled' : '') + ' /></div>';
+}
+function renderNominate() {
+  const awards = BALLOT.awards || [];
+  if (!awards.length) { renderMessage('🏆', 'Nominations coming soon', 'The awards haven’t been posted yet. Check back shortly.'); return; }
+  let html = '<div class="nom-intro">Nominate whoever you think deserves each award — one name each. Leave any blank. After nominations close, the top names become the finalists you’ll vote on.</div>';
+  html += '<div class="awards">' + awards.map((a, i) => nominateCard(a, i, '', false)).join('') + '</div>';
+  html += '<div class="ballot-foot"><div class="prog" id="prog"></div>' +
+    '<button class="btn" id="nomBtn" type="button" disabled>Submit nominations</button></div>';
+  view.innerHTML = html;
+  view.querySelectorAll('.nom-input').forEach(inp => inp.addEventListener('input', updateNomProgress));
+  $('#nomBtn').addEventListener('click', submitNominations);
+  updateNomProgress();
+}
+function updateNomProgress() {
+  const filled = [...view.querySelectorAll('.nom-input')].filter(i => i.value.trim()).length;
+  const total = (BALLOT.awards || []).length;
+  $('#prog').innerHTML = '<b>' + filled + '</b> of <b>' + total + '</b> awards nominated';
+  $('#nomBtn').disabled = filled < 1;
+}
+async function submitNominations() {
+  const choices = {};
+  view.querySelectorAll('.nom-input').forEach(i => { const v = i.value.trim(); if (v) choices[i.dataset.award] = v; });
+  if (!Object.keys(choices).length) { toast('Add at least one nominee.', true); return; }
+  const btn = $('#nomBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
+  const r = await api('/api/ak9?route=nominate', { method: 'POST', body: { choices } });
+  if (r.ok) { toast('Nominations submitted 🙌'); ME.hasNominated = true; ME.nominateChoices = choices; renderNominated(); return; }
+  const err = r.json.error || 'Could not submit — try again.';
+  if (err === 'already_nominated') { toast('You’ve already nominated.', true); ME.hasNominated = true; boot(); return; }
+  if (err === 'follow_required') { toast('You need to follow the channel to nominate.', true); boot(); return; }
+  btn.textContent = 'Submit nominations'; btn.disabled = false;
+  toast(err, true);
+}
+function renderNominated() {
+  const awards = BALLOT.awards || [], picks = (ME && ME.nominateChoices) || {};
+  const list = awards.filter(a => picks[a.id]).map(a =>
+    '<div class="pick"><span class="pa">' + esc(a.title) + '</span><span class="pn">' + esc(picks[a.id]) + '</span></div>').join('');
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">🙌</div>' +
+    '<div class="msg-h">Your nominations are in</div>' +
+    '<div class="msg-p">Thanks! When nominations close, the top picks become the finalists — come back to vote.' +
+    '</div><div class="picks" style="max-width:520px;margin:18px auto 0">' + (list || '<span class="adesc">—</span>') + '</div></div>';
+}
+
 /* ---------- status load + routing ---------- */
 async function loadMe() {
   if (!TOK) { ME = null; return; }
@@ -263,28 +324,50 @@ async function loadMe() {
   if (r.status === 401) { logout(); return; }
   if (r.ok) ME = r.json; else ME = null;
 }
+function settingsNow() { return (ME && ME.settings) || (BALLOT && BALLOT.settings) || {}; }
+function phaseOf() { return settingsNow().phase || 'vote'; }
 function votingClosed() {
-  const s = (ME && ME.settings) || (BALLOT && BALLOT.settings) || {};
+  const s = settingsNow();
+  if (s.phase === 'closed') return true;
   if (s.voting_open === false) return true;
   if (s.deadline && Date.now() > new Date(s.deadline).getTime()) return true;
   return false;
 }
+function nominateClosed() {
+  const s = settingsNow();
+  return !!(s.nominate_deadline && Date.now() > new Date(s.nominate_deadline).getTime());
+}
 function boot() {
   renderAccount();
   if (!BALLOT) return;
-  // countdown from whichever settings we have
-  const s = (ME && ME.settings) || BALLOT.settings || {};
+  const s = settingsNow();
+  const phase = phaseOf();
   $('#month').textContent = s.month_label || '';
-  deadlineMs = s.deadline ? new Date(s.deadline).getTime() : null;
+  // countdown tracks whichever phase's deadline is live
+  countPhase = phase;
+  deadlineMs = (phase === 'nominate')
+    ? (s.nominate_deadline ? new Date(s.nominate_deadline).getTime() : null)
+    : (s.deadline ? new Date(s.deadline).getTime() : null);
   startCountdown();
 
+  if (phase === 'nominate') {
+    if (!TOK || !ME) { renderGuestNominate(); return; }
+    if (nominateClosed()) { renderMessage('⏳', 'Nominations closed', 'Voting on the finalists opens soon — check back shortly!'); return; }
+    if (!ME.broadcasterReady && !ME.isAdmin) { renderMessage('⏳', 'Nominations open soon', 'Almost ready — check back in a bit!'); return; }
+    if (ME.hasNominated) { renderNominated(); return; }
+    if (!ME.isFollower) { renderFollow('nominate'); return; }
+    renderNominate();
+    return;
+  }
+
+  // phase = vote (or closed)
   if (!TOK || !ME) { renderGuest(); return; }
   if (votingClosed()) { renderClosed(); return; }
   if (!ME.broadcasterReady && !ME.isAdmin) {
     renderMessage('⏳', 'Voting opens soon', 'The ballot isn’t quite ready yet. Check back in a bit!'); return;
   }
   if (ME.hasVoted) { renderVoted(); return; }
-  if (!ME.isFollower) { renderFollow(); return; }
+  if (!ME.isFollower) { renderFollow('vote'); return; }
   renderBallot();
 }
 
