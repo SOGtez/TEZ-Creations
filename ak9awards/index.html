@@ -157,6 +157,7 @@ function nomTile(award, n, readonly, selectedId) {
     '<span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></button>';
 }
 function awardCard(award, i, readonly, picks) {
+  if (isCrime()) return crimeLineupCard(award, i, readonly, picks);
   const selId = picks ? picks[award.id] : selection[award.id];
   const noms = (award.nominees || []).map(n => nomTile(award, n, readonly, selId)).join('');
   return '<div class="award' + (readonly ? ' readonly' : '') + '" data-award="' + esc(award.id) + '"' +
@@ -165,6 +166,28 @@ function awardCard(award, i, readonly, picks) {
     '<div class="atitle">' + esc(award.title) + '</div>' +
     (award.description ? '<div class="adesc">' + esc(award.description) + '</div>' : '') +
     '<div class="noms">' + (noms || '<span class="adesc">No nominees yet.</span>') + '</div></div>';
+}
+// Crime theme: the vote card is a case-file dossier with a suspect line-up.
+// Rows keep class "nom" + data-award/data-nom so onPick/updateProgress work unchanged.
+function crimeLineupCard(award, i, readonly, picks) {
+  const selId = picks ? picks[award.id] : selection[award.id];
+  const tilt = (i % 2 ? '-.5deg' : '.5deg');
+  const suspects = (award.nominees || []).map(n => {
+    const sel = selId === n.id;
+    const mug = n.image
+      ? '<span class="mugshot" style="background-image:url(\'' + esc(n.image) + '\')"><span class="mtag">AK9-' + pad(i + 1) + '</span></span>'
+      : '<span class="mugshot"><span class="mtag">AK9-' + pad(i + 1) + '</span>' + esc((n.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+    return '<div class="nom suspect' + (sel ? ' sel' : '') + '"' +
+      (readonly ? ' tabindex="-1"' : ' data-award="' + esc(award.id) + '" data-nom="' + esc(n.id) + '"') + '>' +
+      mug + '<div class="s-info"><div class="s-nm">' + esc(n.name) + '</div><div class="s-sub">Person of interest</div></div>' +
+      '<span class="indict">Indict</span></div>';
+  }).join('');
+  return '<div class="award dossier" data-award="' + esc(award.id) + '" style="--tilt:' + tilt + '">' +
+    '<span class="d-tab">Case #AK9-' + pad(i + 1) + '</span><span class="d-stamp">In review</span>' +
+    '<div class="d-head"><div class="charge">' + esc(award.title) + '</div>' +
+    (award.description ? '<div class="allegation"><b>Allegation</b> · ' + esc(award.description) + '</div>' : '') + '</div>' +
+    '<div class="d-body"><div class="lineup-hd">■ Suspect line-up · identify the prime suspect ■</div>' +
+    (suspects || '<div class="s-sub">No suspects yet.</div>') + '</div></div>';
 }
 
 function renderBallot() {
@@ -271,6 +294,7 @@ function renderClosed() {
 
 /* ---------- phase 1: nominations ---------- */
 function nominateCard(award, i, value, readonly) {
+  if (isCrime()) return crimeIntakeCard(award, i, value, readonly);
   return '<div class="award" data-award="' + esc(award.id) + '" style="animation-delay:' + (i * 0.07) + 's">' +
     '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
     '<div class="atitle">' + esc(award.title) + '</div>' +
@@ -278,6 +302,21 @@ function nominateCard(award, i, value, readonly) {
     '<input class="nom-input" data-award="' + esc(award.id) + '" type="text" maxlength="60" ' +
       'autocomplete="off" spellcheck="false" placeholder="Who deserves this? Type a name…"' +
       (readonly ? ' value="' + esc(value || '') + '" disabled' : '') + ' /></div>';
+}
+// Crime theme: the nominate card is a case-file dossier with a suspect-intake line.
+// The <input> keeps class "nom-input" + data-award so submit/progress work unchanged.
+function crimeIntakeCard(award, i, value, readonly) {
+  const tilt = (i % 2 ? '-.5deg' : '.5deg');
+  return '<div class="dossier" style="--tilt:' + tilt + '">' +
+    '<span class="d-tab">Case #AK9-' + pad(i + 1) + '</span><span class="d-stamp">Open</span>' +
+    '<div class="d-head"><div class="charge">' + esc(award.title) + '</div>' +
+    (award.description ? '<div class="allegation"><b>Allegation</b> · ' + esc(award.description) + '</div>' : '') + '</div>' +
+    '<div class="d-body"><div class="intake-lbl">▸ Name your prime suspect</div>' +
+    '<div class="fill"><span class="fpfx">Suspect</span>' +
+    '<input class="nom-input" data-award="' + esc(award.id) + '" type="text" maxlength="60" ' +
+      'autocomplete="off" spellcheck="false" placeholder="Who did it?"' +
+      (readonly ? ' value="' + esc(value || '') + '" disabled' : '') + ' /></div>' +
+    '<div class="intake-note">Confidential · one tip per case</div></div></div>';
 }
 function renderNominate() {
   const awards = BALLOT.awards || [];
@@ -348,6 +387,23 @@ function fmtWhen2(ms) {
   try { return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
   catch (_) { return ''; }
 }
+function isCrime() { return (settingsNow().theme || 'classic') === 'crime'; }
+// crime theme adds a police-tape band + a case-number chip + a forensic kicker.
+function setupCrimeChrome(s) {
+  if (!document.querySelector('.tape')) {
+    const tape = document.createElement('div'); tape.className = 'tape t1';
+    tape.innerHTML = '<span>CRIME SCENE · DO NOT CROSS · AK9 EVIDENCE</span>';
+    document.body.insertBefore(tape, document.body.firstChild);
+  }
+  const top = document.querySelector('.top');
+  if (top && !top.querySelector('.caseno')) {
+    const c = document.createElement('span'); c.className = 'caseno'; top.insertBefore(c, top.firstChild);
+  }
+  const caseno = document.querySelector('.top .caseno');
+  if (caseno) caseno.textContent = 'Case #AK9 · ' + (s.month_label || '').toUpperCase();
+  const kick = document.querySelector('.hero .kick');
+  if (kick) kick.textContent = 'AleksK9 · Forensics Unit presents…';
+}
 function boot() {
   renderAccount();
   if (!BALLOT) return;
@@ -357,6 +413,7 @@ function boot() {
   const theme = s.theme || 'classic';
   document.body.classList.toggle('theme-crime', theme === 'crime');
   document.body.dataset.ak9phase = phase;
+  if (theme === 'crime') setupCrimeChrome(s);
   // subline: crime theme reframes it as the case log; classic just shows the month
   const crimeSub = { nominate: 'Tip Line', vote: 'Evidence Log', closed: 'Case Closed' }[phase] || '';
   $('#month').textContent = (theme === 'crime' && crimeSub)
