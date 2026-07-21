@@ -54,8 +54,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .kick{font-family:var(--fm);font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted)}
 .word{font-family:var(--fd);font-size:clamp(56px,14vw,132px);line-height:.86;color:#efe9db;text-transform:uppercase;margin:12px 0 6px;text-shadow:0 3px 0 #000, 0 0 34px rgba(0,0,0,.6);position:relative;display:inline-block}
 .evlog{font-family:var(--ft);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--tape)}
-.stamp{position:absolute;top:-24px;right:-16px;z-index:3;transform:rotate(-13deg);font-family:var(--fd);font-size:15px;letter-spacing:.12em;color:var(--evidence);background:rgba(18,16,13,.78);border:3px solid var(--evidence);border-radius:6px;padding:5px 11px;text-transform:uppercase;opacity:.95;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-@media (max-width:600px){.stamp{position:static;display:inline-block;margin-top:12px;right:0}}
+.stamp-row{margin-top:14px}
+.stamp{display:inline-block;transform:rotate(-4deg);font-family:var(--fd);font-size:15px;letter-spacing:.12em;color:var(--evidence);background:rgba(18,16,13,.78);border:3px solid var(--evidence);border-radius:6px;padding:5px 13px;text-transform:uppercase;opacity:.95;box-shadow:0 4px 14px rgba(0,0,0,.5)}
 
 .count{display:flex;gap:14px;justify-content:center;margin:28px 0 6px;flex-wrap:wrap}
 .tag{position:relative;width:74px;background:var(--paper);color:#231d12;border-radius:4px;padding:12px 6px 10px;text-align:center;box-shadow:0 10px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.12);transform:rotate(var(--r,-2deg))}
@@ -287,8 +287,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 
   <div class="hero">
     <div class="kick">AleksK9 · Forensics Unit presents…</div>
-    <div class="word">AK9 AWARDS<span class="stamp" id="heroStamp">Evidence</span></div>
+    <div class="word">AK9 AWARDS</div>
     <div class="evlog" id="heroSub">Evidence Log · July 2026</div>
+    <div class="stamp-row"><span class="stamp" id="heroStamp">Evidence</span></div>
   </div>
 
   <div class="count">
