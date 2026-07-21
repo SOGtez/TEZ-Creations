@@ -55,6 +55,10 @@ export default async function handler(req, res) {
       if (name) clean[awardId] = name;
     }
     if (!Object.keys(clean).length) { res.status(400).json({ error: 'Add at least one nominee.' }); return; }
+    // every award must be nominated (mirrors the client gate — no partial ballots)
+    if (validAward.size && Object.keys(clean).length < validAward.size) {
+      res.status(400).json({ error: 'Please name someone for every award.' }); return;
+    }
 
     const prof = await getProfile(token, id.user_id);
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null;

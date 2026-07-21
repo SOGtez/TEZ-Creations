@@ -321,7 +321,7 @@ function crimeIntakeCard(award, i, value, readonly) {
 function renderNominate() {
   const awards = BALLOT.awards || [];
   if (!awards.length) { renderMessage('🏆', 'Nominations coming soon', 'The awards haven’t been posted yet. Check back shortly.'); return; }
-  let html = '<div class="nom-intro">Nominate whoever you think deserves each award — one name each. Leave any blank. After nominations close, the top names become the finalists you’ll vote on.</div>';
+  let html = '<div class="nom-intro">Name one person for <b>every</b> award — the button unlocks once all are filled in. After nominations close, the top names become the finalists you’ll vote on.</div>';
   html += '<div class="awards">' + awards.map((a, i) => nominateCard(a, i, '', false)).join('') + '</div>';
   html += '<div class="ballot-foot"><div class="prog" id="prog"></div>' +
     '<button class="btn" id="nomBtn" type="button" disabled>Submit nominations</button></div>';
@@ -334,12 +334,13 @@ function updateNomProgress() {
   const filled = [...view.querySelectorAll('.nom-input')].filter(i => i.value.trim()).length;
   const total = (BALLOT.awards || []).length;
   $('#prog').innerHTML = '<b>' + filled + '</b> of <b>' + total + '</b> awards nominated';
-  $('#nomBtn').disabled = filled < 1;
+  $('#nomBtn').disabled = filled < total;   // every award must have a name
 }
 async function submitNominations() {
   const choices = {};
   view.querySelectorAll('.nom-input').forEach(i => { const v = i.value.trim(); if (v) choices[i.dataset.award] = v; });
-  if (!Object.keys(choices).length) { toast('Add at least one nominee.', true); return; }
+  const total = (BALLOT.awards || []).length;
+  if (Object.keys(choices).length < total) { toast('Name someone for every award before submitting.', true); return; }
   const btn = $('#nomBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
   const r = await api('/api/ak9?route=nominate', { method: 'POST', body: { choices } });
   if (r.ok) { toast('Nominations submitted 🙌'); ME.hasNominated = true; ME.nominateChoices = choices; renderNominated(); return; }
