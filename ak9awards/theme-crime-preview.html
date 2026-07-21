@@ -163,44 +163,50 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .reveal-case{position:relative}
 /* the award is hidden until the bag opens, then eased open via a smooth height
    reveal (grid-rows 0fr→1fr — no max-height jank) + a gentle fade/rise */
-.paper-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .95s cubic-bezier(.22,1,.36,1)}
+.paper-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows 1.5s cubic-bezier(.22,1,.36,1)}
 .reveal-case.is-open .paper-wrap{grid-template-rows:1fr}
-.reveal-case .paper{overflow:hidden;opacity:0;transform:translateY(14px) scale(.985);
-  transition:opacity .8s ease .28s, transform .9s cubic-bezier(.22,1,.36,1) .28s}
+.reveal-case .paper{overflow:hidden;opacity:0;transform:translateY(16px) scale(.985);
+  transition:opacity 1s ease .45s, transform 1.1s cubic-bezier(.22,1,.36,1) .45s}
 .reveal-case.is-open .paper{opacity:1;transform:none}
 .reveal-case .paper .ev-guilty{opacity:0;transform:rotate(-11deg) scale(1.55)}
 .reveal-case .paper.revealed .ev-guilty{opacity:.84;transform:rotate(-11deg) scale(1);
   transition:opacity .5s ease, transform .62s cubic-bezier(.18,1.4,.34,1)}
-/* the sealed bag: fixed height, two clipped copies that drift off on open */
+/* the sealed bag: fixed height, two clipped copies that drift off on open.
+   The split lands exactly on the printed dotted CUT line (62%). */
 .seal{position:relative;height:440px;z-index:3;cursor:pointer;overflow:visible;
-  transition:height .95s cubic-bezier(.22,1,.36,1) .05s}
+  transition:height 1.5s cubic-bezier(.22,1,.36,1) .05s}
 .reveal-case.is-open .seal{height:0;pointer-events:none}
-.sealface{position:absolute;left:0;right:0;top:0;height:440px;overflow:hidden;display:flex;flex-direction:column;
+.sealface{position:absolute;left:0;right:0;top:0;height:440px;overflow:hidden;
   background:#eceae3;color:#141414;border-radius:4px;box-shadow:0 22px 50px -20px rgba(0,0,0,.92), inset 0 0 0 1px rgba(0,0,0,.1);
-  transition:transform 1.15s cubic-bezier(.5,.02,.22,1), opacity .9s ease .25s, box-shadow .5s ease;will-change:transform}
+  transition:transform 1.75s cubic-bezier(.42,.04,.24,1), opacity 1.2s ease .45s, box-shadow .6s ease;will-change:transform}
 .sealface::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(125deg,rgba(255,255,255,.4),transparent 30%,transparent 72%,rgba(255,255,255,.28))}
-.sealface.top{clip-path:inset(0 0 52% 0)}
-.sealface.bottom{clip-path:inset(48% 0 0 0)}
-.reveal-case.is-open .sealface{box-shadow:0 40px 80px -20px rgba(0,0,0,.95)}
-.reveal-case.is-open .sealface.top{transform:translateY(-235%) rotate(-7deg);opacity:0}
-.reveal-case.is-open .sealface.bottom{transform:translateY(235%) rotate(6deg);opacity:0}
-.sealface .ev-body{flex:none}
-.sealface .seal-foot{margin-top:auto;padding:0 34px 16px}
-.sealface .redact-block{margin:14px 34px 0;text-align:center}
-.sealface .rb{display:block;height:30px;width:60%;margin:0 auto 10px;background:#111;border-radius:2px;box-shadow:0 0 0 4px #eceae3,0 0 0 5px #111}
-.sealface .rl{font-family:var(--fd);font-size:21px;color:#111;letter-spacing:.04em}
-.sealface .rl2{display:block;font-family:var(--ft);font-size:12.5px;color:#555;margin-top:3px}
-.sealface .taphint{text-align:center;font-family:var(--fd);font-size:20px;color:#b81c14;letter-spacing:.05em;animation:tappulse 1.8s ease-in-out infinite;margin-bottom:8px}
+.sealface.sf-top{clip-path:inset(0 0 20% 0)}
+.sealface.sf-bottom{clip-path:inset(80% 0 0 0)}
+.reveal-case.is-open .sealface{box-shadow:0 44px 88px -22px rgba(0,0,0,.95)}
+.reveal-case.is-open .sealface.sf-top{transform:translateY(-270%) rotate(-6deg);opacity:0}
+.reveal-case.is-open .sealface.sf-bottom{transform:translateY(270%) rotate(5deg);opacity:0}
+.sealface .ev-body{flex:none;padding:14px 32px 0}
+.sealface .ev-title{font-size:34px;margin:2px 0 6px}
+.sealface .redact-block{margin:12px 8px 0;text-align:center}
+.sealface .rb{display:block;height:26px;width:56%;margin:0 auto 8px;background:#111;border-radius:2px;box-shadow:0 0 0 4px #eceae3,0 0 0 5px #111}
+.sealface .rl{font-family:var(--fd);font-size:20px;color:#111;letter-spacing:.04em}
+.sealface .rl2{display:block;font-family:var(--ft);font-size:12px;color:#555;margin-top:3px}
+.sealface .taphint{text-align:center;font-family:var(--fd);font-size:18px;color:#b81c14;letter-spacing:.05em;animation:tappulse 1.8s ease-in-out infinite;margin-top:12px}
+/* the printed dotted cut line — sits exactly at the 80% split */
+.sealface .ev-cut{position:absolute;left:0;right:0;top:80%;margin:0;padding-top:7px;
+  border-top:2px dashed #111;background:transparent;font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-align:center;color:#333}
+.sealface .seal-btm{position:absolute;left:0;right:0;top:80%;bottom:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:10px;letter-spacing:.16em;color:#777;text-transform:uppercase}
 .sealface .sidew{position:absolute;top:62px;bottom:14px;width:20px;font-family:var(--fm);font-size:8px;letter-spacing:.14em;color:#3a3a3a;writing-mode:vertical-rl;white-space:nowrap;overflow:hidden;display:flex;align-items:center;justify-content:center;z-index:1}
 .sealface .sidew.l{left:3px}.sealface .sidew.r{right:3px;transform:rotate(180deg)}
 @keyframes tappulse{0%,100%{opacity:.55}50%{opacity:1}}
-/* the cut sweeps across on an ease so it reads as a deliberate slice */
-.cutline{position:absolute;top:50%;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;z-index:6;
+/* the blade sweeps ALONG the dotted line (also at 80%) */
+.cutline{position:absolute;top:80%;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;z-index:6;
   background:repeating-linear-gradient(90deg,var(--evidence) 0 8px,transparent 8px 14px);
   box-shadow:0 0 8px rgba(213,52,42,.5)}
-.reveal-case.cutting .cutline{transform:scaleX(1);transition:transform .82s cubic-bezier(.6,0,.28,1)}
-.scissors{position:absolute;top:calc(50% - 15px);left:-10px;font-size:22px;z-index:7;opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
-.reveal-case.cutting .scissors{animation:snip .82s cubic-bezier(.6,0,.28,1) forwards}
+.reveal-case.cutting .cutline{transform:scaleX(1);transition:transform .95s cubic-bezier(.6,0,.28,1)}
+.scissors{position:absolute;top:calc(80% - 15px);left:-10px;font-size:22px;z-index:7;opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.reveal-case.cutting .scissors{animation:snip .95s cubic-bezier(.6,0,.28,1) forwards}
 @keyframes snip{0%{left:-10px;opacity:0}8%{opacity:1}92%{opacity:1}100%{left:calc(100% - 12px);opacity:0}}
 .cbtnrow .btn-do{animation:cbtnin .6s ease both}
 @keyframes cbtnin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -323,9 +329,10 @@ function sealFace(b, which){
       '<div class="ev-title">EVIDENCE</div>'+
       '<div class="redact-block"><span class="rb"></span><span class="rl">'+b.cat+'</span>'+
         '<span class="rl2">Suspect redacted · sealed pending verdict</span></div>'+
+      '<div class="taphint">✂ Tap to cut open</div>'+
     '</div>'+
-    '<div class="seal-foot"><div class="taphint">✂ Tap to cut open</div>'+
-      '<div class="ev-cut">✂ CUT ALONG DOTTED LINE TO OPEN</div></div>'+
+    '<div class="ev-cut">✂ CUT ALONG DOTTED LINE TO OPEN</div>'+
+    '<div class="seal-btm">Chain of custody sealed · do not open</div>'+
     '<span class="sidew l">DO NOT CUT HERE TO OPEN</span><span class="sidew r">DO NOT CUT HERE TO OPEN</span>'+
     '</div>';
 }
@@ -335,7 +342,7 @@ function sealedCase(b){
   return '<div class="brief">Case '+(revealIdx+1)+' of '+CASE.bags.length+' · '+b.cat+'</div>'+
     '<div class="cprog">'+dots+'</div>'+
     '<div class="reveal-case" id="rc"><div class="paper-wrap"><div class="paper">'+evbag(b)+'</div></div>'+
-      '<div class="seal">'+sealFace(b,'top')+sealFace(b,'bottom')+
+      '<div class="seal">'+sealFace(b,'sf-top')+sealFace(b,'sf-bottom')+
         '<span class="cutline"></span><span class="scissors">✂</span></div></div>'+
     '<div class="cbtnrow"><div class="opencue">Tap the evidence bag to cut it open</div></div>';
 }
@@ -407,15 +414,15 @@ function render(){
     const rc=stage.querySelector('#rc'), seal=rc.querySelector('.seal');
     seal.addEventListener('click',()=>{
       if(rc.classList.contains('cutting')) return;
-      const showNext=()=>{
-        rc.querySelector('.paper').classList.add('revealed');
+      const addNext=()=>{
         const row=stage.querySelector('.cbtnrow'); row.innerHTML=nextCaseBtn();
         row.querySelector('#nextCase').addEventListener('click',goNextCase);
       };
-      if(reduceM){ rc.classList.add('is-open'); showNext(); return; }
-      rc.classList.add('cutting');                 // the blade sweeps across (~0.82s)
-      setTimeout(()=>rc.classList.add('is-open'),900);   // then the bag drifts open
-      setTimeout(showNext,2050);                   // award settled → Next fades in
+      if(reduceM){ rc.classList.add('is-open'); rc.querySelector('.paper').classList.add('revealed'); addNext(); return; }
+      rc.classList.add('cutting');                 // the blade sweeps along the dotted line (~0.95s)
+      setTimeout(()=>rc.classList.add('is-open'),1050);         // the bag drifts open (~1.75s)
+      setTimeout(()=>rc.querySelector('.paper').classList.add('revealed'),2500); // GUILTY settles on
+      setTimeout(addNext,2950);                    // Next fades in once it's all settled
     });
   }
 }
