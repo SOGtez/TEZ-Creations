@@ -183,8 +183,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .sealface.sf-top{clip-path:inset(0 0 20% 0)}
 .sealface.sf-bottom{clip-path:inset(80% 0 0 0)}
 .reveal-case.is-open .sealface{box-shadow:0 44px 88px -22px rgba(0,0,0,.95)}
-.reveal-case.is-open .sealface.sf-top{transform:translateY(-270%) rotate(-6deg);opacity:0}
-.reveal-case.is-open .sealface.sf-bottom{transform:translateY(270%) rotate(5deg);opacity:0}
+.reveal-case.is-open .sealface.sf-top{transform:translateY(-55%) rotate(-6deg);opacity:0}
+.reveal-case.is-open .sealface.sf-bottom{transform:translateY(55%) rotate(5deg);opacity:0}
 .sealface .ev-body{flex:none;padding:14px 32px 0}
 .sealface .ev-title{font-size:34px;margin:2px 0 6px}
 .sealface .redact-block{margin:12px 8px 0;text-align:center}
@@ -418,10 +418,11 @@ function render(){
         const row=stage.querySelector('.cbtnrow'); row.innerHTML=nextCaseBtn();
         row.querySelector('#nextCase').addEventListener('click',goNextCase);
       };
-      if(reduceM){ rc.classList.add('is-open'); rc.querySelector('.paper').classList.add('revealed'); addNext(); return; }
+      if(reduceM){ rc.classList.add('is-open'); seal.style.display='none'; rc.querySelector('.paper').classList.add('revealed'); addNext(); return; }
       rc.classList.add('cutting');                 // the blade sweeps along the dotted line (~0.95s)
       setTimeout(()=>rc.classList.add('is-open'),1050);         // the bag drifts open (~1.75s)
       setTimeout(()=>rc.querySelector('.paper').classList.add('revealed'),2500); // GUILTY settles on
+      setTimeout(()=>{ seal.style.display='none'; },2850);      // drop the spent bag so it adds no scroll space
       setTimeout(addNext,2950);                    // Next fades in once it's all settled
     });
   }
