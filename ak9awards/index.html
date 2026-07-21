@@ -7,8 +7,9 @@
 <meta name="description" content="Vote for the AK9 community awards. Log in with Twitch to cast your ballot." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Anton&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/ak9awards/ak9.css" />
+<link rel="stylesheet" href="/ak9awards/ak9-crime.css" />
 </head>
 <body>
   <div class="grid-wrap"><div class="grid"></div></div><div class="aura"></div><div class="beams"></div><div class="grain"></div><div class="vig"></div>
@@ -123,7 +124,8 @@ function startCountdown() {
     const diff = deadlineMs - Date.now();
     if (diff <= 0) {
       boxes.forEach(b => b.querySelector('b').textContent = '00');
-      $('#countLbl').textContent = countPhase === 'nominate' ? 'Nominations have ended' : 'Voting has ended';
+      $('#countLbl').textContent = countPhase === 'nominate-open' ? 'Nominations are open'
+        : countPhase === 'nominate' ? 'Nominations have ended' : 'Voting has ended';
       clearInterval(countTimer);
       boot();   // flip to the next state
       return;
@@ -137,7 +139,8 @@ function startCountdown() {
         boxes[i].classList.remove('tick'); void boxes[i].offsetWidth; boxes[i].classList.add('tick');
       }
     });
-    $('#countLbl').textContent = countPhase === 'nominate' ? 'until nominations close' : 'until voting closes';
+    $('#countLbl').textContent = countPhase === 'nominate-open' ? 'until nominations open'
+      : countPhase === 'nominate' ? 'until nominations close' : 'until voting closes';
   };
   tick(); countTimer = setInterval(tick, 1000);
 }
@@ -337,12 +340,28 @@ function nominateClosed() {
   const s = settingsNow();
   return !!(s.nominate_deadline && Date.now() > new Date(s.nominate_deadline).getTime());
 }
+function nominateOpensAt() {
+  const s = settingsNow();
+  return s.nominate_open ? new Date(s.nominate_open).getTime() : null;
+}
+function fmtWhen2(ms) {
+  try { return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+  catch (_) { return ''; }
+}
 function boot() {
   renderAccount();
   if (!BALLOT) return;
   const s = settingsNow();
   const phase = phaseOf();
-  $('#month').textContent = s.month_label || '';
+  // theme skin (classic is the guaranteed fallback)
+  const theme = s.theme || 'classic';
+  document.body.classList.toggle('theme-crime', theme === 'crime');
+  document.body.dataset.ak9phase = phase;
+  // subline: crime theme reframes it as the case log; classic just shows the month
+  const crimeSub = { nominate: 'Tip Line', vote: 'Evidence Log', closed: 'Case Closed' }[phase] || '';
+  $('#month').textContent = (theme === 'crime' && crimeSub)
+    ? (s.month_label ? crimeSub + ' · ' + s.month_label : crimeSub)
+    : (s.month_label || '');
   // countdown tracks whichever phase's deadline is live
   countPhase = phase;
   deadlineMs = (phase === 'nominate')
@@ -351,6 +370,14 @@ function boot() {
   startCountdown();
 
   if (phase === 'nominate') {
+    // scheduled open: before the tip line goes live, count down to it (everyone, logged in or not)
+    const openAt = nominateOpensAt();
+    if (openAt && Date.now() < openAt) {
+      countPhase = 'nominate-open'; deadlineMs = openAt; startCountdown();
+      renderMessage('🕵️', 'Nominations open soon',
+        'The tip line opens <b>' + esc(fmtWhen2(openAt)) + '</b>. Come back then to submit your picks.');
+      return;
+    }
     if (!TOK || !ME) { renderGuestNominate(); return; }
     if (nominateClosed()) { renderMessage('⏳', 'Nominations closed', 'Voting on the finalists opens soon — check back shortly!'); return; }
     if (!ME.broadcasterReady && !ME.isAdmin) { renderMessage('⏳', 'Nominations open soon', 'Almost ready — check back in a bit!'); return; }

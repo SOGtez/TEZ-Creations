@@ -14,6 +14,8 @@ create table if not exists ak9_settings (
   voting_open       boolean default true,
   phase             text default 'vote',    -- 'nominate' | 'vote' | 'closed'
   nominate_deadline timestamptz,            -- phase-1 (nomination) closes at this time
+  nominate_open     timestamptz,            -- phase-1 OPENS at this time (nullable = open now)
+  theme             text default 'classic', -- 'classic' | 'crime' (site skin)
   updated_at        timestamptz default now(),
   constraint ak9_settings_singleton check (id = 1)
 );
@@ -21,6 +23,8 @@ insert into ak9_settings (id) values (1) on conflict (id) do nothing;
 -- Migrations for existing databases (safe to re-run):
 alter table ak9_settings add column if not exists phase text default 'vote';
 alter table ak9_settings add column if not exists nominate_deadline timestamptz;
+alter table ak9_settings add column if not exists nominate_open timestamptz;
+alter table ak9_settings add column if not exists theme text default 'classic';
 
 -- 2) Awards + their nominees. nominees is a JSON array of
 --    { id, name, image, twitch_login }  (image / twitch_login optional).

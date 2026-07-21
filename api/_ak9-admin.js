@@ -97,8 +97,8 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const settings = ((await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open,phase,nominate_deadline&limit=1')).json || [])[0]
-        || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null };
+      const settings = ((await sb('GET', 'ak9_settings?id=eq.1&select=*&limit=1')).json || [])[0]
+        || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null, nominate_open: null, theme: 'classic' };
       const awards = (await sb('GET', 'ak9_awards?select=id,title,description,sort,nominees&order=sort.asc,created_at.asc')).json || [];
       const votes = (await sb('GET', 'ak9_votes?select=twitch_user_id,twitch_login,display_name,choices,created_at&order=created_at.asc')).json || [];
       const noms = (await sb('GET', 'ak9_nominations?select=twitch_user_id,choices&order=created_at.asc')).json || [];
@@ -198,6 +198,17 @@ export default async function handler(req, res) {
           const t = new Date(body.nominate_deadline);
           if (isNaN(t.getTime())) { res.status(400).json({ error: 'Bad nomination deadline.' }); return; }
           patch.nominate_deadline = t.toISOString();
+        }
+        // nominate_open: when phase 1 goes live (same rules)
+        if (body.nominate_open === null || body.nominate_open === '') patch.nominate_open = null;
+        else if (body.nominate_open) {
+          const t = new Date(body.nominate_open);
+          if (isNaN(t.getTime())) { res.status(400).json({ error: 'Bad nomination-open date.' }); return; }
+          patch.nominate_open = t.toISOString();
+        }
+        // theme: classic | crime (default classic if unrecognized)
+        if (body.theme !== undefined) {
+          patch.theme = ['classic', 'crime'].includes(body.theme) ? body.theme : 'classic';
         }
         const u = await sb('PATCH', 'ak9_settings?id=eq.1', { body: patch, prefer: 'return=representation' });
         if (!u.ok) { res.status(502).json({ error: 'Could not save settings.' }); return; }

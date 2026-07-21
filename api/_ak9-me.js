@@ -36,8 +36,9 @@ export default async function handler(req, res) {
       else isFollower = f;
     }
 
-    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=month_label,deadline,voting_open,phase,nominate_deadline&limit=1')).json;
-    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null };
+    // select=* so a not-yet-migrated column (theme / nominate_open) never breaks the query
+    const s = (await sb('GET', 'ak9_settings?id=eq.1&select=*&limit=1')).json;
+    const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null, nominate_open: null, theme: 'classic' };
 
     res.status(200).json({
       user: { id: id.user_id, login: id.login },

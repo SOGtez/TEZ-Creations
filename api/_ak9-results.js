@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     // select=* so optional/added columns never break the query (project convention).
     const s = (await sb('GET', 'ak9_settings?id=eq.1&select=*&limit=1')).json;
     const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true };
-    const pub = { month_label: settings.month_label || '', deadline: settings.deadline || null, voting_open: settings.voting_open !== false };
+    const pub = { month_label: settings.month_label || '', deadline: settings.deadline || null, voting_open: settings.voting_open !== false, theme: settings.theme || 'classic' };
 
     if (!isClosed(settings)) { res.status(200).json({ revealed: false, settings: pub }); return; }
 

@@ -1,0 +1,185 @@
+/* ============================================================
+   AK9 AWARDS — "Crime Scene" theme skin.
+   EVERY rule is scoped under body.theme-crime, so when the theme is
+   'classic' this file changes nothing — the platinum design is a
+   guaranteed fallback. Toggled from the admin Settings → Theme.
+   Reskins the EXISTING voter/results DOM (no markup changes needed).
+   ============================================================ */
+body.theme-crime{
+  --c-ink:#e9e3d4; --c-paper:#cdb98a; --c-bg:#12100d;
+  --c-tape:#f2c115; --c-evidence:#d5342a; --c-muted:#9a917d;
+  --c-fd:"Anton",Impact,sans-serif; --c-fo:"Oswald",sans-serif;
+  --c-ft:"Special Elite","Courier New",monospace; --c-fm:"Space Mono",monospace;
+  background:
+    repeating-linear-gradient(-45deg, rgba(242,193,21,.014) 0 22px, transparent 22px 44px),
+    radial-gradient(120% 90% at 50% -10%, #221a12 0%, #12100d 55%), #12100d;
+  color:var(--c-ink); font-family:var(--c-ft);
+}
+/* hide the platinum background layers */
+body.theme-crime .grid-wrap, body.theme-crime .aura, body.theme-crime .beams,
+body.theme-crime .grain, body.theme-crime .vig{ display:none !important; }
+
+/* police-tape band pinned to the top */
+body.theme-crime::before{
+  content:"CRIME SCENE · DO NOT CROSS · AK9 EVIDENCE";
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  background:var(--c-tape); color:#1a1105;
+  font-family:var(--c-fd); font-size:14px; letter-spacing:.26em; text-transform:uppercase;
+  text-align:center; padding:6px 0; white-space:nowrap; overflow:hidden;
+  border-bottom:3px solid #000; box-shadow:0 5px 16px rgba(0,0,0,.5); pointer-events:none;
+}
+body.theme-crime .wrap{ margin-top:34px; }
+
+/* ---- hero ---- */
+body.theme-crime .kick{ font-family:var(--c-fm); font-size:12px; letter-spacing:.42em; text-transform:uppercase; color:var(--c-muted); }
+body.theme-crime .word{
+  font-family:var(--c-fd); font-weight:400; letter-spacing:.01em; line-height:.9;
+  font-size:clamp(52px,13vw,120px); color:#efe9db; -webkit-text-fill-color:#efe9db;
+  background:none; text-shadow:0 3px 0 #000, 0 0 34px rgba(0,0,0,.6);
+}
+body.theme-crime .month{ font-family:var(--c-ft); font-size:15px; letter-spacing:.3em; text-transform:uppercase; color:var(--c-tape); }
+body.theme-crime .rule{ display:none; }
+/* phase stamp under the subline */
+body.theme-crime .hero::after{
+  display:inline-block; margin-top:14px; content:"Evidence";
+  font-family:var(--c-fd); font-size:14px; letter-spacing:.1em; color:var(--c-evidence);
+  background:rgba(18,16,13,.78); border:3px solid var(--c-evidence); border-radius:6px;
+  padding:5px 13px; text-transform:uppercase; transform:rotate(-4deg); box-shadow:0 4px 14px rgba(0,0,0,.5);
+}
+body.theme-crime[data-ak9phase="nominate"] .hero::after{ content:"Wanted"; }
+body.theme-crime[data-ak9phase="vote"] .hero::after{ content:"Evidence"; }
+body.theme-crime[data-ak9phase="closed"] .hero::after{ content:"Closed"; }
+
+/* ---- countdown → evidence tags ---- */
+body.theme-crime .cbox{ background:var(--c-paper); color:#231d12; border:1px solid rgba(0,0,0,.25); border-radius:4px; box-shadow:0 10px 22px rgba(0,0,0,.5); }
+body.theme-crime .cbox b{ font-family:var(--c-fm); color:#1c1710; }
+body.theme-crime .cbox span{ font-family:var(--c-fm); color:#6b5c3c; letter-spacing:.14em; }
+body.theme-crime .countlbl{ font-family:var(--c-fm); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--c-muted); }
+
+/* ---- award → case-file dossier ---- */
+body.theme-crime .award{
+  position:relative; overflow:visible; margin-top:34px; padding:18px 18px 20px;
+  background:linear-gradient(168deg,#dccb9f,#cdb98a 55%,#c1ac7a); color:#2a2113;
+  border:none; border-radius:0 7px 7px 7px;
+  box-shadow:0 22px 48px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.14);
+}
+/* folder tab (reuses .anum "AWARD 01") */
+body.theme-crime .award .anum{
+  position:absolute; top:-20px; left:18px; margin:0;
+  background:#cdb98a; color:#2a2113; font-family:var(--c-fm); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; padding:6px 15px 7px; border-radius:6px 6px 0 0;
+  box-shadow:0 -3px 9px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.4);
+}
+body.theme-crime .award .atitle{ font-family:var(--c-fd); font-weight:400; font-size:27px; line-height:1.04; text-transform:uppercase; letter-spacing:.01em; color:#1c1610; margin-top:6px; }
+body.theme-crime .award .adesc{ font-family:var(--c-ft); font-size:13px; color:#5c4e30; margin-top:5px; }
+/* corner status stamp */
+body.theme-crime .award::after{
+  content:"Evidence"; position:absolute; top:12px; right:14px; transform:rotate(8deg);
+  font-family:var(--c-fd); font-size:13px; letter-spacing:.1em; color:var(--c-evidence);
+  border:2.5px solid var(--c-evidence); border-radius:5px; padding:2px 8px; text-transform:uppercase; opacity:.82;
+}
+body.theme-crime[data-ak9phase="nominate"] .award::after{ content:"Open"; }
+body.theme-crime[data-ak9phase="vote"] .award::after{ content:"In review"; }
+
+/* nominees → suspect line-up (stacked) */
+body.theme-crime .noms{ display:grid; grid-template-columns:1fr !important; gap:10px; margin-top:16px; }
+body.theme-crime .noms::before{
+  content:"■ Suspect line-up · identify the prime suspect ■"; grid-column:1 / -1;
+  font-family:var(--c-fm); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#7a6a45; margin-bottom:2px;
+}
+body.theme-crime .nom{
+  position:relative; display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+  background:rgba(255,255,255,.34); border:1px solid rgba(0,0,0,.18); border-radius:4px; padding:10px 12px; cursor:pointer;
+  transition:background .16s ease, border-color .16s ease, transform .12s ease;
+}
+body.theme-crime .nom:hover{ border-color:#8a2a22; transform:translateY(-1px); }
+body.theme-crime .nom.sel{ background:rgba(213,52,42,.15); border-color:var(--c-evidence); box-shadow:0 0 0 1px var(--c-evidence); }
+/* avatar → mugshot (photo shows through inline background-image; else height-chart + initial) */
+body.theme-crime .nom .av{
+  width:56px; height:56px; flex:none; border-radius:3px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--c-fd); font-size:24px; color:#f3ede0; border:1px solid rgba(0,0,0,.5);
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 13px,#3a3a3a 13px 14px); background-size:cover; background-position:center;
+}
+body.theme-crime .nom .nm{ flex:1; min-width:0; font-family:var(--c-fo); font-weight:600; font-size:18px; color:#241c10; }
+/* checkmark pill → INDICT / INDICTED toggle */
+body.theme-crime .nom .tick{
+  flex:none; margin-left:auto; width:auto; height:auto; background:transparent; border:2px solid #8a2a22; border-radius:4px;
+  font-family:var(--c-fd); font-size:12px; line-height:1; letter-spacing:.08em; text-transform:uppercase; color:#8a2a22; padding:5px 10px;
+  opacity:.82; transform:none;                 /* classic hides/shrinks the tick until selected — keep the INDICT pill visible */
+}
+body.theme-crime .nom .tick svg{ display:none; }
+body.theme-crime .nom .tick::before{ content:"Indict"; }
+body.theme-crime .nom.sel .tick{ color:#fff; background:var(--c-evidence); border-color:var(--c-evidence); opacity:1; }
+body.theme-crime .nom.sel .tick::before{ content:"Indicted"; }
+
+/* nominate input → intake fill line */
+body.theme-crime .nom-input{
+  margin-top:14px; background:transparent; border:none; border-bottom:2px solid #6f5f3d; border-radius:0;
+  color:#241c10; font-family:var(--c-ft); font-size:18px; padding:8px 2px;
+}
+body.theme-crime .nom-input::placeholder{ color:#9a8a62; }
+body.theme-crime .nom-input:focus{ outline:none; border-bottom-color:var(--c-evidence); }
+
+/* ---- buttons ---- */
+body.theme-crime .btn{
+  font-family:var(--c-fd); font-weight:400; letter-spacing:.06em; text-transform:uppercase;
+  background:var(--c-tape); color:#1a1105; border:none; border-radius:5px; box-shadow:0 8px 20px -6px rgba(242,193,21,.5);
+}
+body.theme-crime .btn:hover{ filter:brightness(1.05); }
+body.theme-crime .btn:disabled{ opacity:.5; }
+body.theme-crime .btn svg{ fill:#1a1105; }
+body.theme-crime .btn.ghost{ background:transparent; color:var(--c-ink); border:1px solid rgba(233,227,212,.3); box-shadow:none; }
+body.theme-crime .btn.ghost svg{ fill:var(--c-ink); }
+
+/* progress + footer */
+body.theme-crime .prog{ font-family:var(--c-fm); letter-spacing:.06em; color:var(--c-muted); }
+body.theme-crime .prog b{ color:var(--c-tape); }
+body.theme-crime .foot{ font-family:var(--c-fm); font-size:11px; letter-spacing:.04em; color:var(--c-muted); }
+body.theme-crime .nom-intro{ font-family:var(--c-ft); color:var(--c-muted); }
+
+/* ---- message panels → manila paper ---- */
+body.theme-crime .panel{
+  background:linear-gradient(168deg,#dccb9f,#cdb98a 55%,#c1ac7a); color:#2a2113; border:none; border-radius:6px;
+  box-shadow:0 22px 48px -18px rgba(0,0,0,.85), inset 0 0 0 1px rgba(0,0,0,.14);
+}
+body.theme-crime .panel h3, body.theme-crime .msg-h{ font-family:var(--c-fd); font-weight:400; text-transform:uppercase; color:#1c1610; }
+body.theme-crime .msg-p, body.theme-crime .panel .sub{ font-family:var(--c-ft); color:#5c4e30; }
+body.theme-crime .msg-p b, body.theme-crime .panel .sub b{ color:#8a2a22; }
+
+/* submitted picks → evidence list */
+body.theme-crime .picks .pick{ background:rgba(255,255,255,.3); border:1px solid rgba(0,0,0,.18); }
+body.theme-crime .picks .pa{ font-family:var(--c-fm); text-transform:uppercase; color:#6f5f3d; }
+body.theme-crime .picks .pn{ font-family:var(--c-fo); font-weight:600; color:#241c10; }
+
+/* account chip + toast */
+body.theme-crime .adminlink{ font-family:var(--c-fm); color:var(--c-tape); }
+body.theme-crime .toast{ font-family:var(--c-fm); background:#1c1710; border:1px solid var(--c-tape); color:var(--c-ink); }
+body.theme-crime .toast.err{ border-color:var(--c-evidence); }
+
+/* ---- results page (case closed) ---- */
+body.theme-crime[data-ak9phase="closed"] .award::after{ content:"Closed"; }
+body.theme-crime .results-tag{ font-family:var(--c-fd); font-weight:400; letter-spacing:.06em; color:var(--c-evidence); border:2.5px solid var(--c-evidence); background:rgba(18,16,13,.5); }
+body.theme-crime .tally-teaser{ font-family:var(--c-fm); letter-spacing:.1em; text-transform:uppercase; color:var(--c-muted); }
+body.theme-crime .cskip{ font-family:var(--c-fm); color:var(--c-muted); }
+body.theme-crime .cdot{ background:rgba(233,227,212,.2); }
+body.theme-crime .cdot.done{ background:rgba(233,227,212,.5); }
+body.theme-crime .cdot.cur{ background:var(--c-tape); box-shadow:0 0 10px var(--c-tape); }
+body.theme-crime .winlbl{ font-family:var(--c-fm); letter-spacing:.14em; text-transform:uppercase; color:#7a6a45; }
+body.theme-crime .winner{ background:rgba(213,52,42,.14); border:1px solid var(--c-evidence); border-radius:4px; }
+body.theme-crime .winner .av{ border-radius:3px; border:1px solid rgba(0,0,0,.5); color:#f3ede0; font-family:var(--c-fd);
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 13px,#3a3a3a 13px 14px); background-size:cover; background-position:center; }
+body.theme-crime .winner .wname{ font-family:var(--c-fo); font-weight:600; color:#241c10; }
+body.theme-crime .winner .wsub{ font-family:var(--c-fm); color:#6f5f3d; }
+body.theme-crime .winner .wvotes{ font-family:var(--c-fd); color:var(--c-evidence); }
+body.theme-crime .winner .wvotes span{ font-family:var(--c-fm); color:#6f5f3d; }
+body.theme-crime .breakdown .track{ background:rgba(0,0,0,.28); }
+body.theme-crime .breakdown .track i{ background:repeating-linear-gradient(-45deg,#8a8d97 0 6px,#000 6px 8px); }
+body.theme-crime .breakdown .brow.win .track i{ background:repeating-linear-gradient(-45deg,var(--c-evidence) 0 6px,#000 6px 8px); }
+body.theme-crime .breakdown .bname{ font-family:var(--c-fo); color:#241c10; }
+body.theme-crime .breakdown .bval{ font-family:var(--c-fm); color:#6f5f3d; }
+body.theme-crime .contenders .cont{ background:rgba(255,255,255,.3); border:1px solid rgba(0,0,0,.18); }
+body.theme-crime .contenders .cont .av{ color:#f3ede0; font-family:var(--c-fd);
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 13px,#3a3a3a 13px 14px); background-size:cover; background-position:center; }
+body.theme-crime .contenders .cn{ font-family:var(--c-fo); color:#241c10; }
+body.theme-crime .nowin{ font-family:var(--c-ft); color:#5c4e30; }

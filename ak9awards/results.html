@@ -7,8 +7,9 @@
 <meta name="description" content="The winners of the AK9 community awards, revealed." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Anton&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/ak9awards/ak9.css" />
+<link rel="stylesheet" href="/ak9awards/ak9-crime.css" />
 </head>
 <body>
   <div class="grid-wrap"><div class="grid"></div></div><div class="aura"></div><div class="beams"></div><div class="grain"></div><div class="vig"></div>
@@ -237,10 +238,16 @@ function setupGridWarp() {
 setupGridWarp();
 
 /* ---------- load ---------- */
+function applyTheme(s) {
+  const crime = ((s && s.theme) || 'classic') === 'crime';
+  document.body.classList.toggle('theme-crime', crime);
+  document.body.dataset.ak9phase = 'closed';   // results = case closed
+}
 async function load() {
   const r = await apiGet('/api/ak9?route=results');
   if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
   if (!r.ok) { renderMessage('⚠️', 'Couldn’t load results', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
+  applyTheme(r.json.settings || {});
   if (!r.json.revealed) { renderLocked(r.json.settings || {}); return; }
   renderResults(r.json);
 }

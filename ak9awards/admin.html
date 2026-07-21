@@ -338,15 +338,25 @@ function renderSettings() {
   const phase = s.phase || 'vote';
   const seg = (v, label) => '<button type="button" class="phase-opt' + (phase === v ? ' on' : '') +
     '" data-phase="' + v + '" onclick="ak9SetPhase(this)">' + label + '</button>';
+  const theme = s.theme || 'classic';
+  const themeSeg = (v, label) => '<button type="button" class="phase-opt' + (theme === v ? ' on' : '') +
+    '" data-theme="' + v + '" onclick="ak9SetTheme(this)">' + label + '</button>';
   $('#tab-settings').innerHTML =
     '<div class="panel"><h3>Phase</h3><div class="sub">The awards run in two phases. <b>Nominate</b> lets followers suggest names; ' +
     'close it, promote the top names to finalists (Nominations tab), then switch to <b>Vote</b>. <b>Closed</b> ends everything and reveals results.</div>' +
     '<div class="phase-seg" id="phaseSeg">' + seg('nominate', '1 · Nominate') + seg('vote', '2 · Vote') + seg('closed', 'Closed') + '</div></div>' +
 
-    '<div class="panel"><h3>Deadlines & month</h3><div class="sub">Set the month label and each phase’s deadline.</div>' +
+    '<div class="panel"><h3>Theme</h3><div class="sub">The public site skin. <b>Classic</b> is the default platinum design; ' +
+    '<b>Crime scene</b> is this month’s evidence-bag theme. Classic always stays available as a guaranteed fallback — ' +
+    'switch back anytime.</div>' +
+    '<div class="phase-seg" id="themeSeg">' + themeSeg('classic', 'Classic') + themeSeg('crime', 'Crime scene') + '</div></div>' +
+
+    '<div class="panel"><h3>Deadlines & month</h3><div class="sub">Set the month label, when phase 1 opens, and each phase’s deadline. Times use your device’s timezone.</div>' +
     '<div class="field" style="margin-bottom:12px"><label>Month label</label><input id="s-month" value="' + esc(s.month_label || '') + '" placeholder="e.g. June 2026"></div>' +
-    '<div class="row"><div class="field"><label>Nomination deadline (phase 1)</label><input id="s-nomdeadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.nominate_deadline) + '"></div>' +
-    '<div class="field"><label>Voting deadline (phase 2)</label><input id="s-deadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.deadline) + '"></div></div>' +
+    '<div class="row"><div class="field"><label>Nominations open (phase 1 start)</label><input id="s-nomopen" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.nominate_open) + '"></div>' +
+    '<div class="field"><label>Nomination deadline (phase 1 close)</label><input id="s-nomdeadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.nominate_deadline) + '"></div></div>' +
+    '<div class="row"><div class="field"><label>Voting deadline (phase 2 close)</label><input id="s-deadline" type="datetime-local" onclick="try{this.showPicker()}catch(e){}" value="' + toLocalInput(s.deadline) + '"></div>' +
+    '<div class="field"></div></div>' +
     '<label class="switch" style="margin:6px 0 16px"><input type="checkbox" id="s-open" ' + (s.voting_open !== false ? 'checked' : '') + '> Voting open</label>' +
     '<div><button class="btn" onclick="ak9SaveSettings(this)">Save settings</button></div></div>' +
 
@@ -360,23 +370,29 @@ function renderSettings() {
     '<button class="btn danger" onclick="ak9ResetNominations()">Reset all nominations</button> ' +
     '<button class="btn danger" onclick="ak9ResetVotes()">Reset all votes</button></div>';
 }
-let pendingPhase = null;
+let pendingPhase = null, pendingTheme = null;
 window.ak9SetPhase = function (btn) {
   pendingPhase = btn.dataset.phase;
   document.querySelectorAll('#phaseSeg .phase-opt').forEach(b => b.classList.toggle('on', b === btn));
 };
+window.ak9SetTheme = function (btn) {
+  pendingTheme = btn.dataset.theme;
+  document.querySelectorAll('#themeSeg .phase-opt').forEach(b => b.classList.toggle('on', b === btn));
+};
 window.ak9SaveSettings = async function (btn) {
-  const dl = $('#s-deadline').value, nomdl = $('#s-nomdeadline').value;
+  const dl = $('#s-deadline').value, nomdl = $('#s-nomdeadline').value, nomopen = $('#s-nomopen').value;
   const body = { action: 'save_settings', month_label: $('#s-month').value.trim(),
     voting_open: $('#s-open').checked,
     deadline: dl ? new Date(dl).toISOString() : null,
     nominate_deadline: nomdl ? new Date(nomdl).toISOString() : null,
-    phase: pendingPhase || (DATA.settings && DATA.settings.phase) || 'vote' };
+    nominate_open: nomopen ? new Date(nomopen).toISOString() : null,
+    phase: pendingPhase || (DATA.settings && DATA.settings.phase) || 'vote',
+    theme: pendingTheme || (DATA.settings && DATA.settings.theme) || 'classic' };
   btn.disabled = true;
   const r = await api('/api/ak9?route=admin', { method: 'POST', body });
   btn.disabled = false;
   if (!r.ok) { toast(r.json.error || 'Save failed.', true); return; }
-  pendingPhase = null;
+  pendingPhase = null; pendingTheme = null;
   toast('Settings saved'); await reload();
 };
 window.ak9ResetVotes = async function () {
