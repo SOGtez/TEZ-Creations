@@ -171,8 +171,9 @@ let NOM_SEL = {};   // { awardId: Set(name) }
 function renderNoms() {
   const awards = DATA.awards || [];
   const tally = DATA.nominationTally || {};
-  let html = '<div class="panel"><h3>Phase 1 · nominations</h3><div class="sub">' +
-    '<b>' + (DATA.totalNominators || 0) + '</b> people nominated. Each award below lists the names people submitted, ranked by votes ' +
+  let html = '<div class="panel"><h3>Phase 1 · nominations ' +
+    '<button class="btn ghost sm" onclick="ak9Recheck()" style="float:right;margin-top:-4px">↻ Refresh</button></h3><div class="sub">' +
+    '<b>' + (DATA.totalNominators || 0) + '</b> people nominated so far. Each award below lists the names people submitted, ranked by votes ' +
     '(similar spellings like <i>aleksk9 / AleksK9 / @aleksk9</i> are merged). The <b>top 3 are pre-selected</b> — tap names to ' +
     'adjust, then <b>Set as finalists</b> to make them the voting ballot. Add photos/Twitch logins afterward in Manage awards.</div></div>';
   if (!awards.length) { $('#tab-noms').innerHTML = html + '<div class="panel">Add awards first (Manage awards).</div>'; return; }
@@ -425,15 +426,18 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
   t.classList.add('on');
   ['results', 'noms', 'manage', 'settings'].forEach(n => $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
+  // Results + Nominations are read-only views — pull the latest so freshly
+  // submitted votes/nominations show up without a manual page reload.
+  if (DATA && (t.dataset.tab === 'results' || t.dataset.tab === 'noms')) reload();
 }));
 
 // Auto-refresh the shared status when an admin returns to the tab — but ONLY on
-// the read-only Results tab, so it never wipes unsaved edits in Manage/Settings.
+// the read-only Results / Nominations tabs, so it never wipes unsaved edits in Manage/Settings.
 let _lastAuto = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !DATA) return;
   const on = document.querySelector('.tab.on');
-  if (on && on.dataset.tab === 'results' && Date.now() - _lastAuto > 4000) { _lastAuto = Date.now(); reload(); }
+  if (on && (on.dataset.tab === 'results' || on.dataset.tab === 'noms') && Date.now() - _lastAuto > 4000) { _lastAuto = Date.now(); reload(); }
 });
 
 /* ---- living grid: warp toward the cursor (desktop) / device tilt (mobile) — same as the site ---- */
