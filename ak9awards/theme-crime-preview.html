@@ -103,6 +103,52 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .tipwrap input:focus{border-color:var(--tape);border-left-color:var(--tape)}
 .tipwrap input::placeholder{color:var(--muted)}
 
+/* ---- case-file dossier (phase 1 tip intake + phase 2 suspect line-up) ---- */
+.dossier{position:relative;margin:34px 0;padding:0 0 20px;border-radius:0 7px 7px 7px;
+  background:linear-gradient(168deg,#dccb9f,#cdb98a 55%,#c1ac7a);color:#2a2113;
+  box-shadow:0 22px 48px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.14);
+  transform:rotate(var(--tilt,0deg))}
+.dossier::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;border-radius:0 7px 0 0;background:rgba(0,0,0,.10)}
+.d-tab{position:absolute;top:-20px;left:18px;background:#cdb98a;color:#2a2113;font-family:var(--fm);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 15px 7px;border-radius:6px 6px 0 0;
+  box-shadow:0 -3px 9px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.4)}
+.d-stamp{position:absolute;top:12px;right:14px;transform:rotate(8deg);font-family:var(--fd);font-size:14px;
+  letter-spacing:.1em;color:var(--evidence);border:2.5px solid var(--evidence);border-radius:5px;padding:3px 9px;
+  text-transform:uppercase;opacity:.82}
+.d-head{padding:18px 18px 6px}
+.charge{font-family:var(--fd);font-size:27px;line-height:1.04;text-transform:uppercase;color:#1c1610;letter-spacing:.01em}
+.allegation{font-family:var(--ft);font-size:13px;color:#5c4e30;margin-top:5px}
+.allegation b{font-family:var(--fm);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8a2a22;font-weight:400}
+.d-body{padding:8px 18px 0}
+/* phase 1 — suspect intake line */
+.intake-lbl{font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7a6a45;margin:4px 0 12px}
+.fill{display:flex;align-items:center;gap:12px;border-bottom:2px solid #6f5f3d;padding-bottom:7px}
+.fill .fpfx{flex:none;font-family:var(--fm);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a2a22}
+.fill input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#241c10;font-family:var(--ft);font-size:18px;padding:2px 0}
+.fill input::placeholder{color:#9a8a62}
+.intake-note{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:#8a7a54;margin-top:9px}
+/* phase 2 — suspect line-up */
+.lineup-hd{font-family:var(--fm);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a45;margin:4px 0 12px}
+.suspect{position:relative;display:flex;align-items:center;gap:14px;padding:10px 12px;margin-bottom:10px;
+  background:rgba(255,255,255,.34);border:1px solid rgba(0,0,0,.18);border-radius:4px;cursor:pointer;
+  transition:background .16s ease,border-color .16s ease,transform .12s ease}
+.suspect:last-child{margin-bottom:0}
+.suspect:hover{border-color:#8a2a22;transform:translateY(-1px)}
+.suspect.sel{background:rgba(213,52,42,.15);border-color:var(--evidence);box-shadow:0 0 0 1px var(--evidence)}
+.mugshot{position:relative;width:56px;height:56px;flex:none;border-radius:3px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:24px;color:#f3ede0;
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 13px,#3a3a3a 13px 14px);border:1px solid rgba(0,0,0,.5)}
+.mugshot .mtag{position:absolute;bottom:0;left:0;right:0;font-family:var(--fm);font-size:6px;letter-spacing:.04em;
+  color:#111;background:#c9b688;text-align:center;padding:1px 0}
+.s-info{flex:1;min-width:0}
+.s-nm{font-family:var(--fo);font-weight:600;font-size:18px;color:#241c10;line-height:1.1}
+.s-sub{font-family:var(--fm);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#6f5f3d;margin-top:3px}
+.indict{flex:none;font-family:var(--fd);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#8a2a22;
+  border:2px solid #8a2a22;border-radius:4px;padding:5px 11px;opacity:.72;transition:.16s ease}
+.suspect:hover .indict{opacity:1}
+.suspect.sel .indict{color:#fff;background:var(--evidence);border-color:var(--evidence);opacity:1}
+.suspect.sel .indict::after{content:"ed"}
+
 /* reveal (case closed) */
 .winner{position:relative;display:flex;align-items:center;gap:16px;margin:16px 18px 0;padding:16px 18px;background:rgba(213,52,42,.1);border:1px solid var(--evidence);border-radius:4px}
 .guilty{position:absolute;top:-12px;right:16px;transform:rotate(8deg);font-family:var(--fd);font-size:17px;color:var(--evidence);border:3px solid var(--evidence);border-radius:5px;padding:4px 12px;letter-spacing:.1em;background:rgba(20,16,13,.75)}
@@ -282,6 +328,35 @@ function label(bag){
   return '<div class="label"><div class="bagno">Evidence bag #'+bag.no+' · chain of custody</div>'+
     '<div class="cat">'+bag.cat+'</div><div class="catdesc">'+bag.desc+'</div></div>';
 }
+// A case-file dossier: shared shell for phase 1 (tip intake) and phase 2 (line-up).
+function caseHead(b, stamp){
+  return '<span class="d-tab">Case #AK9-07-'+b.no+'</span>'+
+    '<span class="d-stamp">'+stamp+'</span>'+
+    '<div class="d-head"><div class="charge">'+b.cat+'</div>'+
+    '<div class="allegation"><b>Allegation</b> · '+b.desc+'</div></div>';
+}
+function intakeBody(){
+  return '<div class="d-body">'+
+    '<div class="intake-lbl">▸ Name your prime suspect</div>'+
+    '<div class="fill"><span class="fpfx">Suspect</span>'+
+      '<input type="text" placeholder="Who did it?"></div>'+
+    '<div class="intake-note">Confidential · one tip per case</div></div>';
+}
+function lineupBody(b){
+  return '<div class="d-body"><div class="lineup-hd">■ Suspect line-up · identify the prime suspect ■</div>'+
+    b.finalists.map(f=>'<div class="suspect'+(picks[b.no]===f.name?' sel':'')+'" data-name="'+f.name+'">'+
+      '<span class="mugshot"><span class="mtag">AK9-'+b.no+'</span>'+ini(f.name)+'</span>'+
+      '<div class="s-info"><div class="s-nm">'+f.name+'</div>'+
+        '<div class="s-sub">Person of interest · '+f.tips+' tips</div></div>'+
+      '<span class="indict">Indict</span></div>').join('')+
+  '</div>';
+}
+function caseFile(b, kind){
+  const tilt = Number(b.no)%2 ? '-.5deg' : '.5deg';
+  return '<div class="dossier" data-bag="'+b.no+'" style="--tilt:'+tilt+'">'+
+    caseHead(b, kind==='intake'?'Open':'In review')+
+    (kind==='intake' ? intakeBody() : lineupBody(b))+'</div>';
+}
 // Winner reveal as a real evidence bag (paper award sealed inside).
 function evbag(b){
   const ranked=[...b.finalists].sort((x,y)=>y.votes-x.votes);
@@ -364,21 +439,14 @@ function render(){
     heroStamp.textContent='Wanted'; heroSub.textContent='Tip Line · July 2026'; countLbl.textContent='until the tip line closes';
     brief='See something? Say something. For each open case, name your <b>prime suspect</b> — the top tips become the finalists. One tip sheet per account.';
     ruleTxt='■ OPEN CASES · 03 ■';
-    bagsHtml = CASE.bags.map(b=>'<div class="bag">'+label(b)+
-      '<div class="tipwrap"><div class="tiplbl">Name your prime suspect</div>'+
-      '<input type="text" placeholder="Who did it? Type a name…"></div></div>').join('');
+    bagsHtml = CASE.bags.map(b=>caseFile(b,'intake')).join('');
     action='<div class="actionbar"><div class="prog"><b>0</b> of <b>3</b> tips written</div>'+
       '<button class="btn-do">Submit your tips ⟶</button></div>';
   } else if(phase==='vote'){
     heroStamp.textContent='Evidence'; heroSub.textContent='Evidence Log · July 2026'; countLbl.textContent='until the case is sealed';
     brief='Review the evidence. For each bag, name your <b>prime suspect</b> from the finalists and cast your verdict. One verdict per account — sealed until the reveal.';
     ruleTxt='■ EVIDENCE BAGS · 03 ■';
-    bagsHtml = CASE.bags.map(b=>'<div class="bag" data-bag="'+b.no+'">'+label(b)+
-      '<div class="pois">'+b.finalists.map(f=>'<div class="poi'+(picks[b.no]===f.name?' sel':'')+'" data-name="'+f.name+'">'+
-        '<span class="mug">'+ini(f.name)+'</span><div><div class="nm">'+f.name+'</div>'+
-        '<div class="sub">Person of interest · '+f.tips+' tips</div></div>'+
-        '<span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>').join('')+
-      '</div></div>').join('');
+    bagsHtml = CASE.bags.map(b=>caseFile(b,'lineup')).join('');
     const done=CASE.bags.filter(b=>picks[b.no]).length;
     action='<div class="actionbar"><div class="prog"><b>'+done+'</b> of <b>3</b> verdicts cast</div>'+
       '<button class="btn-do">Cast your verdict ⟶</button></div>';
@@ -396,19 +464,19 @@ function render(){
     : '<div class="brief">'+brief+'</div><div class="rule">'+ruleTxt+'</div>'+bagsHtml+action;
 
   if(phase==='vote'){
-    stage.querySelectorAll('.bag').forEach(bag=>{
-      bag.querySelectorAll('.poi').forEach(poi=>poi.addEventListener('click',()=>{
-        picks[bag.dataset.bag]=poi.dataset.name;
-        bag.querySelectorAll('.poi').forEach(p=>p.classList.toggle('sel',p===poi));
+    stage.querySelectorAll('.dossier').forEach(d=>{
+      d.querySelectorAll('.suspect').forEach(s=>s.addEventListener('click',()=>{
+        picks[d.dataset.bag]=s.dataset.name;
+        d.querySelectorAll('.suspect').forEach(x=>x.classList.toggle('sel',x===s));
         const done=CASE.bags.filter(b=>picks[b.no]).length;
         stage.querySelector('.actionbar .prog').innerHTML='<b>'+done+'</b> of <b>3</b> verdicts cast';
       }));
     });
   }
   if(phase==='nominate'){
-    const upd=()=>{ const n=[...stage.querySelectorAll('.tipwrap input')].filter(i=>i.value.trim()).length;
+    const upd=()=>{ const n=[...stage.querySelectorAll('.fill input')].filter(i=>i.value.trim()).length;
       stage.querySelector('.actionbar .prog').innerHTML='<b>'+n+'</b> of <b>3</b> tips written'; };
-    stage.querySelectorAll('.tipwrap input').forEach(i=>i.addEventListener('input',upd));
+    stage.querySelectorAll('.fill input').forEach(i=>i.addEventListener('input',upd));
   }
   if(phase==='reveal' && custom!=null){
     const rc=stage.querySelector('#rc'), seal=rc.querySelector('.seal');
