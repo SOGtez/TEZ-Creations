@@ -10,18 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Special+Elite&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --ink:#e9e3d4;            /* aged paper text */
-  --paper:#cbb98f;          /* manila */
-  --paper-2:#b8a377;
-  --bg:#12100d; --bg-2:#191510;
-  --tape:#f2c115;           /* police-tape yellow */
-  --evidence:#d5342a;       /* evidence red */
-  --muted:#9a917d;
+  --ink:#e9e3d4; --paper:#cbb98f; --bg:#12100d;
+  --tape:#f2c115; --evidence:#d5342a; --muted:#9a917d;
   --line:rgba(233,227,212,.14);
-  --fd:"Anton",Impact,sans-serif;
-  --fo:"Oswald",sans-serif;
-  --ft:"Special Elite","Courier New",monospace;
-  --fm:"Space Mono",monospace;
+  --fd:"Anton",Impact,sans-serif; --fo:"Oswald",sans-serif;
+  --ft:"Special Elite","Courier New",monospace; --fm:"Space Mono",monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
@@ -32,123 +25,119 @@ body{
     repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px);
   color:var(--ink);font-family:var(--ft);line-height:1.6;overflow-x:hidden;min-height:100vh;
 }
-/* forensic grain + vignette */
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
   box-shadow:inset 0 0 260px 60px rgba(0,0,0,.72);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");}
 
-/* police tape ribbon */
-.tape{position:fixed;left:-8%;width:116%;height:40px;z-index:30;
+.tape{position:fixed;left:-8%;width:116%;height:38px;z-index:30;
   background:repeating-linear-gradient(-45deg, var(--tape) 0 26px, #000 26px 52px);
-  display:flex;align-items:center;justify-content:center;overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,.5);filter:saturate(1.05)}
-.tape span{font-family:var(--fd);font-size:19px;letter-spacing:.34em;color:#000;
-  background:var(--tape);padding:2px 18px;white-space:nowrap;text-transform:uppercase}
-.tape.t1{top:26px;transform:rotate(-3.2deg)}
-.tape.t2{bottom:34px;transform:rotate(2.4deg)}
+  display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.tape span{font-family:var(--fd);font-size:18px;letter-spacing:.34em;color:#000;background:var(--tape);padding:2px 18px;white-space:nowrap;text-transform:uppercase}
+.tape.t1{top:24px;transform:rotate(-3.2deg)}
 
-.wrap{position:relative;z-index:10;max-width:860px;margin:0 auto;padding:96px 22px 150px}
+.wrap{position:relative;z-index:10;max-width:860px;margin:0 auto;padding:92px 22px 160px}
 
-/* top bar */
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;font-family:var(--fm)}
+/* preview-only phase switcher */
+.switcher{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;
+  margin:0 auto 30px;padding:10px 12px;max-width:640px;
+  background:rgba(20,16,13,.85);border:1px dashed rgba(242,193,21,.5);border-radius:5px}
+.switcher .lbl{font-family:var(--fm);font-size:9px;letter-spacing:.14em;color:var(--tape);text-transform:uppercase}
+.switcher button{font-family:var(--ft);font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:3px;padding:8px 14px;cursor:pointer}
+.switcher button.on{background:var(--tape);color:#1a1105;border-color:var(--tape)}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;font-family:var(--fm)}
 .caseno{font-size:12px;letter-spacing:.2em;color:var(--tape);border:1px dashed rgba(242,193,21,.5);padding:6px 12px;text-transform:uppercase}
 .chip{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:6px 12px}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--evidence);box-shadow:0 0 8px var(--evidence)}
 
-/* hero */
-.hero{text-align:center;padding:8px 0 6px;position:relative}
+.hero{text-align:center;padding:6px 0 2px;position:relative}
 .kick{font-family:var(--fm);font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted)}
-.word{font-family:var(--fd);font-size:clamp(58px,15vw,140px);line-height:.86;letter-spacing:.01em;
-  color:#efe9db;text-transform:uppercase;margin:12px 0 6px;
-  text-shadow:0 3px 0 #000, 0 0 34px rgba(0,0,0,.6);}
-.word .redact{position:relative}
+.word{font-family:var(--fd);font-size:clamp(56px,14vw,132px);line-height:.86;color:#efe9db;text-transform:uppercase;margin:12px 0 6px;text-shadow:0 3px 0 #000, 0 0 34px rgba(0,0,0,.6);position:relative;display:inline-block}
 .evlog{font-family:var(--ft);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--tape)}
-/* red case stamp */
-.stamp{position:absolute;top:-8px;right:-6px;transform:rotate(-13deg);
-  font-family:var(--fd);font-size:15px;letter-spacing:.12em;color:var(--evidence);
-  border:3px solid var(--evidence);border-radius:6px;padding:5px 11px;text-transform:uppercase;
-  opacity:.92;mix-blend-mode:screen;box-shadow:inset 0 0 0 1px rgba(213,52,42,.3)}
-@media (max-width:560px){.stamp{position:static;display:inline-block;margin-top:12px}}
+.stamp{position:absolute;top:-6px;right:-30px;transform:rotate(-13deg);font-family:var(--fd);font-size:15px;letter-spacing:.12em;color:var(--evidence);border:3px solid var(--evidence);border-radius:6px;padding:5px 11px;text-transform:uppercase;opacity:.92;mix-blend-mode:screen}
+@media (max-width:600px){.stamp{position:static;display:inline-block;margin-top:12px;right:0}}
 
-/* countdown = evidence tags */
-.count{display:flex;gap:14px;justify-content:center;margin:30px 0 8px;flex-wrap:wrap}
-.tag{position:relative;width:74px;background:var(--paper);color:#231d12;border-radius:4px;
-  padding:12px 6px 10px;text-align:center;
-  box-shadow:0 10px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.12);
-  transform:rotate(var(--r,-2deg))}
+.count{display:flex;gap:14px;justify-content:center;margin:28px 0 6px;flex-wrap:wrap}
+.tag{position:relative;width:74px;background:var(--paper);color:#231d12;border-radius:4px;padding:12px 6px 10px;text-align:center;box-shadow:0 10px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.12);transform:rotate(var(--r,-2deg))}
 .tag:nth-child(2){--r:1.5deg}.tag:nth-child(3){--r:-1deg}.tag:nth-child(4){--r:2.5deg}
-.tag::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
-  width:9px;height:9px;border-radius:50%;background:#231d12;opacity:.5}
+.tag::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#231d12;opacity:.5}
 .tag b{display:block;font-family:var(--fd);font-size:28px;line-height:1;margin-top:10px}
 .tag span{font-family:var(--fm);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#5a4e34}
 .countlbl{text-align:center;font-family:var(--ft);font-size:13px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-top:6px}
 
-.brief{max-width:600px;margin:34px auto 6px;text-align:center;font-size:16px;color:var(--ink);line-height:1.7}
+.brief{max-width:600px;margin:32px auto 6px;text-align:center;font-size:16px;color:var(--ink);line-height:1.7}
 .brief b{color:var(--tape)}
-.rule{display:flex;align-items:center;gap:12px;margin:30px auto;max-width:520px;color:var(--muted);font-family:var(--fm);font-size:11px;letter-spacing:.2em}
+.rule{display:flex;align-items:center;gap:12px;margin:28px auto;max-width:520px;color:var(--muted);font-family:var(--fm);font-size:11px;letter-spacing:.2em}
 .rule::before,.rule::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--line),transparent)}
 
-/* evidence bag = award card */
 .bag{position:relative;margin:26px 0;padding:0 0 22px;border-radius:6px;
   background:linear-gradient(180deg, rgba(200,210,220,.10), rgba(180,190,200,.04));
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 18px 44px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 44px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.10);
   overflow:hidden;transform:rotate(var(--tilt,0deg))}
 .bag:nth-child(odd){--tilt:-.4deg}.bag:nth-child(even){--tilt:.5deg}
-/* the plastic zip-top */
-.bag::before{content:"";position:absolute;top:0;left:0;right:0;height:16px;
-  background:repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0 5px, rgba(255,255,255,.04) 5px 10px);
-  border-bottom:1px dashed rgba(255,255,255,.25)}
-/* chain-of-custody label */
-.label{margin:30px 18px 4px;background:var(--paper);color:#231d12;border-radius:3px;padding:12px 15px;
-  box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative}
-.label::after{content:"EVIDENCE";position:absolute;top:8px;right:12px;font-family:var(--fd);font-size:13px;
-  letter-spacing:.12em;color:var(--evidence);border:2.5px solid var(--evidence);border-radius:4px;padding:2px 8px;
-  transform:rotate(6deg);opacity:.85}
+.bag::before{content:"";position:absolute;top:0;left:0;right:0;height:16px;background:repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0 5px, rgba(255,255,255,.04) 5px 10px);border-bottom:1px dashed rgba(255,255,255,.25)}
+.label{margin:30px 18px 4px;background:var(--paper);color:#231d12;border-radius:3px;padding:12px 15px;box-shadow:0 8px 18px rgba(0,0,0,.4);position:relative}
+.label::after{content:"EVIDENCE";position:absolute;top:8px;right:12px;font-family:var(--fd);font-size:13px;letter-spacing:.12em;color:var(--evidence);border:2.5px solid var(--evidence);border-radius:4px;padding:2px 8px;transform:rotate(6deg);opacity:.85}
 .bagno{font-family:var(--fm);font-size:11px;letter-spacing:.14em;color:#6b5c3c;text-transform:uppercase}
 .cat{font-family:var(--fd);font-size:26px;line-height:1.05;margin-top:2px;text-transform:uppercase;color:#1c1710}
 .catdesc{font-family:var(--ft);font-size:13px;color:#5a4e34;margin-top:3px}
 
+/* persons of interest (vote) */
 .pois{padding:16px 18px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:560px){.pois{grid-template-columns:1fr}}
-.poi{position:relative;display:flex;align-items:center;gap:13px;padding:12px;cursor:pointer;
-  background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:4px;
-  transition:border-color .18s ease, background .18s ease, transform .12s ease}
+.poi{position:relative;display:flex;align-items:center;gap:13px;padding:12px;cursor:pointer;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:4px;transition:border-color .18s ease, background .18s ease, transform .12s ease}
 .poi:hover{border-color:rgba(242,193,21,.55);transform:translateY(-1px)}
 .poi.sel{border-color:var(--evidence);background:rgba(213,52,42,.12);box-shadow:0 0 0 1px var(--evidence)}
-/* mugshot */
-.mug{width:52px;height:52px;flex:none;border-radius:3px;overflow:hidden;position:relative;
-  background:repeating-linear-gradient(0deg,#3a352b 0 11px,#2b271f 11px 12px);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--fd);font-size:22px;color:#efe9db;border:1px solid rgba(0,0,0,.4)}
-.mug img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.poi .nm{font-family:var(--fo);font-weight:600;font-size:17px;letter-spacing:.01em;line-height:1.15}
+.mug{width:52px;height:52px;flex:none;border-radius:3px;overflow:hidden;position:relative;background:repeating-linear-gradient(0deg,#3a352b 0 11px,#2b271f 11px 12px);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#efe9db;border:1px solid rgba(0,0,0,.4)}
+.poi .nm{font-family:var(--fo);font-weight:600;font-size:17px;line-height:1.15}
 .poi .sub{font-family:var(--fm);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:2px}
-.poi .pick{margin-left:auto;width:26px;height:26px;flex:none;border-radius:50%;border:2px solid rgba(255,255,255,.28);
-  display:flex;align-items:center;justify-content:center;transition:.18s ease}
+.poi .pick{margin-left:auto;width:26px;height:26px;flex:none;border-radius:50%;border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;transition:.18s ease}
 .poi.sel .pick{background:var(--evidence);border-color:var(--evidence)}
 .poi .pick svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;opacity:0;transition:.18s}
 .poi.sel .pick svg{opacity:1}
 
-/* verdict bar */
-.verdict{position:sticky;bottom:20px;z-index:20;margin-top:34px;display:flex;align-items:center;
-  justify-content:space-between;gap:16px;flex-wrap:wrap;
-  background:rgba(20,16,13,.92);border:1px solid rgba(242,193,21,.4);border-radius:6px;
-  padding:16px 20px;backdrop-filter:blur(8px);box-shadow:0 20px 50px -18px rgba(0,0,0,.9)}
-.verdict .prog{font-family:var(--ft);font-size:14px;letter-spacing:.06em;color:var(--muted)}
-.verdict .prog b{color:var(--tape)}
-.btn-verdict{font-family:var(--fd);font-size:19px;letter-spacing:.1em;text-transform:uppercase;color:#1a1105;
-  background:var(--tape);border:none;border-radius:4px;padding:14px 28px;cursor:pointer;position:relative;
-  box-shadow:0 8px 22px -8px rgba(242,193,21,.6), inset 0 -3px 0 rgba(0,0,0,.25);transition:transform .15s ease}
-.btn-verdict:hover{transform:translatey(-2px)}
+/* tip field (nominate) */
+.tipwrap{padding:16px 18px 0}
+.tipwrap .tiplbl{font-family:var(--fm);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.tipwrap input{width:100%;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--evidence);color:var(--ink);font-family:var(--ft);font-size:16px;padding:14px 15px;border-radius:3px;outline:none}
+.tipwrap input:focus{border-color:var(--tape);border-left-color:var(--tape)}
+.tipwrap input::placeholder{color:var(--muted)}
+
+/* reveal (case closed) */
+.winner{position:relative;display:flex;align-items:center;gap:16px;margin:16px 18px 0;padding:16px 18px;background:rgba(213,52,42,.1);border:1px solid var(--evidence);border-radius:4px}
+.guilty{position:absolute;top:-12px;right:16px;transform:rotate(8deg);font-family:var(--fd);font-size:17px;color:var(--evidence);border:3px solid var(--evidence);border-radius:5px;padding:4px 12px;letter-spacing:.1em;background:rgba(20,16,13,.75)}
+.winner .mug{width:64px;height:64px;font-size:26px}
+.winner .wn{font-family:var(--fd);font-size:24px;text-transform:uppercase;line-height:1}
+.winner .ws{font-family:var(--fm);font-size:11px;letter-spacing:.1em;color:var(--tape);text-transform:uppercase;margin-top:4px}
+.tallies{padding:14px 18px 0}
+.trow{display:flex;align-items:center;gap:10px;margin:8px 0;font-family:var(--fo)}
+.trow .tn{width:120px;font-size:14px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow.win .tn{font-weight:700}
+.trow .tbar{flex:1;height:12px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.trow .tbar i{display:block;height:100%;background:repeating-linear-gradient(-45deg,#8a8d97 0 6px,#000 6px 8px)}
+.trow.win .tbar i{background:repeating-linear-gradient(-45deg,var(--evidence) 0 6px,#000 6px 8px)}
+.trow .tc{width:60px;text-align:right;font-family:var(--fm);font-size:12px;color:var(--muted)}
+
+/* action bar */
+.actionbar{position:sticky;bottom:20px;z-index:20;margin-top:34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(20,16,13,.94);border:1px solid rgba(242,193,21,.4);border-radius:6px;padding:16px 20px;backdrop-filter:blur(8px);box-shadow:0 20px 50px -18px rgba(0,0,0,.9)}
+.actionbar .prog{font-family:var(--ft);font-size:14px;letter-spacing:.06em;color:var(--muted)}
+.actionbar .prog b{color:var(--tape)}
+.btn-do{font-family:var(--fd);font-size:19px;letter-spacing:.1em;text-transform:uppercase;color:#1a1105;background:var(--tape);border:none;border-radius:4px;padding:14px 28px;cursor:pointer;box-shadow:0 8px 22px -8px rgba(242,193,21,.6), inset 0 -3px 0 rgba(0,0,0,.25);transition:transform .15s ease}
+.btn-do:hover{transform:translateY(-2px)}
 .foot{text-align:center;margin-top:40px;font-family:var(--ft);font-size:12px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
 </style>
 </head>
 <body>
 <div class="tape t1"><span>Crime Scene · Do Not Cross · AK9 Evidence</span></div>
-<div class="tape t2"><span>AK9 Forensics Unit · Do Not Cross</span></div>
 
 <div class="wrap">
+  <div class="switcher">
+    <span class="lbl">Preview · phase</span>
+    <button data-phase="nominate">Phase 1 · Submit a tip</button>
+    <button data-phase="vote" class="on">Phase 2 · Cast your verdict</button>
+    <button data-phase="reveal">Reveal · Case closed</button>
+  </div>
+
   <div class="top">
     <div class="caseno">CASE #AK9-07 · JULY 2026</div>
     <div class="chip"><span class="dot"></span>@viewer1 · logged in</div>
@@ -156,8 +145,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 
   <div class="hero">
     <div class="kick">AleksK9 · Forensics Unit presents…</div>
-    <div class="word">AK9 AWARDS<span class="stamp">Evidence</span></div>
-    <div class="evlog">Evidence Log · July 2026</div>
+    <div class="word">AK9 AWARDS<span class="stamp" id="heroStamp">Evidence</span></div>
+    <div class="evlog" id="heroSub">Evidence Log · July 2026</div>
   </div>
 
   <div class="count">
@@ -166,72 +155,95 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
     <div class="tag"><b>37</b><span>min</span></div>
     <div class="tag"><b>09</b><span>sec</span></div>
   </div>
-  <div class="countlbl">until the case is sealed</div>
+  <div class="countlbl" id="countLbl">until the case is sealed</div>
 
-  <div class="brief">Review the evidence. For each bag, name your <b>prime suspect</b> and cast your verdict. One verdict per Twitch account — sealed until the reveal.</div>
+  <div id="stage"></div>
 
-  <div class="rule">■ EVIDENCE BAGS · 03 ■</div>
-
-  <!-- Evidence bag 1 -->
-  <div class="bag">
-    <div class="label">
-      <div class="bagno">Evidence bag #01 · chain of custody</div>
-      <div class="cat">Clip of the Month</div>
-      <div class="catdesc">The clip that broke the timeline.</div>
-    </div>
-    <div class="pois">
-      <div class="poi sel"><span class="mug">A</span><div><div class="nm">AleksK9</div><div class="sub">Person of interest · 12 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-      <div class="poi"><span class="mug">M</span><div><div class="nm">mossyowl</div><div class="sub">Person of interest · 8 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-      <div class="poi"><span class="mug">F</span><div><div class="nm">frost</div><div class="sub">Person of interest · 5 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-    </div>
-  </div>
-
-  <!-- Evidence bag 2 -->
-  <div class="bag">
-    <div class="label">
-      <div class="bagno">Evidence bag #02 · chain of custody</div>
-      <div class="cat">Best Chatter</div>
-      <div class="catdesc">Prime suspect for keyboard-related noise complaints.</div>
-    </div>
-    <div class="pois">
-      <div class="poi"><span class="mug">V</span><div><div class="nm">vynce</div><div class="sub">Person of interest · 9 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-      <div class="poi sel"><span class="mug">K</span><div><div class="nm">kev</div><div class="sub">Person of interest · 7 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-    </div>
-  </div>
-
-  <!-- Evidence bag 3 -->
-  <div class="bag">
-    <div class="label">
-      <div class="bagno">Evidence bag #03 · chain of custody</div>
-      <div class="cat">Most Wanted Newcomer</div>
-      <div class="catdesc">Last seen streaming under 1k followers.</div>
-    </div>
-    <div class="pois">
-      <div class="poi"><span class="mug">Q</span><div><div class="nm">quilt</div><div class="sub">Person of interest · 4 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-      <div class="poi"><span class="mug">E</span><div><div class="nm">ember</div><div class="sub">Person of interest · 3 tips</div></div><span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
-    </div>
-  </div>
-
-  <div class="verdict">
-    <div class="prog"><b>2</b> of <b>3</b> verdicts cast</div>
-    <button class="btn-verdict" type="button">Cast your verdict ⟶</button>
-  </div>
-
-  <div class="foot">Sealed until the reveal · AK9 Forensics Unit · one verdict per account</div>
+  <div class="foot">Sealed until the reveal · AK9 Forensics Unit · one entry per account</div>
 </div>
 
 <script>
-// mockup interactivity: pick a suspect per bag
-document.querySelectorAll('.bag').forEach(bag=>{
-  bag.querySelectorAll('.poi').forEach(poi=>{
-    poi.addEventListener('click',()=>{
-      bag.querySelectorAll('.poi').forEach(p=>p.classList.remove('sel'));
-      poi.classList.add('sel');
-      const done=[...document.querySelectorAll('.bag')].filter(b=>b.querySelector('.poi.sel')).length;
-      document.querySelector('.verdict .prog').innerHTML='<b>'+done+'</b> of <b>3</b> verdicts cast';
+const CASE = {
+  bags:[
+    {no:'01', cat:'Clip of the Month', desc:'The clip that broke the timeline.',
+     finalists:[{name:'AleksK9',tips:12,votes:34},{name:'mossyowl',tips:8,votes:19},{name:'frost',tips:5,votes:9}]},
+    {no:'02', cat:'Best Chatter', desc:'Prime suspect for keyboard-related noise complaints.',
+     finalists:[{name:'vynce',tips:9,votes:22},{name:'kev',tips:7,votes:28}]},
+    {no:'03', cat:'Most Wanted Newcomer', desc:'Last seen streaming under 1k followers.',
+     finalists:[{name:'quilt',tips:4,votes:15},{name:'ember',tips:3,votes:11}]},
+  ]
+};
+const ini = s => (s||'?').slice(0,1).toUpperCase();
+const stage = document.getElementById('stage');
+let phase = 'vote', picks = { '01':'AleksK9', '02':'kev' };
+
+function label(bag){
+  return '<div class="label"><div class="bagno">Evidence bag #'+bag.no+' · chain of custody</div>'+
+    '<div class="cat">'+bag.cat+'</div><div class="catdesc">'+bag.desc+'</div></div>';
+}
+function render(){
+  document.querySelectorAll('.switcher button').forEach(b=>b.classList.toggle('on', b.dataset.phase===phase));
+  const heroStamp=document.getElementById('heroStamp'), heroSub=document.getElementById('heroSub'), countLbl=document.getElementById('countLbl');
+  let brief, ruleTxt, bagsHtml='', action='';
+
+  if(phase==='nominate'){
+    heroStamp.textContent='Wanted'; heroSub.textContent='Tip Line · July 2026'; countLbl.textContent='until the tip line closes';
+    brief='See something? Say something. For each open case, name your <b>prime suspect</b> — the top tips become the finalists. One tip sheet per account.';
+    ruleTxt='■ OPEN CASES · 03 ■';
+    bagsHtml = CASE.bags.map(b=>'<div class="bag">'+label(b)+
+      '<div class="tipwrap"><div class="tiplbl">Name your prime suspect</div>'+
+      '<input type="text" placeholder="Who did it? Type a name…"></div></div>').join('');
+    action='<div class="actionbar"><div class="prog"><b>0</b> of <b>3</b> tips written</div>'+
+      '<button class="btn-do">Submit your tips ⟶</button></div>';
+  } else if(phase==='vote'){
+    heroStamp.textContent='Evidence'; heroSub.textContent='Evidence Log · July 2026'; countLbl.textContent='until the case is sealed';
+    brief='Review the evidence. For each bag, name your <b>prime suspect</b> from the finalists and cast your verdict. One verdict per account — sealed until the reveal.';
+    ruleTxt='■ EVIDENCE BAGS · 03 ■';
+    bagsHtml = CASE.bags.map(b=>'<div class="bag" data-bag="'+b.no+'">'+label(b)+
+      '<div class="pois">'+b.finalists.map(f=>'<div class="poi'+(picks[b.no]===f.name?' sel':'')+'" data-name="'+f.name+'">'+
+        '<span class="mug">'+ini(f.name)+'</span><div><div class="nm">'+f.name+'</div>'+
+        '<div class="sub">Person of interest · '+f.tips+' tips</div></div>'+
+        '<span class="pick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>').join('')+
+      '</div></div>').join('');
+    const done=CASE.bags.filter(b=>picks[b.no]).length;
+    action='<div class="actionbar"><div class="prog"><b>'+done+'</b> of <b>3</b> verdicts cast</div>'+
+      '<button class="btn-do">Cast your verdict ⟶</button></div>';
+  } else {
+    heroStamp.textContent='Closed'; heroSub.textContent='Case Closed · July 2026'; countLbl.textContent='the case is sealed';
+    brief='The evidence is in and the verdict is final. Each bag is opened — here are the <b>convicted</b>.';
+    ruleTxt='■ CASES CLOSED · 03 ■';
+    bagsHtml = CASE.bags.map(b=>{
+      const ranked=[...b.finalists].sort((x,y)=>y.votes-x.votes);
+      const win=ranked[0], max=Math.max(...ranked.map(f=>f.votes)), total=ranked.reduce((s,f)=>s+f.votes,0);
+      return '<div class="bag">'+label(b)+
+        '<div class="winner"><span class="guilty">Guilty</span><span class="mug">'+ini(win.name)+'</span>'+
+        '<div><div class="wn">'+win.name+'</div><div class="ws">Convicted · '+win.votes+' votes · '+Math.round(win.votes/total*100)+'% of the jury</div></div></div>'+
+        '<div class="tallies">'+ranked.map(f=>'<div class="trow'+(f===win?' win':'')+'">'+
+          '<span class="tn">'+f.name+'</span><span class="tbar"><i style="width:'+Math.round(f.votes/max*100)+'%"></i></span>'+
+          '<span class="tc">'+f.votes+' · '+Math.round(f.votes/total*100)+'%</span></div>').join('')+'</div></div>';
+    }).join('');
+    action='';
+  }
+  stage.innerHTML='<div class="brief">'+brief+'</div><div class="rule">'+ruleTxt+'</div>'+bagsHtml+action;
+
+  if(phase==='vote'){
+    stage.querySelectorAll('.bag').forEach(bag=>{
+      bag.querySelectorAll('.poi').forEach(poi=>poi.addEventListener('click',()=>{
+        picks[bag.dataset.bag]=poi.dataset.name;
+        bag.querySelectorAll('.poi').forEach(p=>p.classList.toggle('sel',p===poi));
+        const done=CASE.bags.filter(b=>picks[b.no]).length;
+        stage.querySelector('.actionbar .prog').innerHTML='<b>'+done+'</b> of <b>3</b> verdicts cast';
+      }));
     });
-  });
-});
+  }
+  if(phase==='nominate'){
+    const upd=()=>{ const n=[...stage.querySelectorAll('.tipwrap input')].filter(i=>i.value.trim()).length;
+      stage.querySelector('.actionbar .prog').innerHTML='<b>'+n+'</b> of <b>3</b> tips written'; };
+    stage.querySelectorAll('.tipwrap input').forEach(i=>i.addEventListener('input',upd));
+  }
+}
+document.querySelectorAll('.switcher button').forEach(b=>b.addEventListener('click',()=>{ phase=b.dataset.phase; render(); window.scrollTo({top:0,behavior:'smooth'}); }));
+render();
 </script>
 </body>
 </html>
