@@ -163,7 +163,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .reveal-case{position:relative}
 /* the award is hidden until the bag opens, then eased open via a smooth height
    reveal (grid-rows 0fr→1fr — no max-height jank) + a gentle fade/rise */
-.paper-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows 1.5s cubic-bezier(.22,1,.36,1)}
+.paper-wrap{display:grid;grid-template-rows:0fr;min-height:440px;transition:grid-template-rows 1.5s cubic-bezier(.22,1,.36,1)}
 .reveal-case.is-open .paper-wrap{grid-template-rows:1fr}
 .reveal-case .paper{overflow:hidden;opacity:0;transform:translateY(16px) scale(.985);
   transition:opacity 1s ease .45s, transform 1.1s cubic-bezier(.22,1,.36,1) .45s}
@@ -173,8 +173,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
   transition:opacity .5s ease, transform .62s cubic-bezier(.18,1.4,.34,1)}
 /* the sealed bag: fixed height, two clipped copies that drift off on open.
    The split lands exactly on the printed dotted CUT line (62%). */
-.seal{position:relative;height:440px;z-index:3;cursor:pointer;overflow:visible;
-  transition:height 1.5s cubic-bezier(.22,1,.36,1) .05s}
+.seal{position:absolute;left:0;right:0;top:0;height:440px;z-index:3;cursor:pointer;overflow:visible;
+  transition:opacity .4s ease}
 .reveal-case.is-open .seal{height:0;pointer-events:none}
 .sealface{position:absolute;left:0;right:0;top:0;height:440px;overflow:hidden;
   background:#eceae3;color:#141414;border-radius:4px;box-shadow:0 22px 50px -20px rgba(0,0,0,.92), inset 0 0 0 1px rgba(0,0,0,.1);
