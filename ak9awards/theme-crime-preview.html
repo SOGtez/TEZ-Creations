@@ -118,6 +118,43 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 .trow.win .tbar i{background:repeating-linear-gradient(-45deg,var(--evidence) 0 6px,#000 6px 8px)}
 .trow .tc{width:60px;text-align:right;font-family:var(--fm);font-size:12px;color:var(--muted)}
 
+/* ---- winner reveal: real evidence bag ---- */
+.evbag{position:relative;margin:26px 0 4px;background:#eceae3;color:#141414;border-radius:4px;
+  box-shadow:0 24px 54px -20px rgba(0,0,0,.92), inset 0 0 0 1px rgba(0,0,0,.1);overflow:hidden;
+  transform:rotate(var(--tl,0deg))}
+.evbag:nth-of-type(even){--tl:.4deg}.evbag:nth-of-type(odd){--tl:-.4deg}
+.evbag::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;
+  background:linear-gradient(125deg,rgba(255,255,255,.55),transparent 26%,transparent 74%,rgba(255,255,255,.4))}
+.ev-strip{background:#d8342a;padding:5px 0 4px}
+.ev-brand{font-family:var(--fm);font-weight:700;font-style:italic;font-size:8px;letter-spacing:.1em;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-align:center}
+.ev-targets{display:flex;justify-content:space-around;align-items:center;color:#fff;font-size:14px;padding:2px 8px}
+.ev-sidewarn{position:absolute;top:66px;bottom:16px;width:20px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:8px;letter-spacing:.14em;color:#3a3a3a;writing-mode:vertical-rl;white-space:nowrap;overflow:hidden;z-index:3}
+.ev-sidewarn.l{left:3px}.ev-sidewarn.r{right:3px;transform:rotate(180deg)}
+.ev-body{position:relative;padding:16px 32px 12px;z-index:2}
+.ev-barrow{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #111;padding:6px 10px;margin-bottom:8px}
+.ev-caseno{font-family:var(--fm);font-weight:700;font-size:17px;letter-spacing:.04em}
+.ev-barcode{flex:1;height:26px;background-image:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 3px,#000 3px 4px,#fff 4px 7px,#000 7px 9px,#fff 9px 11px,#000 11px 12px,#fff 12px 15px)}
+.ev-title{font-family:var(--fd);font-size:42px;letter-spacing:.02em;text-align:center;margin:4px 0 10px;color:#111}
+.ev-photo{position:absolute;top:70px;right:34px;width:98px;transform:rotate(3deg);z-index:4}
+.ev-photo .tape{position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(-4deg);width:48px;height:16px;background:rgba(242,193,21,.72);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.ev-photo .frame{display:block;background:#fff;padding:6px 6px 8px;box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.ev-photo .mugimg{width:100%;aspect-ratio:1;background:repeating-linear-gradient(0deg,#3a3a3a 0 14px,#2c2c2c 14px 15px);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:36px;color:#eee;overflow:hidden}
+.ev-photo .mugimg img{width:100%;height:100%;object-fit:cover}
+.ev-photo .cap{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-align:center;color:#111;margin-top:5px}
+.ev-f{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:8px 0;max-width:calc(100% - 96px)}
+.ev-f label{font-family:var(--fo);font-weight:600;font-size:12px;letter-spacing:.02em;color:#111;white-space:nowrap}
+.ev-f .val{flex:1;min-width:70px;border-bottom:1px solid #111;font-family:var(--ft);font-size:14px;line-height:1.5;padding-bottom:1px}
+.ev-f .susp{font-weight:700;font-size:16px;color:#b81c14}
+.ev-coc{margin-top:12px}
+.ev-coc h5{font-family:var(--fd);font-size:17px;text-align:center;letter-spacing:.03em;margin-bottom:5px;color:#111}
+.ev-coc table{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:10.5px}
+.ev-coc th,.ev-coc td{border:1px solid #111;padding:4px 8px;text-align:left}
+.ev-guilty{position:absolute;bottom:104px;left:30px;transform:rotate(-11deg);z-index:4;
+  font-family:var(--fd);font-size:30px;color:#b81c14;border:5px solid #b81c14;border-radius:8px;padding:1px 15px;opacity:.8;letter-spacing:.06em}
+.ev-cut{border-top:2px dashed #111;margin-top:12px;padding-top:6px;font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-align:center;color:#333}
+.ev-runners{font-family:var(--fm);font-size:11px;color:var(--muted);text-align:center;margin:8px 0 22px;letter-spacing:.06em}
+
 /* action bar */
 .actionbar{position:sticky;bottom:20px;z-index:20;margin-top:34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(20,16,13,.94);border:1px solid rgba(242,193,21,.4);border-radius:6px;padding:16px 20px;backdrop-filter:blur(8px);box-shadow:0 20px 50px -18px rgba(0,0,0,.9)}
 .actionbar .prog{font-family:var(--ft);font-size:14px;letter-spacing:.06em;color:var(--muted)}
@@ -166,10 +203,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
 const CASE = {
   bags:[
     {no:'01', cat:'Clip of the Month', desc:'The clip that broke the timeline.',
+     victim:'the timeline', crime:'Convicted of posting the clip that broke the timeline. Fled the scene at 34 votes — no remorse shown.',
      finalists:[{name:'AleksK9',tips:12,votes:34},{name:'mossyowl',tips:8,votes:19},{name:'frost',tips:5,votes:9}]},
     {no:'02', cat:'Best Chatter', desc:'Prime suspect for keyboard-related noise complaints.',
+     victim:'the mods', crime:'Charged with keyboard-related noise complaints and excessive yapping in chat.',
      finalists:[{name:'vynce',tips:9,votes:22},{name:'kev',tips:7,votes:28}]},
     {no:'03', cat:'Most Wanted Newcomer', desc:'Last seen streaming under 1k followers.',
+     victim:'the algorithm', crime:'Wanted for impersonating an established streamer while under 1k followers.',
      finalists:[{name:'quilt',tips:4,votes:15},{name:'ember',tips:3,votes:11}]},
   ]
 };
@@ -180,6 +220,41 @@ let phase = 'vote', picks = { '01':'AleksK9', '02':'kev' };
 function label(bag){
   return '<div class="label"><div class="bagno">Evidence bag #'+bag.no+' · chain of custody</div>'+
     '<div class="cat">'+bag.cat+'</div><div class="catdesc">'+bag.desc+'</div></div>';
+}
+// Winner reveal as a real evidence bag (paper award sealed inside).
+function evbag(b){
+  const ranked=[...b.finalists].sort((x,y)=>y.votes-x.votes);
+  const win=ranked[0], total=ranked.reduce((s,f)=>s+f.votes,0), pct=Math.round(win.votes/total*100);
+  const runners=ranked.slice(1).map(f=>f.name+' ('+f.votes+')').join(' · ');
+  // real build: <img src="TWITCH_PFP"> — mockup shows the initial
+  const photo='<div class="mugimg">'+ini(win.name)+'</div>';
+  return '<div class="evbag">'+
+    '<div class="ev-strip">'+
+      '<div class="ev-brand">'+('AK9 FORENSICS UNIT · '.repeat(9))+'</div>'+
+      '<div class="ev-targets">'+('⊕'.repeat(15).split('').join(' '))+'</div>'+
+      '<div class="ev-brand">'+('TAMPER EVIDENT · DO NOT OPEN · '.repeat(6))+'</div>'+
+    '</div>'+
+    '<div class="ev-sidewarn l">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>'+
+    '<div class="ev-sidewarn r">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>'+
+    '<div class="ev-body">'+
+      '<div class="ev-barrow"><span class="ev-caseno">AK9-07-'+b.no+'</span><span class="ev-barcode"></span></div>'+
+      '<div class="ev-title">EVIDENCE</div>'+
+      '<div class="ev-photo"><span class="tape"></span><span class="frame">'+photo+'<span class="cap">EXHIBIT A · @'+win.name+'</span></span></div>'+
+      '<div class="ev-guilty">GUILTY</div>'+
+      '<div class="ev-f"><label>Agency</label><span class="val">AK9 Forensics Unit</span></div>'+
+      '<div class="ev-f"><label>Offense</label><span class="val">'+b.cat+'</span></div>'+
+      '<div class="ev-f"><label>Suspect</label><span class="val susp">@'+win.name+'</span></div>'+
+      '<div class="ev-f"><label>Victim</label><span class="val">'+b.victim+'</span></div>'+
+      '<div class="ev-f"><label>Recovered by</label><span class="val">community verdict — '+win.votes+' votes ('+pct+'%)</span></div>'+
+      '<div class="ev-f"><label>Description of the crime</label><span class="val">'+b.crime+'</span></div>'+
+      '<div class="ev-f"><label>Sealed by</label><span class="val">AleksK9 · Forensics Unit</span></div>'+
+      '<div class="ev-coc"><h5>Chain of Custody</h5><table>'+
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>'+
+        '<tr><td>Jul 2026</td><td>Community tips</td><td>Finalists</td></tr>'+
+        '<tr><td>Jul 2026</td><td>The jury</td><td>Verdict: Guilty</td></tr></table></div>'+
+      '<div class="ev-cut">✂ TO REMOVE CONTENTS CUT ALONG BOTTOM DOTTED LINE</div>'+
+    '</div></div>'+
+    (runners?'<div class="ev-runners">Also questioned: '+runners+'</div>':'');
 }
 function render(){
   document.querySelectorAll('.switcher button').forEach(b=>b.classList.toggle('on', b.dataset.phase===phase));
@@ -210,18 +285,9 @@ function render(){
       '<button class="btn-do">Cast your verdict ⟶</button></div>';
   } else {
     heroStamp.textContent='Closed'; heroSub.textContent='Case Closed · July 2026'; countLbl.textContent='the case is sealed';
-    brief='The evidence is in and the verdict is final. Each bag is opened — here are the <b>convicted</b>.';
-    ruleTxt='■ CASES CLOSED · 03 ■';
-    bagsHtml = CASE.bags.map(b=>{
-      const ranked=[...b.finalists].sort((x,y)=>y.votes-x.votes);
-      const win=ranked[0], max=Math.max(...ranked.map(f=>f.votes)), total=ranked.reduce((s,f)=>s+f.votes,0);
-      return '<div class="bag">'+label(b)+
-        '<div class="winner"><span class="guilty">Guilty</span><span class="mug">'+ini(win.name)+'</span>'+
-        '<div><div class="wn">'+win.name+'</div><div class="ws">Convicted · '+win.votes+' votes · '+Math.round(win.votes/total*100)+'% of the jury</div></div></div>'+
-        '<div class="tallies">'+ranked.map(f=>'<div class="trow'+(f===win?' win':'')+'">'+
-          '<span class="tn">'+f.name+'</span><span class="tbar"><i style="width:'+Math.round(f.votes/max*100)+'%"></i></span>'+
-          '<span class="tc">'+f.votes+' · '+Math.round(f.votes/total*100)+'%</span></div>').join('')+'</div></div>';
-    }).join('');
+    brief='The evidence is in and the verdict is final. Each award is sealed in the bag — open it to meet the <b>convicted</b>.';
+    ruleTxt='■ SEALED EVIDENCE · 03 ■';
+    bagsHtml = CASE.bags.map(evbag).join('');
     action='';
   }
   stage.innerHTML='<div class="brief">'+brief+'</div><div class="rule">'+ruleTxt+'</div>'+bagsHtml+action;
