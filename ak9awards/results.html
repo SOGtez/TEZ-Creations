@@ -47,7 +47,10 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
 const pad = n => String(n).padStart(2, '0');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let deadlineMs = null, countTimer = null;
+let deadlineMs = null, countTimer = null, RES = null;
+function isCrime() { return ((RES && RES.settings && RES.settings.theme) || 'classic') === 'crime'; }
+const rep = (s, n) => { let o = ''; for (let i = 0; i < n; i++) o += s; return o; };
+const targets = n => new Array(n).fill('⊕').join(' ');
 
 async function apiGet(path) {
   const r = await fetch(path);
@@ -136,8 +139,9 @@ function awardCard(a, i) {
 }
 
 function renderResults(data) {
+  RES = data;
   const awards = data.awards || [];
-  $('#month').textContent = data.settings.month_label || '';
+  $('#month').textContent = (isCrime() ? 'Case Closed · ' : '') + (data.settings.month_label || '');
   if (!awards.length) {
     renderMessage('🏆', 'No awards to show', 'There weren’t any awards set up for this round.',
       '<a class="btn" href="/ak9awards">Back to AK9 →</a>');
@@ -145,6 +149,16 @@ function renderResults(data) {
   }
   const voters = data.totalVoters || 0;
   const teaser = voters + ' ballot' + (voters === 1 ? '' : 's') + ' cast · ' + awards.length + ' award' + (awards.length === 1 ? '' : 's');
+
+  // crime theme: the evidence-bag reveal ceremony
+  if (isCrime()) {
+    if (reduceMotion) { crimeShowAll(); return; }
+    view.innerHTML = '<div class="reveal-cta" id="revealCta">' +
+      '<div class="tally-teaser">' + esc(teaser) + '</div>' +
+      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🔦 Open the case files</button></div>';
+    $('#revealBtn').addEventListener('click', () => crimeStep(0));
+    return;
+  }
 
   // the finale: every award at once, bars growing
   const showAll = () => {
@@ -203,6 +217,106 @@ function renderResults(data) {
   $('#revealBtn').addEventListener('click', () => step(0, false));
 }
 
+/* ---------- crime theme: evidence-bag reveal ceremony ---------- */
+function crimeWinner(a) {
+  const ranked = (a.nominees || []).slice().sort((x, y) => y.votes - x.votes);
+  const winners = ranked.filter(n => (a.winnerIds || []).indexOf(n.id) !== -1);
+  return { ranked, win: winners[0] || ranked[0] || null, tie: winners.length > 1 };
+}
+// The revealed evidence file (paper award) for one case.
+function crimeEvbag(a, idx) {
+  const { ranked, win, tie } = crimeWinner(a);
+  const total = a.total || 0;
+  const solved = !!win && total > 0;
+  const pct = solved && total > 0 ? Math.round((win.votes / total) * 100) : 0;
+  const runners = ranked.filter(n => n !== win && n.votes > 0).map(n => esc(n.name) + ' (' + n.votes + ')').join(' · ');
+  const photo = solved ? (win.image ? '<img src="' + esc(win.image) + '" alt="">' : esc((win.name || '?').slice(0, 1).toUpperCase())) : '?';
+  const suspect = solved ? '@' + esc(win.name) : '— unsolved —';
+  const month = esc(RES.settings.month_label || '—');
+  return '<div class="evbag">' +
+    '<div class="ev-strip"><div class="ev-brand">' + rep('AK9 FORENSICS UNIT · ', 9) + '</div>' +
+      '<div class="ev-targets">' + targets(15) + '</div>' +
+      '<div class="ev-brand">' + rep('TAMPER EVIDENT · DO NOT OPEN · ', 6) + '</div></div>' +
+    '<div class="ev-sidewarn l">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>' +
+    '<div class="ev-sidewarn r">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>' +
+    '<div class="ev-body">' +
+      '<div class="ev-barrow"><span class="ev-caseno">AK9-' + pad(idx + 1) + '</span><span class="ev-barcode"></span></div>' +
+      '<div class="ev-title">EVIDENCE</div>' +
+      '<div class="ev-photo"><span class="ptape"></span><span class="frame"><span class="mugimg">' + photo + '</span>' +
+        '<span class="cap">EXHIBIT A · ' + suspect + '</span></span></div>' +
+      (solved ? '<div class="ev-guilty">GUILTY</div>' : '') +
+      '<div class="ev-f"><label>Agency</label><span class="val">AK9 Forensics Unit</span></div>' +
+      '<div class="ev-f"><label>Offense</label><span class="val">' + esc(a.title) + '</span></div>' +
+      '<div class="ev-f"><label>Suspect</label><span class="val susp">' + suspect + '</span></div>' +
+      '<div class="ev-f"><label>Recovered by</label><span class="val">' +
+        (solved ? 'community verdict — ' + win.votes + ' vote' + (win.votes === 1 ? '' : 's') + ' (' + pct + '%)' + (tie ? ' · tie' : '') : 'no votes were cast') + '</span></div>' +
+      (a.description ? '<div class="ev-f"><label>Case notes</label><span class="val">' + esc(a.description) + '</span></div>' : '') +
+      '<div class="ev-f"><label>Sealed by</label><span class="val">AleksK9 · Forensics Unit</span></div>' +
+      '<div class="ev-coc"><h5>Chain of Custody</h5><table>' +
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>' +
+        '<tr><td>' + month + '</td><td>Community tips</td><td>Finalists</td></tr>' +
+        '<tr><td>' + month + '</td><td>The jury</td><td>Verdict: ' + (solved ? 'Guilty' : 'Unsolved') + '</td></tr></table></div>' +
+      '<div class="ev-cut">✂ TO REMOVE CONTENTS CUT ALONG BOTTOM DOTTED LINE</div>' +
+    '</div></div>' +
+    (runners ? '<div class="ev-runners">Also questioned: ' + runners + '</div>' : '');
+}
+// One sealed-bag face (rendered twice, clipped top/bottom, so it splits cleanly).
+function crimeSealFace(a, which, idx) {
+  return '<div class="sealface ' + which + '">' +
+    '<div class="ev-strip"><div class="ev-brand">' + rep('AK9 FORENSICS UNIT · ', 9) + '</div>' +
+      '<div class="ev-targets">' + targets(15) + '</div>' +
+      '<div class="ev-brand">' + rep('TAMPER EVIDENT · DO NOT OPEN · ', 6) + '</div></div>' +
+    '<div class="ev-body">' +
+      '<div class="ev-barrow"><span class="ev-caseno">AK9-' + pad(idx + 1) + '</span><span class="ev-barcode"></span></div>' +
+      '<div class="ev-title">EVIDENCE</div>' +
+      '<div class="redact-block"><span class="rb"></span><span class="rl">' + esc(a.title) + '</span>' +
+        '<span class="rl2">Suspect redacted · sealed pending verdict</span></div>' +
+      '<div class="taphint">✂ Tap to cut open</div>' +
+    '</div>' +
+    '<div class="ev-cut">✂ CUT ALONG DOTTED LINE TO OPEN</div>' +
+    '<div class="seal-btm">Chain of custody sealed · do not open</div>' +
+    '<span class="sidew l">DO NOT CUT HERE TO OPEN</span><span class="sidew r">DO NOT CUT HERE TO OPEN</span>' +
+    '</div>';
+}
+function crimeSealedCase(a, idx) {
+  const awards = RES.awards;
+  const dots = awards.map((_, j) => '<span class="cdot' + (j < idx ? ' done' : j === idx ? ' cur' : '') + '"></span>').join('');
+  return '<div class="brief">Case ' + (idx + 1) + ' of ' + awards.length + ' · ' + esc(a.title) + '</div>' +
+    '<div class="cprog">' + dots + '</div>' +
+    '<div class="reveal-case" id="rc"><div class="paper-wrap"><div class="paper">' + crimeEvbag(a, idx) + '</div></div>' +
+      '<div class="seal">' + crimeSealFace(a, 'sf-top', idx) + crimeSealFace(a, 'sf-bottom', idx) +
+        '<span class="cutline"></span><span class="scissors">✂</span></div></div>' +
+    '<div class="cbtnrow"><div class="opencue">Tap the evidence bag to cut it open</div></div>';
+}
+function crimeStep(idx) {
+  const awards = RES.awards, a = awards[idx];
+  view.innerHTML = crimeSealedCase(a, idx);
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  const rc = view.querySelector('#rc'), seal = rc.querySelector('.seal');
+  const last = idx === awards.length - 1;
+  const addNext = () => {
+    const row = view.querySelector('.cbtnrow');
+    row.innerHTML = '<button class="btn reveal-btn" id="nextCase" type="button">' + (last ? 'See all case files →' : 'Next case →') + '</button>';
+    row.querySelector('#nextCase').addEventListener('click', () => { if (last) crimeShowAll(); else crimeStep(idx + 1); });
+  };
+  seal.addEventListener('click', () => {
+    if (rc.classList.contains('cutting')) return;
+    if (reduceMotion) { rc.classList.add('is-open'); seal.style.display = 'none'; rc.querySelector('.paper').classList.add('revealed'); addNext(); return; }
+    rc.classList.add('cutting');                                          // blade sweeps the dotted line
+    setTimeout(() => rc.classList.add('is-open'), 1050);                  // bag drifts open
+    setTimeout(() => rc.querySelector('.paper').classList.add('revealed'), 2500); // GUILTY settles on
+    setTimeout(() => { seal.style.display = 'none'; }, 2850);             // drop the spent bag (no scroll void)
+    setTimeout(addNext, 2950);
+  });
+}
+function crimeShowAll() {
+  const awards = RES.awards;
+  view.innerHTML = '<div class="brief">All cases closed · the full evidence log.</div>' +
+    '<div id="awards">' + awards.map((a, i) => crimeEvbag(a, i)).join('') + '</div>' +
+    '<div class="btnrow" style="margin-top:28px;justify-content:center;display:flex"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
 /* ---------- living grid warp (same as the voter page) ---------- */
 function setupGridWarp() {
   const grid = document.querySelector('.grid');
@@ -242,6 +356,15 @@ function applyTheme(s) {
   const crime = ((s && s.theme) || 'classic') === 'crime';
   document.body.classList.toggle('theme-crime', crime);
   document.body.dataset.ak9phase = 'closed';   // results = case closed
+  if (crime) {
+    if (!document.querySelector('.tape')) {
+      const t = document.createElement('div'); t.className = 'tape t1';
+      t.innerHTML = '<span>CRIME SCENE · DO NOT CROSS · AK9 EVIDENCE</span>';
+      document.body.insertBefore(t, document.body.firstChild);
+    }
+    const kick = document.querySelector('.hero .kick');
+    if (kick) kick.textContent = 'AleksK9 · Forensics Unit presents…';
+  }
 }
 async function load() {
   const r = await apiGet('/api/ak9?route=results');

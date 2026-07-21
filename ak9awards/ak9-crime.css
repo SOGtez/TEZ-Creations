@@ -181,3 +181,83 @@ body.theme-crime .contenders .cont .av{ color:#f3ede0; font-family:var(--c-fd);
   background:repeating-linear-gradient(0deg,#4a4a4a 0 13px,#3a3a3a 13px 14px); background-size:cover; background-position:center; }
 body.theme-crime .contenders .cn{ font-family:var(--c-fo); color:#241c10; }
 body.theme-crime .nowin{ font-family:var(--c-ft); color:#5c4e30; }
+
+/* ============================================================
+   crime results: evidence-bag reveal ceremony (ported from the
+   preview). Rendered by results.html's crime path.
+   ============================================================ */
+body.theme-crime .reveal-cta{ text-align:center; margin:40px 0; }
+body.theme-crime .brief{ max-width:600px; margin:32px auto 6px; text-align:center; font-family:var(--c-ft); font-size:16px; color:var(--c-ink); line-height:1.7; }
+body.theme-crime .cprog{ display:flex; gap:9px; justify-content:center; margin:4px 0 20px; }
+
+/* the evidence bag (the paper award) */
+body.theme-crime .evbag{ position:relative; margin:26px 0 4px; background:#eceae3; color:#141414; border-radius:4px;
+  box-shadow:0 24px 54px -20px rgba(0,0,0,.92), inset 0 0 0 1px rgba(0,0,0,.1); overflow:hidden; transform:rotate(var(--tl,0deg)); }
+body.theme-crime .evbag:nth-of-type(even){ --tl:.4deg } body.theme-crime .evbag:nth-of-type(odd){ --tl:-.4deg }
+body.theme-crime .evbag::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:5;
+  background:linear-gradient(125deg,rgba(255,255,255,.55),transparent 26%,transparent 74%,rgba(255,255,255,.4)); }
+body.theme-crime .ev-strip{ background:#d8342a; padding:5px 0 4px; }
+body.theme-crime .ev-brand{ font-family:var(--c-fm); font-weight:700; font-style:italic; font-size:8px; letter-spacing:.1em; color:rgba(255,255,255,.9); white-space:nowrap; overflow:hidden; text-align:center; }
+body.theme-crime .ev-targets{ display:flex; justify-content:space-around; align-items:center; color:#fff; font-size:14px; padding:2px 8px; }
+body.theme-crime .ev-sidewarn{ position:absolute; top:66px; bottom:16px; width:20px; display:flex; align-items:center; justify-content:center; font-family:var(--c-fm); font-size:8px; letter-spacing:.14em; color:#3a3a3a; writing-mode:vertical-rl; white-space:nowrap; overflow:hidden; z-index:3; }
+body.theme-crime .ev-sidewarn.l{ left:3px } body.theme-crime .ev-sidewarn.r{ right:3px; transform:rotate(180deg) }
+body.theme-crime .ev-body{ position:relative; padding:16px 32px 12px; z-index:2; }
+body.theme-crime .ev-barrow{ display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #111; padding:6px 10px; margin-bottom:8px; }
+body.theme-crime .ev-caseno{ font-family:var(--c-fm); font-weight:700; font-size:17px; letter-spacing:.04em; }
+body.theme-crime .ev-barcode{ flex:1; height:26px; background-image:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 3px,#000 3px 4px,#fff 4px 7px,#000 7px 9px,#fff 9px 11px,#000 11px 12px,#fff 12px 15px); }
+body.theme-crime .ev-title{ font-family:var(--c-fd); font-size:42px; letter-spacing:.02em; text-align:center; margin:4px 0 10px; color:#111; }
+body.theme-crime .ev-photo{ position:absolute; top:70px; right:34px; width:98px; transform:rotate(3deg); z-index:4; }
+body.theme-crime .ev-photo .ptape{ position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-4deg); width:48px; height:16px; background:rgba(242,193,21,.72); box-shadow:0 2px 4px rgba(0,0,0,.2); }
+body.theme-crime .ev-photo .frame{ display:block; background:#fff; padding:6px 6px 8px; box-shadow:0 8px 18px rgba(0,0,0,.45); }
+body.theme-crime .ev-photo .mugimg{ width:100%; aspect-ratio:1; background:repeating-linear-gradient(0deg,#3a3a3a 0 14px,#2c2c2c 14px 15px); display:flex; align-items:center; justify-content:center; font-family:var(--c-fd); font-size:36px; color:#eee; overflow:hidden; }
+body.theme-crime .ev-photo .mugimg img{ width:100%; height:100%; object-fit:cover; }
+body.theme-crime .ev-photo .cap{ font-family:var(--c-fm); font-size:8px; letter-spacing:.12em; text-align:center; color:#111; margin-top:5px; }
+body.theme-crime .ev-f{ display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline; margin:8px 0; max-width:calc(100% - 96px); }
+body.theme-crime .ev-f label{ font-family:var(--c-fo); font-weight:600; font-size:12px; letter-spacing:.02em; color:#111; white-space:nowrap; }
+body.theme-crime .ev-f .val{ flex:1; min-width:70px; border-bottom:1px solid #111; font-family:var(--c-ft); font-size:14px; line-height:1.5; padding-bottom:1px; }
+body.theme-crime .ev-f .susp{ font-weight:700; font-size:16px; color:#b81c14; }
+body.theme-crime .ev-coc{ margin-top:12px; }
+body.theme-crime .ev-coc h5{ font-family:var(--c-fd); font-size:17px; text-align:center; letter-spacing:.03em; margin-bottom:5px; color:#111; }
+body.theme-crime .ev-coc table{ width:100%; border-collapse:collapse; font-family:var(--c-fm); font-size:10.5px; }
+body.theme-crime .ev-coc th, body.theme-crime .ev-coc td{ border:1px solid #111; padding:4px 8px; text-align:left; }
+body.theme-crime .ev-guilty{ position:absolute; bottom:104px; left:30px; transform:rotate(-11deg); z-index:4; font-family:var(--c-fd); font-size:30px; color:#b81c14; border:5px solid #b81c14; border-radius:8px; padding:1px 15px; opacity:.8; letter-spacing:.06em; }
+body.theme-crime .ev-cut{ border-top:2px dashed #111; margin-top:12px; padding-top:6px; font-family:var(--c-fm); font-size:9px; letter-spacing:.1em; text-align:center; color:#333; }
+body.theme-crime .ev-runners{ font-family:var(--c-fm); font-size:11px; color:var(--c-muted); text-align:center; margin:8px 0 22px; letter-spacing:.06em; }
+
+/* the sealed bag → cut open → reveal */
+body.theme-crime .reveal-case{ position:relative; }
+body.theme-crime .paper-wrap{ display:grid; grid-template-rows:0fr; min-height:440px; transition:grid-template-rows 1.5s cubic-bezier(.22,1,.36,1); }
+body.theme-crime .reveal-case.is-open .paper-wrap{ grid-template-rows:1fr; }
+body.theme-crime .reveal-case .paper{ overflow:hidden; opacity:0; transform:translateY(16px) scale(.985); transition:opacity 1s ease .45s, transform 1.1s cubic-bezier(.22,1,.36,1) .45s; }
+body.theme-crime .reveal-case.is-open .paper{ opacity:1; transform:none; }
+body.theme-crime .reveal-case .paper .ev-guilty{ opacity:0; transform:rotate(-11deg) scale(1.55); }
+body.theme-crime .reveal-case .paper.revealed .ev-guilty{ opacity:.84; transform:rotate(-11deg) scale(1); transition:opacity .5s ease, transform .62s cubic-bezier(.18,1.4,.34,1); }
+body.theme-crime .seal{ position:absolute; left:0; right:0; top:0; height:440px; z-index:3; cursor:pointer; overflow:visible; transition:opacity .4s ease; }
+body.theme-crime .reveal-case.is-open .seal{ height:0; pointer-events:none; }
+body.theme-crime .sealface{ position:absolute; left:0; right:0; top:0; height:440px; overflow:hidden; background:#eceae3; color:#141414; border-radius:4px; box-shadow:0 22px 50px -20px rgba(0,0,0,.92), inset 0 0 0 1px rgba(0,0,0,.1); transition:transform 1.75s cubic-bezier(.42,.04,.24,1), opacity 1.2s ease .45s, box-shadow .6s ease; will-change:transform; }
+body.theme-crime .sealface::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:2; background:linear-gradient(125deg,rgba(255,255,255,.4),transparent 30%,transparent 72%,rgba(255,255,255,.28)); }
+body.theme-crime .sealface.sf-top{ clip-path:inset(0 0 20% 0); }
+body.theme-crime .sealface.sf-bottom{ clip-path:inset(80% 0 0 0); }
+body.theme-crime .reveal-case.is-open .sealface{ box-shadow:0 44px 88px -22px rgba(0,0,0,.95); }
+body.theme-crime .reveal-case.is-open .sealface.sf-top{ transform:translateY(-55%) rotate(-6deg); opacity:0; }
+body.theme-crime .reveal-case.is-open .sealface.sf-bottom{ transform:translateY(55%) rotate(5deg); opacity:0; }
+body.theme-crime .sealface .ev-body{ padding:14px 32px 0; }
+body.theme-crime .sealface .ev-title{ font-size:34px; margin:2px 0 6px; }
+body.theme-crime .sealface .redact-block{ margin:12px 8px 0; text-align:center; }
+body.theme-crime .sealface .rb{ display:block; height:26px; width:56%; margin:0 auto 8px; background:#111; border-radius:2px; box-shadow:0 0 0 4px #eceae3,0 0 0 5px #111; }
+body.theme-crime .sealface .rl{ font-family:var(--c-fd); font-size:20px; color:#111; letter-spacing:.04em; }
+body.theme-crime .sealface .rl2{ display:block; font-family:var(--c-ft); font-size:12px; color:#555; margin-top:3px; }
+body.theme-crime .sealface .taphint{ text-align:center; font-family:var(--c-fd); font-size:18px; color:#b81c14; letter-spacing:.05em; animation:ak9tappulse 1.8s ease-in-out infinite; margin-top:12px; }
+body.theme-crime .sealface .ev-cut{ position:absolute; left:0; right:0; top:80%; margin:0; padding-top:7px; border-top:2px dashed #111; background:transparent; font-family:var(--c-fm); font-size:9px; letter-spacing:.1em; text-align:center; color:#333; }
+body.theme-crime .sealface .seal-btm{ position:absolute; left:0; right:0; top:80%; bottom:0; display:flex; align-items:center; justify-content:center; font-family:var(--c-fm); font-size:10px; letter-spacing:.16em; color:#777; text-transform:uppercase; }
+body.theme-crime .sealface .sidew{ position:absolute; top:62px; bottom:14px; width:20px; font-family:var(--c-fm); font-size:8px; letter-spacing:.14em; color:#3a3a3a; writing-mode:vertical-rl; white-space:nowrap; overflow:hidden; display:flex; align-items:center; justify-content:center; z-index:1; }
+body.theme-crime .sealface .sidew.l{ left:3px } body.theme-crime .sealface .sidew.r{ right:3px; transform:rotate(180deg); }
+@keyframes ak9tappulse{ 0%,100%{opacity:.55} 50%{opacity:1} }
+body.theme-crime .cutline{ position:absolute; top:80%; left:0; right:0; height:2px; transform:scaleX(0); transform-origin:left; z-index:6; background:repeating-linear-gradient(90deg,var(--c-evidence) 0 8px,transparent 8px 14px); box-shadow:0 0 8px rgba(213,52,42,.5); }
+body.theme-crime .reveal-case.cutting .cutline{ transform:scaleX(1); transition:transform .95s cubic-bezier(.6,0,.28,1); }
+body.theme-crime .scissors{ position:absolute; top:calc(80% - 15px); left:-10px; font-size:22px; z-index:7; opacity:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+body.theme-crime .reveal-case.cutting .scissors{ animation:ak9snip .95s cubic-bezier(.6,0,.28,1) forwards; }
+@keyframes ak9snip{ 0%{left:-10px;opacity:0} 8%{opacity:1} 92%{opacity:1} 100%{left:calc(100% - 12px);opacity:0} }
+body.theme-crime .cbtnrow{ display:flex; justify-content:center; margin-top:26px; }
+body.theme-crime .opencue{ font-family:var(--c-ft); font-size:13px; letter-spacing:.1em; color:var(--c-muted); text-transform:uppercase; }
+@media (prefers-reduced-motion:reduce){ body.theme-crime .cutline, body.theme-crime .scissors{ display:none; } body.theme-crime .sealface .taphint{ animation:none; } }
