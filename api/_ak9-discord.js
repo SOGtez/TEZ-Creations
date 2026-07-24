@@ -38,112 +38,103 @@ async function postWebhook(payload, url = webhookUrl()) {
   } catch (_) { return false; }
 }
 
-// Wrap an embed in a webhook payload with the forensic identity + @everyone ping.
-function payload(embed) {
-  return {
-    username: 'AK9 Forensics Unit',
-    content: '@everyone',
-    allowed_mentions: { parse: ['everyone'] },
-    embeds: [embed],
-  };
-}
-function embed({ title, url, description, color, deadlineMs, closesLabel }) {
-  const e = { title, url, description, color, footer: { text: 'AK9 Forensics Unit · The AK9 Awards' } };
+// Build a full announcement: the SITUATION goes in the plain-text message (with the
+// @everyone ping), and a compact embed carries just the call-to-action link + deadline.
+function msg({ text, title, url, linkLabel, linkUrl, color, deadlineMs, closesLabel }) {
+  const card = { title, url, color, footer: { text: 'The AK9 Awards · AK9 Forensics Unit' } };
+  if (linkLabel && linkUrl) card.description = '**' + linkLabel + '**\n' + linkUrl;
   if (deadlineMs) {
-    e.fields = [{
+    card.fields = [{
       name: closesLabel || 'Closes',
       value: '<t:' + unix(deadlineMs) + ':R>  ·  <t:' + unix(deadlineMs) + ':F>',
     }];
   }
-  return e;
+  return {
+    username: 'AK9 Forensics Unit',
+    content: '@everyone\n\n' + text,
+    allowed_mentions: { parse: ['everyone'] },
+    embeds: [card],
+  };
 }
-// A bold, visible call-to-action line ending in the raw URL on its own line, so
-// people clearly see there's a link to click (not just the headline).
-const cta = (label, url) => '\n\n**' + label + '**\n' + url;
 
-// ---- the message set ----
+// ---- the message set (plain text = hype/explanation; embed = link + deadline) ----
 function nominationsOpen(s) {
   const month = s.month_label ? ' for **' + s.month_label + '**' : '';
-  return payload(embed({
-    title: '🕵️ The tip line is OPEN — name your suspects',
-    url: SITE, color: RED,
-    description:
-      'A fresh stack of cases just hit the board' + month + ', and the AK9 Forensics Unit needs the ' +
-      'community to name a **prime suspect** for every award — Worst Gamer, Chat MVP, Best Duo, Most ' +
-      'Loved, and the rest of the lineup.\n\n' +
-      'Log in with Twitch (you’ll need to follow the channel), then fill out one tip sheet naming who ' +
-      'you think deserves each award. The most-named suspects become the official **finalists** the ' +
-      'whole community votes on next round — so your picks decide who even makes the ballot.\n\n' +
-      '**One tip sheet per detective. Make ’em count.**' +
-      cta('📋 File your tips here:', SITE),
+  return msg({
+    text:
+      '🚨 The AK9 Awards are BACK and the tip line is officially **OPEN**! 🕵️\n\n' +
+      'It’s time to put the community on record' + month + '. For every award — Worst Gamer, Chat MVP, ' +
+      'Best Duo, Most Loved and the whole lineup — we need **YOU** to name your prime suspect. Whoever ' +
+      'racks up the most tips becomes an official **finalist**, so your picks literally decide who even ' +
+      'makes the ballot! 👀\n\n' +
+      'Grab your badge, log in with Twitch, and file one tip sheet — let’s build these cases! 🔥',
+    title: '🕵️ File your tips', url: SITE, color: RED,
+    linkLabel: '📋 Name your suspects here:', linkUrl: SITE,
     deadlineMs: s.nominate_deadline ? Date.parse(s.nominate_deadline) : null,
     closesLabel: '🔒 Tip line closes',
-  }));
+  });
 }
 function votingLive(s) {
-  return payload(embed({
-    title: '🗳️ Voting is LIVE — cast your verdict',
-    url: SITE, color: YELLOW,
-    description:
-      'The investigation’s wrapped and the suspects are lined up. For each case, the community ' +
-      'narrowed the field down to the top finalists — now it’s on you to deliver a verdict.\n\n' +
-      'Log in with Twitch, review the evidence, and **indict your pick** for every award. Your ballot ' +
-      'seals the moment you submit, and the standings stay hidden until the final reveal — so no one ' +
-      'can watch the numbers or game the result.\n\n' +
-      '**One verdict per detective. Choose wisely.**' +
-      cta('⚖️ Cast your verdict here:', SITE),
+  return msg({
+    text:
+      '🚨 The suspects are locked in and **VOTING IS LIVE**! 🗳️\n\n' +
+      'The community narrowed every case down to the finalists — now it’s on **YOU** to deliver the ' +
+      'verdict. Review the lineup, back your pick for each award, and lock it in. Ballots seal the second ' +
+      'you submit and the results stay hidden until the big reveal, so no peeking and no gaming it. 😤\n\n' +
+      'This is where champions get crowned — go make your voice count! 🔥',
+    title: '⚖️ Cast your verdict', url: SITE, color: YELLOW,
+    linkLabel: '🗳️ Vote here:', linkUrl: SITE,
     deadlineMs: s.deadline ? Date.parse(s.deadline) : null,
     closesLabel: '🔒 Voting closes',
-  }));
+  });
 }
 function winners(s) {
   const month = (s && s.month_label) ? ' of **' + s.month_label + '**' : '';
-  return payload(embed({
-    title: '👑 The verdicts are in — case closed',
-    url: RESULTS, color: RED,
-    description:
-      'Every case is sealed and the jury has spoken. The evidence bags are ready to be cut open, one ' +
-      'by one, to reveal who the community found **GUILTY** of being the best (and worst)' + month + '.\n\n' +
-      'Head to the case files to watch the full reveal ceremony — every winner, the vote breakdowns, ' +
-      'and the final standings, laid out like a crime board.\n\n' +
-      '**Come see who took home the hardware.**' +
-      cta('🔍 Open the case files here:', RESULTS),
-  }));
+  return msg({
+    text:
+      '👑 The jury has spoken — **CASE CLOSED**! 🎉\n\n' +
+      'Every verdict is in and the evidence bags are ready to be cut open, one by one. Come find out who ' +
+      'the community crowned the best — and busted as the worst' + month + '! Full reveal ceremony, vote ' +
+      'breakdowns, and final standings, all laid out on the board. 🔍\n\n' +
+      'You do **NOT** want to miss this one — let’s crown ’em! 🏆',
+    title: '🔍 Open the case files', url: RESULTS, color: RED,
+    linkLabel: '🏆 See the winners here:', linkUrl: RESULTS,
+  });
 }
 function closingSoon(kind, dlMs, last) {
   const vote = kind === 'vote';
   const rel = '<t:' + unix(dlMs) + ':R>';
-  let title, description;
+  let text, title, linkLabel;
   if (!vote && !last) {
-    title = '⏳ Tip line closing soon — get your suspects in';
-    description =
-      'Heads up, detectives — the tip line for the AK9 Awards closes ' + rel + '. If you haven’t named ' +
-      'your prime suspects yet, now’s the time. Once it locks, the top names become the finalists and ' +
-      'there’s no adding more.\n\nDon’t let your picks land on the record too late.' +
-      cta('📋 File your tips here:', SITE);
+    text =
+      '⏳ Heads up, detectives — the tip line is closing **SOON**!\n\n' +
+      'You’ve still got a little time to name your prime suspects, but the clock’s ticking (closes ' + rel + '). ' +
+      'Once it locks, the finalists are set in stone — no more names after that. Don’t let your picks miss the cut! 🔥';
+    title = '📋 File your tips'; linkLabel = '📋 Name your suspects here:';
   } else if (!vote && last) {
-    title = '🚨 LAST CALL — nominations lock soon';
-    description =
-      'Final warning. The tip line closes ' + rel + ' and the case board seals for good. This is your ' +
-      'last chance to name a suspect for each award before the finalists are locked in.\n\n' +
-      '**Get in there before it’s sealed.**' + cta('📋 File your tips now:', SITE);
+    text =
+      '🚨 **LAST CALL** — nominations are about to LOCK! 🚨\n\n' +
+      'This is it — the final stretch to get your suspects on the record (tip line closes ' + rel + '). After this ' +
+      'the case board seals for good. If you’ve been sitting on your picks, **now** is the time — go go go! 🏃💨';
+    title = '📋 File your tips NOW'; linkLabel = '📋 Last chance — nominate here:';
   } else if (vote && !last) {
-    title = '⏳ Voting closing soon — cast your verdict';
-    description =
-      'The clock’s running down — voting for the AK9 Awards closes ' + rel + '. If you haven’t delivered ' +
-      'your verdict on each case yet, get it in before the ballots seal. Every vote counts toward who ' +
-      'takes home the hardware.' + cta('⚖️ Cast your verdict here:', SITE);
+    text =
+      '⏳ The clock is ticking — voting is closing **SOON**!\n\n' +
+      'Haven’t cast your verdict yet? Don’t sleep on it — voting closes ' + rel + '. Every single vote counts ' +
+      'toward who takes home the hardware. Get in there and make it count! 🔥';
+    title = '⚖️ Cast your verdict'; linkLabel = '🗳️ Vote here:';
   } else {
-    title = '🚨 LAST CALL to vote — ballots seal soon';
-    description =
-      'Final warning. Voting closes ' + rel + '. This is your last chance to weigh in on who’s guilty of ' +
-      'being the best in the community. After this, the verdicts are final.\n\n' +
-      '**Make it count.**' + cta('⚖️ Vote now:', SITE);
+    text =
+      '🚨 **LAST CALL** to vote — ballots seal any minute! 🚨\n\n' +
+      'Final warning, detectives! This is your last shot to weigh in on who’s guilty of being the best in ' +
+      'the community (voting closes ' + rel + '). After this, the verdicts are **FINAL**. Don’t miss it — vote now! 🗳️🔥';
+    title = '⚖️ Vote NOW'; linkLabel = '🗳️ Last chance — vote here:';
   }
-  return payload(embed({
-    title, url: SITE, color: YELLOW, description,
+  return msg({
+    text, title, url: SITE, color: YELLOW,
+    linkLabel, linkUrl: SITE,
     deadlineMs: dlMs, closesLabel: vote ? '🔒 Voting closes' : '🔒 Tip line closes',
-  }));
+  });
 }
 
 // ---- preview mode (perfect the wording in a PRIVATE channel first) ----
@@ -165,11 +156,13 @@ function previewPayload(which, s) {
     default: return null;
   }
 }
-// A preview clone of a payload: same embed, NO @everyone, clearly labelled.
+// A preview clone of a payload: full message text + embed, but the @everyone ping
+// stripped and mentions disabled, clearly labelled as practice.
 function asPreview(p) {
+  const body = String(p.content || '').replace(/^@everyone\s*/, '');
   return {
     username: p.username,
-    content: '🔧 **PREVIEW** — practice post (not announced, no ping)',
+    content: '🔧 **PREVIEW** — practice post (not announced, no ping)\n\n' + body,
     allowed_mentions: { parse: [] },
     embeds: p.embeds,
   };
@@ -232,11 +225,11 @@ export async function announce() {
 
 // Fire a one-off test post to confirm the webhook is wired (ignores flags).
 async function testPost() {
-  return postWebhook(payload(embed({
+  return postWebhook(msg({
+    text: 'Test transmission received. ✅ Announcements will post here when the case phase changes.',
     title: '✅ AK9 Forensics Unit — webhook wired',
     url: SITE, color: YELLOW,
-    description: "Test transmission received. Announcements will post here when the case phase changes.",
-  })));
+  }));
 }
 
 // Default export = the ?route=cron handler (dispatched from api/ak9.js).
