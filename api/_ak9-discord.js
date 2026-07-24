@@ -137,23 +137,66 @@ function closingSoon(kind, dlMs, last) {
   });
 }
 
+// ---- twice-a-day reminders (rotating copy while a phase is open) ----
+// Fired on every cron run while nominations/voting are open, so with a 2x/day cron
+// the community gets a fresh nudge twice daily. Escalates to closing-soon / last-call
+// automatically as the deadline nears. `n` rotates the copy so it isn't identical.
+const NOMINATE_REMINDERS = [
+  '🕵️ Still time to make your case! The AK9 Awards tip line is OPEN — swing by and name your ' +
+    'prime suspect for each award. Your nominations decide who even makes the finalists! 🔥',
+  '📋 Detectives, we still need your tips! Every award needs suspects — Worst Gamer, Chat MVP, ' +
+    'Best Duo and the rest. Log in with Twitch and drop your picks before the board locks. 👀',
+  '🚨 Don’t sit on the sidelines! Nominations for the AK9 Awards are live right now. Name who ' +
+    'deserves each award — the most-tipped names become the official finalists. 💪',
+  '🔎 Who’s guilty of being the GOAT? The tip line’s open — put your community picks on the ' +
+    'record for every award. One tip sheet per detective, so make ’em count! 🏆',
+];
+const VOTE_REMINDERS = [
+  '🗳️ Voting’s still LIVE! Haven’t cast your verdict yet? Jump in and back your pick for every ' +
+    'award — every single vote counts toward who takes home the hardware. 🔥',
+  '⚖️ The jury needs YOU! Voting for the AK9 Awards is open — review the lineup and lock in your ' +
+    'verdicts before the ballots seal. 👀',
+  '🚨 Make your voice heard! Voting is live right now — pick your champions for each award. Your ' +
+    'ballot stays sealed till the big reveal, so no one can game it. 💪',
+  '👑 Crown your champions! The suspects are lined up and it’s on you to deliver the verdict. ' +
+    'Hop in and vote for every award before time runs out! 🏆',
+];
+function reminder(kind, dlMs, n) {
+  const vote = kind === 'vote';
+  const left = dlMs ? dlMs - Date.now() : Infinity;
+  if (dlMs && left <= 3 * HOUR) return closingSoon(kind, dlMs, true);    // last call
+  if (dlMs && left <= DAY) return closingSoon(kind, dlMs, false);        // closing soon
+  const bank = vote ? VOTE_REMINDERS : NOMINATE_REMINDERS;
+  return msg({
+    text: bank[n % bank.length],
+    title: vote ? '⚖️ Cast your verdict' : '🕵️ File your tips',
+    url: SITE, color: YELLOW,
+    linkLabel: vote ? '🗳️ Vote here:' : '📋 Name your suspects here:', linkUrl: SITE,
+    deadlineMs: dlMs, closesLabel: vote ? '🔒 Voting closes' : '🔒 Tip line closes',
+  });
+}
+
 // ---- preview mode (perfect the wording in a PRIVATE channel first) ----
 const previewWebhookUrl = () => process.env.DISCORD_PREVIEW_WEBHOOK_URL || '';
-const PREVIEW_TYPES = ['nominate', 'nom-soon', 'nom-last', 'vote', 'vote-soon', 'vote-last', 'closed'];
+const PREVIEW_TYPES = ['nominate', 'nom-reminders', 'nom-soon', 'nom-last', 'vote', 'vote-reminders', 'vote-soon', 'vote-last', 'closed'];
 // Build any one announcement on demand (uses real deadlines if set, else a fake +24h
 // so the countdown still renders). Returns the normal @everyone payload.
-function previewPayload(which, s) {
+function previewPayloads(which, s) {
   const nomDl = s.nominate_deadline ? Date.parse(s.nominate_deadline) : Date.now() + DAY;
   const voteDl = s.deadline ? Date.parse(s.deadline) : Date.now() + DAY;
+  const far = Date.now() + 5 * DAY;   // so reminder() shows the rotating copy, not escalated
+  const one = (p) => (p ? [p] : []);
   switch (which) {
-    case 'nominate':  return nominationsOpen(s);
-    case 'vote':      return votingLive(s);
-    case 'closed':    return winners(s);
-    case 'nom-soon':  return closingSoon('nominate', nomDl, false);
-    case 'nom-last':  return closingSoon('nominate', nomDl, true);
-    case 'vote-soon': return closingSoon('vote', voteDl, false);
-    case 'vote-last': return closingSoon('vote', voteDl, true);
-    default: return null;
+    case 'nominate':       return one(nominationsOpen(s));
+    case 'vote':           return one(votingLive(s));
+    case 'closed':         return one(winners(s));
+    case 'nom-soon':       return one(closingSoon('nominate', nomDl, false));
+    case 'nom-last':       return one(closingSoon('nominate', nomDl, true));
+    case 'vote-soon':      return one(closingSoon('vote', voteDl, false));
+    case 'vote-last':      return one(closingSoon('vote', voteDl, true));
+    case 'nom-reminders':  return NOMINATE_REMINDERS.map((_, i) => reminder('nominate', far, i));
+    case 'vote-reminders': return VOTE_REMINDERS.map((_, i) => reminder('vote', far, i));
+    default: return [];
   }
 }
 // A preview clone of a payload: full message text + embed, but the @everyone ping
@@ -174,11 +217,14 @@ async function loadSettings() {
   return (rows || [])[0] || null;
 }
 
-// Core: figure out which announcements are DUE and unsent, mark them, then post.
-// Idempotent via the `notified` flags (reset to {} on a phase change — see _ak9-admin).
-// Called by the cron route AND by admin save_settings after a phase flip.
-// RESERVE-THEN-POST: we persist the flags BEFORE posting, so a missing `notified`
-// column (setup SQL not run) fails safe with ZERO posts rather than spamming @everyone.
+// Core: decide what to post this run, persist state, then post. Called by the cron
+// route (every ~12h) AND by admin save_settings after a phase flip.
+// Model: the FIRST time a phase is live, post the big announcement (flag-gated, once);
+// every run after that posts ONE rotating reminder (so a 2x/day cron = 2 nudges/day),
+// which auto-escalates to closing-soon / last-call near the deadline. Phase flips reset
+// `notified` (see _ak9-admin) so the next phase announces + reminds fresh.
+// RESERVE-THEN-POST: persist `notified` BEFORE posting, so a missing `notified` column
+// (setup SQL not run) fails safe with ZERO posts rather than spamming @everyone.
 export async function announce() {
   if (!webhookUrl()) return { ok: false, reason: 'no-webhook', posted: 0 };
   const s = await loadSettings();
@@ -187,40 +233,41 @@ export async function announce() {
   const phase = s.phase || 'vote';
   const notified = (s.notified && typeof s.notified === 'object') ? { ...s.notified } : {};
   const now = Date.now();
-  const due = [];   // { flag, payload }
+  const outbox = [];   // payloads to post this run
 
   if (phase === 'nominate') {
     const openMs = s.nominate_open ? Date.parse(s.nominate_open) : null;
-    const isOpen = !openMs || now >= openMs;   // respects the scheduled-open gate
-    if (isOpen && !notified.nom_open) due.push({ flag: 'nom_open', payload: nominationsOpen(s) });
+    const isOpen = !openMs || now >= openMs;               // respects the scheduled-open gate
     const dl = s.nominate_deadline ? Date.parse(s.nominate_deadline) : null;
-    if (isOpen && dl && dl > now) {
-      const left = dl - now;
-      if (left <= DAY && left > 3 * HOUR && !notified.nom_24) due.push({ flag: 'nom_24', payload: closingSoon('nominate', dl, false) });
-      if (left <= 3 * HOUR && !notified.nom_3) due.push({ flag: 'nom_3', payload: closingSoon('nominate', dl, true) });
+    if (isOpen) {
+      if (!notified.nom_open) {
+        outbox.push(nominationsOpen(s)); notified.nom_open = true;   // first run → big announce
+      } else if (!dl || dl > now) {
+        outbox.push(reminder('nominate', dl, notified.rem || 0));    // ongoing 2x/day nudge
+        notified.rem = (notified.rem || 0) + 1;
+      }
     }
   } else if (phase === 'vote') {
-    if (!notified.vote_open) due.push({ flag: 'vote_open', payload: votingLive(s) });
     const dl = s.deadline ? Date.parse(s.deadline) : null;
-    if (dl && dl > now) {
-      const left = dl - now;
-      if (left <= DAY && left > 3 * HOUR && !notified.vote_24) due.push({ flag: 'vote_24', payload: closingSoon('vote', dl, false) });
-      if (left <= 3 * HOUR && !notified.vote_3) due.push({ flag: 'vote_3', payload: closingSoon('vote', dl, true) });
+    if (!notified.vote_open) {
+      outbox.push(votingLive(s)); notified.vote_open = true;
+    } else if (!dl || dl > now) {
+      outbox.push(reminder('vote', dl, notified.rem || 0));
+      notified.rem = (notified.rem || 0) + 1;
     }
   } else if (phase === 'closed') {
-    if (!notified.closed) due.push({ flag: 'closed', payload: winners(s) });
+    if (!notified.closed) { outbox.push(winners(s)); notified.closed = true; }
   }
 
-  if (!due.length) return { ok: true, posted: 0 };
+  if (!outbox.length) return { ok: true, posted: 0 };
 
-  // reserve first
-  due.forEach(d => { notified[d.flag] = true; });
+  // reserve state first (spam-safe on a missing column)
   const saved = await sb('PATCH', 'ak9_settings?id=eq.1', { body: { notified }, prefer: 'return=minimal' });
   if (!saved.ok) return { ok: false, reason: 'notified-save-failed (run the setup SQL?)', posted: 0 };
 
   let posted = 0;
-  for (const d of due) { if (await postWebhook(d.payload)) posted++; }
-  return { ok: true, posted, of: due.length };
+  for (const p of outbox) { if (await postWebhook(p)) posted++; }
+  return { ok: true, posted, of: outbox.length };
 }
 
 // Fire a one-off test post to confirm the webhook is wired (ignores flags).
@@ -249,7 +296,8 @@ export default async function handler(req, res) {
 
   try {
     // PREVIEW: fire practice posts to a PRIVATE channel — no @everyone, no state change.
-    //   &preview=<type>  where type ∈ nominate|nom-soon|nom-last|vote|vote-soon|vote-last|closed|all
+    //   &preview=<type>  type ∈ nominate|nom-reminders|nom-soon|nom-last|vote|vote-reminders|
+    //                          vote-soon|vote-last|closed|all
     const pv = String(req.query.preview || '');
     if (pv) {
       const purl = previewWebhookUrl();
@@ -258,9 +306,9 @@ export default async function handler(req, res) {
       const list = pv === 'all' ? PREVIEW_TYPES : [pv];
       let posted = 0; const unknown = [];
       for (const w of list) {
-        const p = previewPayload(w, s);
-        if (!p) { unknown.push(w); continue; }
-        if (await postWebhook(asPreview(p), purl)) posted++;
+        const items = previewPayloads(w, s);
+        if (!items.length) { unknown.push(w); continue; }
+        for (const p of items) { if (await postWebhook(asPreview(p), purl)) posted++; }
       }
       res.status(200).json({ ok: true, preview: true, posted, unknown, types: PREVIEW_TYPES }); return;
     }
