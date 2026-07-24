@@ -212,7 +212,7 @@
     const label = submit.textContent;
     submit.textContent = 'Joining…';
     try{
-      const r = await fetch('/api/waitlist', {
+      const r = await fetch('/api/apps?route=waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, website: $('website').value }),

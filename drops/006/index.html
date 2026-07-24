@@ -1021,7 +1021,7 @@ async function checkSingle(){
   const pill=makePill(name,'checking'); singleResult.innerHTML=''; singleResult.appendChild(pill);
   singleBtn.disabled=true;
   try{
-    const r=await fetch('/api/usercheck?platform='+state.platform+'&usernames='+encodeURIComponent(name),{headers:authHeaders()});
+    const r=await fetch('/api/apps?route=usercheck&platform='+state.platform+'&usernames='+encodeURIComponent(name),{headers:authHeaders()});
     if(!r.ok&&r.status!==429) throw new Error('HTTP '+r.status);
     const d=await r.json();
     const res=(d.results||[])[0];
@@ -1074,7 +1074,7 @@ async function runVerify(){
     for(let i=0;i<handles.length;i+=100){
       const batch=handles.slice(i,i+100);
       const qs=batch.map(u=>'usernames='+encodeURIComponent(u)).join('&');
-      const r=await fetch('/api/usercheck?platform=twitch&'+qs,{headers:authHeaders()});
+      const r=await fetch('/api/apps?route=usercheck&platform=twitch&'+qs,{headers:authHeaders()});
       if(!r.ok) throw new Error('HTTP '+r.status);
       const d=await r.json();
       for(const res of (d.results||[])) out.push(res);
@@ -1221,7 +1221,7 @@ async function startHunt(){
     while(retries<3 && !state.aborted){
       try{
         const qs=batch.map(u=>`usernames=${encodeURIComponent(u)}`).join('&');
-        const r=await fetch(`/api/usercheck?platform=${state.platform}&${qs}`,{headers:authHeaders()});
+        const r=await fetch(`/api/apps?route=usercheck&platform=${state.platform}&${qs}`,{headers:authHeaders()});
         if(r.status===429){
           const reset=parseInt(r.headers.get('Ratelimit-Reset')||'0',10);
           const wait=Math.max(1000,(reset*1000-Date.now())||3000);
@@ -1389,7 +1389,7 @@ async function submitUnclaimable(){
   reportSubmit.disabled=true;
   reportSubmit.textContent='Saving…';
   try{
-    const r=await fetch('/api/usercheck',{
+    const r=await fetch('/api/apps?route=usercheck',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+TezAuth.token()},
       body:JSON.stringify({handles})

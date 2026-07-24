@@ -317,7 +317,7 @@ async function addGameCmd(name){
   if(board.games.some(g=>norm(g.name)===norm(name))){ toast("already on the list: "+name); return; }
   let image = "";
   try{
-    const r = await fetch("../api/games?q="+encodeURIComponent(name));
+    const r = await fetch("../api/apps?route=games&q="+encodeURIComponent(name));
     if(r.ok){ const d = await r.json(); const top = (d.results||[])[0]; if(top) image = top.image || ""; }
   }catch(_){ /* no art is fine */ }
   board.games.push({ name, image, done:false });

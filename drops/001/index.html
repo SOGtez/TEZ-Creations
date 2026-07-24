@@ -319,7 +319,7 @@
     async function fetchGames(league) {
       // Try the site's cached API first; fall back to ESPN directly
       try {
-        const r = await fetch(`/api/score?league=${league}`, { cache: "no-store" });
+        const r = await fetch(`/api/apps?route=score&league=${league}`, { cache: "no-store" });
         if (r.ok) return (await r.json()).games;
         throw new Error("api");
       } catch (_) {

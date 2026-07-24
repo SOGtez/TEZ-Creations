@@ -447,7 +447,7 @@ async function challengeFor(verifier){ const d=await crypto.subtle.digest('SHA-2
 if (CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") $('cidwarn').classList.remove('hidden');
 
 /* ---------- OAuth (Authorization Code flow; refresh token stays server-side) ----------
-   The setup page sends the one-time ?code= to /api/twitch-auth, which exchanges it
+   The setup page sends the one-time ?code= to /api/twitch?route=auth, which exchanges it
    for a refresh token (kept in Supabase) and returns an opaque id. The overlay URL
    carries only that id — never a Twitch token — and auto-refreshes, so it never expires. */
 // storage helpers that survive browsers blocking storage (e.g. file://)
@@ -527,7 +527,7 @@ function connForPlatform(p){
 }
 
 async function exchangeCode(code, platform){
-  const ep = platform === 'kick' ? '/api/kick-auth' : '/api/twitch-auth';
+  const ep = platform === 'kick' ? '/api/kick-auth' : '/api/twitch?route=auth';
   const payload = { code, redirect_uri: redirectUri() };
   if (platform === 'kick') payload.code_verifier = sget('kick_verifier') || '';
   const r = await fetch(location.origin + ep, {

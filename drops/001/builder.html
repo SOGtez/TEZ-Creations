@@ -758,7 +758,7 @@
       try {
         let g = null;
         try {
-          const r = await fetch(`/api/score?game=${GAME}&league=${LEAGUE}`, { cache: "no-store" });
+          const r = await fetch(`/api/apps?route=score&game=${GAME}&league=${LEAGUE}`, { cache: "no-store" });
           if (r.ok) g = await r.json();
           else throw new Error("api");
         } catch (_) {

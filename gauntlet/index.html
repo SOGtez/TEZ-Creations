@@ -355,7 +355,7 @@ const norm = s => (s||"").toLowerCase().trim();
 function makeId(ch){ return norm(ch).replace(/[^a-z0-9]/g,"") + "-" + Math.random().toString(36).slice(2,7); }
 function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-/* ---------- game search (RAWG via /api/games) ---------- */
+/* ---------- game search (RAWG via /api/apps?route=games) ---------- */
 let picked = [];   // [{ name, image, done:false }]
 let searchTimer;
 
@@ -379,7 +379,7 @@ async function runSearch(q){
   if(!q){ $("results").innerHTML=""; return; }
   $("results").innerHTML = `<div class="searching">searching…</div>`;
   try{
-    const r = await fetch("../api/games?q="+encodeURIComponent(q));
+    const r = await fetch("../api/apps?route=games&q="+encodeURIComponent(q));
     const d = await r.json();
     if(d.error){ $("results").innerHTML = `<div class="searching">${escapeHtml(d.error)}</div>`; return; }
     renderResults(d.results||[]);

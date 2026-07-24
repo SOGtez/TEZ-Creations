@@ -299,7 +299,7 @@ function authHeaders(){ return { Authorization:'Bearer '+S.token, 'Client-Id': S
 
 // id-mode: ask our server for a fresh short-lived access token (refresh stays server-side)
 async function refreshToken(){
-  const r = await fetch(location.origin + '/api/twitch-token?id=' + encodeURIComponent(P.id),
+  const r = await fetch(location.origin + '/api/twitch?route=token&id=' + encodeURIComponent(P.id),
     { cache:'no-store' });
   if (!r.ok) throw new Error('auth');           // 401 reauth / 404 unknown id → reconnect
   const j = await r.json();

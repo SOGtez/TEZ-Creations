@@ -70,7 +70,7 @@
   async function load(key){
     $('err').textContent = '';
     try{
-      const r = await fetch('/api/waitlist?key=' + encodeURIComponent(key));
+      const r = await fetch('/api/apps?route=waitlist&key=' + encodeURIComponent(key));
       if (r.status === 403){ $('err').textContent = 'Wrong key.'; return; }
       const j = await r.json();
       if (!r.ok){ $('err').textContent = j.error || 'Could not load.'; return; }
