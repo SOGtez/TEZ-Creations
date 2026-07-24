@@ -24,9 +24,9 @@ const DAY = 86400000, HOUR = 3600000;
 const webhookUrl = () => process.env.DISCORD_WEBHOOK_URL || '';
 const unix = (ms) => Math.floor(ms / 1000);
 
-// Post a payload to the Discord webhook. Returns true on 2xx. Best-effort.
-async function postWebhook(payload) {
-  const url = webhookUrl();
+// Post a payload to a Discord webhook (defaults to the real announcements one).
+// Returns true on 2xx. Best-effort.
+async function postWebhook(payload, url = webhookUrl()) {
   if (!url) return false;
   try {
     const r = await fetch(url, {
@@ -99,6 +99,35 @@ function closingSoon(kind, dlMs, last) {
   return payload(embed({ title, url: SITE, color: YELLOW, description }));
 }
 
+// ---- preview mode (perfect the wording in a PRIVATE channel first) ----
+const previewWebhookUrl = () => process.env.DISCORD_PREVIEW_WEBHOOK_URL || '';
+const PREVIEW_TYPES = ['nominate', 'nom-soon', 'nom-last', 'vote', 'vote-soon', 'vote-last', 'closed'];
+// Build any one announcement on demand (uses real deadlines if set, else a fake +24h
+// so the countdown still renders). Returns the normal @everyone payload.
+function previewPayload(which, s) {
+  const nomDl = s.nominate_deadline ? Date.parse(s.nominate_deadline) : Date.now() + DAY;
+  const voteDl = s.deadline ? Date.parse(s.deadline) : Date.now() + DAY;
+  switch (which) {
+    case 'nominate':  return nominationsOpen(s);
+    case 'vote':      return votingLive(s);
+    case 'closed':    return winners();
+    case 'nom-soon':  return closingSoon('nominate', nomDl, false);
+    case 'nom-last':  return closingSoon('nominate', nomDl, true);
+    case 'vote-soon': return closingSoon('vote', voteDl, false);
+    case 'vote-last': return closingSoon('vote', voteDl, true);
+    default: return null;
+  }
+}
+// A preview clone of a payload: same embed, NO @everyone, clearly labelled.
+function asPreview(p) {
+  return {
+    username: p.username,
+    content: '🔧 **PREVIEW** — practice post (not announced, no ping)',
+    allowed_mentions: { parse: [] },
+    embeds: p.embeds,
+  };
+}
+
 // Load the singleton settings row (select=* so a missing `notified` column never breaks it).
 async function loadSettings() {
   const rows = (await sb('GET', 'ak9_settings?id=eq.1&select=*&limit=1')).json;
@@ -164,8 +193,11 @@ async function testPost() {
 }
 
 // Default export = the ?route=cron handler (dispatched from api/ak9.js).
-//   GET /api/ak9?route=cron&key=<CRON_SECRET>          → run due announcements
-//   GET /api/ak9?route=cron&key=<CRON_SECRET>&test=1   → fire a test post
+//   GET /api/ak9?route=cron&key=<CRON_SECRET>                → run due announcements (real channel)
+//   GET /api/ak9?route=cron&key=<CRON_SECRET>&test=1         → fire a test post (real channel)
+//   GET /api/ak9?route=cron&key=<CRON_SECRET>&preview=<type> → practice post to the PRIVATE channel
+//        (no @everyone, no state change; type ∈ nominate|nom-soon|nom-last|vote|vote-soon|
+//         vote-last|closed|all). Needs DISCORD_PREVIEW_WEBHOOK_URL.
 export default async function handler(req, res) {
   cors(res);
   res.setHeader('Cache-Control', 'no-store');
@@ -174,9 +206,27 @@ export default async function handler(req, res) {
   const secret = process.env.CRON_SECRET;
   if (!secret) { res.status(503).json({ error: 'Cron not configured (set CRON_SECRET).' }); return; }
   if (String(req.query.key || '') !== secret) { res.status(401).json({ error: 'Unauthorized.' }); return; }
-  if (!webhookUrl()) { res.status(503).json({ error: 'Discord webhook not configured (set DISCORD_WEBHOOK_URL).' }); return; }
 
   try {
+    // PREVIEW: fire practice posts to a PRIVATE channel — no @everyone, no state change.
+    //   &preview=<type>  where type ∈ nominate|nom-soon|nom-last|vote|vote-soon|vote-last|closed|all
+    const pv = String(req.query.preview || '');
+    if (pv) {
+      const purl = previewWebhookUrl();
+      if (!purl) { res.status(503).json({ error: 'Preview channel not configured (set DISCORD_PREVIEW_WEBHOOK_URL).' }); return; }
+      const s = (await loadSettings()) || {};
+      const list = pv === 'all' ? PREVIEW_TYPES : [pv];
+      let posted = 0; const unknown = [];
+      for (const w of list) {
+        const p = previewPayload(w, s);
+        if (!p) { unknown.push(w); continue; }
+        if (await postWebhook(asPreview(p), purl)) posted++;
+      }
+      res.status(200).json({ ok: true, preview: true, posted, unknown, types: PREVIEW_TYPES }); return;
+    }
+
+    // Everything below posts to the REAL announcements channel.
+    if (!webhookUrl()) { res.status(503).json({ error: 'Discord webhook not configured (set DISCORD_WEBHOOK_URL).' }); return; }
     if (String(req.query.test || '') === '1') {
       const ok = await testPost();
       res.status(ok ? 200 : 502).json({ ok, test: true }); return;
