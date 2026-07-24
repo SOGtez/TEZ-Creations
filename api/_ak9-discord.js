@@ -24,18 +24,39 @@ const DAY = 86400000, HOUR = 3600000;
 const webhookUrl = () => process.env.DISCORD_WEBHOOK_URL || '';
 const unix = (ms) => Math.floor(ms / 1000);
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 // Post a payload to a Discord webhook (defaults to the real announcements one).
-// Returns true on 2xx. Best-effort.
+// Returns true on 2xx. Honors Discord's 429 rate limit (waits retry_after, up to 2 retries).
 async function postWebhook(payload, url = webhookUrl()) {
   if (!url) return false;
-  try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    return r.ok;   // Discord returns 204 on success
-  } catch (_) { return false; }
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (r.status === 429) {                                  // rate limited → wait + retry
+        let wait = 1000;
+        try { const j = await r.json(); if (j && j.retry_after) wait = Math.ceil(j.retry_after * 1000) + 100; } catch (_) {}
+        await sleep(Math.min(wait, 4000));
+        continue;
+      }
+      return r.ok;   // Discord returns 204 on success
+    } catch (_) { return false; }
+  }
+  return false;
+}
+// Post a list sequentially with a small gap, so a batch (e.g. preview=all) stays
+// under Discord's per-webhook rate limit. Returns how many succeeded.
+async function postAll(payloads, url) {
+  let n = 0;
+  for (let i = 0; i < payloads.length; i++) {
+    if (i) await sleep(350);
+    if (await postWebhook(payloads[i], url)) n++;
+  }
+  return n;
 }
 
 // Build a full announcement: the SITUATION goes in the plain-text message (with the
@@ -178,7 +199,9 @@ function reminder(kind, dlMs, n) {
 
 // ---- preview mode (perfect the wording in a PRIVATE channel first) ----
 const previewWebhookUrl = () => process.env.DISCORD_PREVIEW_WEBHOOK_URL || '';
-const PREVIEW_TYPES = ['nominate', 'nom-reminders', 'nom-soon', 'nom-last', 'vote', 'vote-reminders', 'vote-soon', 'vote-last', 'closed'];
+// `preview=all` fires one of each (a single reminder sample); use the plural
+// `preview=nom-reminders` / `vote-reminders` to see every rotation variant.
+const PREVIEW_TYPES = ['nominate', 'nom-reminder', 'nom-soon', 'nom-last', 'vote', 'vote-reminder', 'vote-soon', 'vote-last', 'closed'];
 // Build any one announcement on demand (uses real deadlines if set, else a fake +24h
 // so the countdown still renders). Returns the normal @everyone payload.
 function previewPayloads(which, s) {
@@ -194,6 +217,8 @@ function previewPayloads(which, s) {
     case 'nom-last':       return one(closingSoon('nominate', nomDl, true));
     case 'vote-soon':      return one(closingSoon('vote', voteDl, false));
     case 'vote-last':      return one(closingSoon('vote', voteDl, true));
+    case 'nom-reminder':   return one(reminder('nominate', far, 0));
+    case 'vote-reminder':  return one(reminder('vote', far, 0));
     case 'nom-reminders':  return NOMINATE_REMINDERS.map((_, i) => reminder('nominate', far, i));
     case 'vote-reminders': return VOTE_REMINDERS.map((_, i) => reminder('vote', far, i));
     default: return [];
@@ -265,8 +290,7 @@ export async function announce() {
   const saved = await sb('PATCH', 'ak9_settings?id=eq.1', { body: { notified }, prefer: 'return=minimal' });
   if (!saved.ok) return { ok: false, reason: 'notified-save-failed (run the setup SQL?)', posted: 0 };
 
-  let posted = 0;
-  for (const p of outbox) { if (await postWebhook(p)) posted++; }
+  const posted = await postAll(outbox, webhookUrl());
   return { ok: true, posted, of: outbox.length };
 }
 
@@ -304,12 +328,13 @@ export default async function handler(req, res) {
       if (!purl) { res.status(503).json({ error: 'Preview channel not configured (set DISCORD_PREVIEW_WEBHOOK_URL).' }); return; }
       const s = (await loadSettings()) || {};
       const list = pv === 'all' ? PREVIEW_TYPES : [pv];
-      let posted = 0; const unknown = [];
+      const payloads = []; const unknown = [];
       for (const w of list) {
         const items = previewPayloads(w, s);
         if (!items.length) { unknown.push(w); continue; }
-        for (const p of items) { if (await postWebhook(asPreview(p), purl)) posted++; }
+        for (const p of items) payloads.push(asPreview(p));
       }
+      const posted = await postAll(payloads, purl);
       res.status(200).json({ ok: true, preview: true, posted, unknown, types: PREVIEW_TYPES }); return;
     }
 
