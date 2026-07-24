@@ -12,6 +12,7 @@
 //   reset_voter        { twitch_user_id }
 
 import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi, twitchProfiles } from './_ak9.js';
+import { announce } from './_ak9-discord.js';
 
 // Best-effort: fill each nominee's avatar from Twitch. A nominee's login is its
 // explicit twitch_login, else its name if that looks like a Twitch handle
@@ -210,8 +211,18 @@ export default async function handler(req, res) {
         if (body.theme !== undefined) {
           patch.theme = ['classic', 'crime'].includes(body.theme) ? body.theme : 'classic';
         }
+        // Detect a phase change so we can (a) re-arm Discord announcements for the new
+        // phase and (b) fire the instant post. Read the current phase first.
+        let phaseChanged = false;
+        if (patch.phase !== undefined) {
+          const cur = ((await sb('GET', 'ak9_settings?id=eq.1&select=phase&limit=1')).json || [])[0];
+          phaseChanged = (cur ? (cur.phase || 'vote') : 'vote') !== patch.phase;
+          if (phaseChanged) patch.notified = {};   // new phase → its announcements are unsent
+        }
         const u = await sb('PATCH', 'ak9_settings?id=eq.1', { body: patch, prefer: 'return=representation' });
         if (!u.ok) { res.status(502).json({ error: 'Could not save settings.' }); return; }
+        // Fire Discord announcements on a phase flip (best-effort — never blocks the save).
+        if (phaseChanged) { try { await announce(); } catch (_) { /* ignore */ } }
         res.status(200).json({ ok: true, settings: (u.json || [])[0] || null }); return;
       }
 

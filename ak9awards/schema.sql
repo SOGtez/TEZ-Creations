@@ -16,6 +16,7 @@ create table if not exists ak9_settings (
   nominate_deadline timestamptz,            -- phase-1 (nomination) closes at this time
   nominate_open     timestamptz,            -- phase-1 OPENS at this time (nullable = open now)
   theme             text default 'classic', -- 'classic' | 'crime' (site skin)
+  notified          jsonb default '{}'::jsonb, -- Discord announce flags (reset on phase change)
   updated_at        timestamptz default now(),
   constraint ak9_settings_singleton check (id = 1)
 );
@@ -25,6 +26,7 @@ alter table ak9_settings add column if not exists phase text default 'vote';
 alter table ak9_settings add column if not exists nominate_deadline timestamptz;
 alter table ak9_settings add column if not exists nominate_open timestamptz;
 alter table ak9_settings add column if not exists theme text default 'classic';
+alter table ak9_settings add column if not exists notified jsonb default '{}'::jsonb;
 
 -- 2) Awards + their nominees. nominees is a JSON array of
 --    { id, name, image, twitch_login }  (image / twitch_login optional).

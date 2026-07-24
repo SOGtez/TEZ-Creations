@@ -10,6 +10,7 @@
 //   /api/ak9?route=vote     (POST)       cast a vote
 //   /api/ak9?route=admin    (GET|POST)   admin dashboard + actions
 //   /api/ak9?route=results  (GET)        public winners/tallies (only after voting closes)
+//   /api/ak9?route=cron     (GET)        Discord announcements (CRON_SECRET-gated; &test=1)
 
 import auth from './_ak9-auth.js';
 import ballot from './_ak9-ballot.js';
@@ -18,8 +19,9 @@ import nominate from './_ak9-nominate.js';
 import vote from './_ak9-vote.js';
 import admin from './_ak9-admin.js';
 import results from './_ak9-results.js';
+import cron from './_ak9-discord.js';
 
-const ROUTES = { auth, ballot, me, nominate, vote, admin, results };
+const ROUTES = { auth, ballot, me, nominate, vote, admin, results, cron };
 
 export default async function handler(req, res) {
   const route = String(req.query.route || '');
