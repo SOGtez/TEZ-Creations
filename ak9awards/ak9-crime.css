@@ -268,7 +268,7 @@ body.theme-crime .opencue{ font-family:var(--c-ft); font-size:13px; letter-spaci
    flip over with a camera flash + IDENTIFIED stamp.
    ============================================================ */
 body.theme-crime .lu-dossier{ margin-top:30px; }
-body.theme-crime .lu-row{ display:flex; justify-content:center; gap:24px; flex-wrap:wrap; padding:16px 0 34px; }
+body.theme-crime .lu-row{ display:flex; justify-content:center; gap:42px 24px; flex-wrap:wrap; padding:16px 0 34px; }
 body.theme-crime .lu-card{ position:relative; width:176px; height:238px; perspective:1000px; cursor:pointer;
   transform:rotate(var(--r,-1.6deg)); animation:luDeal .6s cubic-bezier(.22,1,.36,1) backwards; }
 body.theme-crime .lu-card:nth-child(2){ --r:1.3deg } body.theme-crime .lu-card:nth-child(3){ --r:-.7deg }
@@ -304,8 +304,8 @@ body.theme-crime .lu-photo{ position:relative; flex:1; min-height:0; border:1px 
   background:repeating-linear-gradient(0deg,#4a4a4a 0 14px,#3a3a3a 14px 15px);
   display:flex; align-items:center; justify-content:center; font-family:var(--c-fd); font-size:54px; color:#eee; }
 body.theme-crime .lu-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
-body.theme-crime .lu-name{ font-family:var(--c-ft); font-size:15px; text-align:center; color:#1c1610;
-  padding:8px 4px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.theme-crime .lu-name{ font-family:var(--c-ft); font-size:15px; line-height:1.25; text-align:center; color:#1c1610;
+  padding:8px 4px 2px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 body.theme-crime .lu-sub{ font-family:var(--c-fm); font-size:8px; letter-spacing:.16em; color:#8a7a54;
   text-align:center; padding-bottom:8px; text-transform:uppercase; }
 body.theme-crime .lu-stamp{ position:absolute; top:18px; left:50%; z-index:3; text-transform:uppercase;
