@@ -426,7 +426,8 @@ ol.obs b{color:var(--text)}
    3. In Vercel, set env vars: TWITCH_CLIENT_SECRET, SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY. Run subgoal/schema.sql in Supabase. Redeploy.
    Auth-code flow keeps a refresh token server-side (Supabase) so the overlay
-   URL holds only an opaque id and never expires. See api/twitch-auth.js + token.js.
+   URL holds only an opaque id and never expires. See api/twitch.js
+   (_twitch-auth.js / _twitch-token.js helpers).
    ============================================================ */
 const CLIENT_ID = "i5n7ykd3ns3n0fxgbith466dnj51fc";
 const SCOPES = "channel:read:goals channel:read:subscriptions";

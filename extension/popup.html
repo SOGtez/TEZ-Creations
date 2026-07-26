@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TEZ Creations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- backdrop: static grid + breathing glow (popup adaptation of the site backdrop) -->
+  <div class="backdrop" aria-hidden="true"><div class="grid"></div><div class="glow"></div></div>
+
+  <header class="top">
+    <div class="wordmark">TEZ<span class="dot">.</span></div>
+    <div id="tier-chip" class="chip" hidden></div>
+  </header>
+
+  <!-- ================= AUTH VIEW ================= -->
+  <section id="view-auth" hidden>
+    <p class="eyebrow">Members only</p>
+    <h1>Log in to your<br /><span class="accent">TEZ</span> account</h1>
+    <p class="sub">One account across every drop. Your tier unlocks features here too.</p>
+
+    <div class="tabs" role="tablist">
+      <button id="tab-login" class="tab active" role="tab">Log in</button>
+      <button id="tab-signup" class="tab" role="tab">Sign up</button>
+    </div>
+
+    <div class="field" id="field-name" hidden>
+      <label for="in-name">Name</label>
+      <input id="in-name" type="text" autocomplete="name" placeholder="Your name" />
+    </div>
+    <div class="field">
+      <label for="in-email">Email</label>
+      <input id="in-email" type="email" autocomplete="email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label for="in-pass">Password</label>
+      <input id="in-pass" type="password" autocomplete="current-password" placeholder="••••••••" />
+    </div>
+
+    <p id="auth-err" class="err" hidden></p>
+    <button id="btn-submit" class="btn-primary">Log in</button>
+    <p class="fineprint">Same account as <a href="https://tez-creations.vercel.app" target="_blank" rel="noopener">tez-creations.vercel.app</a></p>
+  </section>
+
+  <!-- ================= MAIN VIEW ================= -->
+  <section id="view-main" hidden>
+    <div class="account card">
+      <div class="acct-row">
+        <div>
+          <div id="acct-name" class="acct-name"></div>
+          <div id="acct-code" class="acct-code"></div>
+        </div>
+        <button id="btn-logout" class="btn-ghost">Log out</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Site features</h2>
+      </div>
+      <div class="feat-row">
+        <div class="feat-info">
+          <div class="feat-name">Connect 4 Assist <span class="perk">tester</span></div>
+          <div class="feat-desc">
+            <span class="site-tag">papergames.io</span>
+            <span id="c4-live" class="feat-live" hidden>&#9679; active on this tab</span>
+          </div>
+          <div class="feat-desc">Ghost mark shows the strongest drop while you play.</div>
+        </div>
+        <button id="c4-toggle" class="switch" role="switch" aria-checked="true" aria-label="Connect 4 Assist"><span class="knob"></span></button>
+      </div>
+      <p id="c4-locked" class="feat-locked" hidden>Tester account only — this feature stays off for other accounts.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="https://tez-creations.vercel.app/home" target="_blank" rel="noopener">Open TEZ Creations ↗</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "TEZ Creations",
+  "version": "1.1.0",
+  "description": "Your TEZ account, one click away — plus TEZ features on supported sites, unlocked by your tier.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TEZ Creations"
+  },
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://tez-creations.vercel.app/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://papergames.io/*"],
+      "js": ["content/solver.js", "content/papergames.js"],
+      "css": ["content/papergames.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

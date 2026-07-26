@@ -1,0 +1,77 @@
+/* TEZ Creations — papergames.io Connect 4 Assist overlay.
+   TEZ design tokens inlined (content CSS can't share the popup's :root).
+   The ghost must read as TEZ, not as a site piece: the site's own teal is
+   #18bc9c, so the mark leans on the dashed ring + mono "T" + grid green
+   (#2bd46a) glow rather than a filled disc. Everything is pointer-events:none
+   so the page's own click handling is untouched. */
+
+.tez-ghost-host { position: relative; }
+
+.tez-ghost {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.tez-ghost::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 3px dashed #2bd46a;
+  background: radial-gradient(closest-side, rgba(43, 212, 106, 0.22), rgba(43, 212, 106, 0.06) 68%, transparent);
+  box-shadow: 0 0 18px rgba(43, 212, 106, 0.5), inset 0 0 16px rgba(43, 212, 106, 0.28);
+  animation: tez-ghost-spin 10s linear infinite, tez-ghost-pulse 1.6s ease-in-out infinite;
+}
+.tez-ghost .tez-ghost-t {
+  position: relative;
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-weight: 700;
+  font-size: clamp(14px, 2.6vw, 30px);
+  line-height: 1;
+  color: #4ade80;
+  text-shadow: 0 0 12px rgba(43, 212, 106, 0.9);
+  letter-spacing: 0.04em;
+}
+
+@keyframes tez-ghost-spin { to { transform: rotate(360deg); } }
+@keyframes tez-ghost-pulse { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
+
+/* status chip, fixed bottom-right — unmistakably the extension talking */
+.tez-c4-badge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #16a34a;
+  background: rgba(5, 8, 6, 0.94);
+  box-shadow: 0 0 18px rgba(43, 212, 106, 0.25);
+  pointer-events: none;
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8fa394;
+}
+.tez-c4-badge .tez-c4-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2bd46a;
+  box-shadow: 0 0 8px #2bd46a;
+  animation: tez-ghost-pulse 1.6s ease-in-out infinite;
+}
+.tez-c4-badge .tez-c4-brand { color: #4ade80; }
+.tez-c4-badge.is-hot { border-color: #4ade80; color: #eaf2ec; box-shadow: 0 0 24px rgba(43, 212, 106, 0.45); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tez-ghost::before, .tez-c4-badge .tez-c4-dot { animation: none; }
+}
