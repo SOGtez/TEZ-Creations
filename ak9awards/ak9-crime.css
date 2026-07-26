@@ -261,3 +261,97 @@ body.theme-crime .reveal-case.cutting .scissors{ animation:ak9snip .95s cubic-be
 body.theme-crime .cbtnrow{ display:flex; justify-content:center; margin-top:26px; }
 body.theme-crime .opencue{ font-family:var(--c-ft); font-size:13px; letter-spacing:.1em; color:var(--c-muted); text-transform:uppercase; }
 @media (prefers-reduced-motion:reduce){ body.theme-crime .cutline, body.theme-crime .scissors{ display:none; } body.theme-crime .sealface .taphint{ animation:none; } }
+
+/* ============================================================
+   nominee reveal ceremony ("the lineup") — reveal.html
+   One case (award) at a time; three face-down suspect photos
+   flip over with a camera flash + IDENTIFIED stamp.
+   ============================================================ */
+body.theme-crime .lu-dossier{ margin-top:30px; }
+body.theme-crime .lu-row{ display:flex; justify-content:center; gap:24px; flex-wrap:wrap; padding:16px 0 34px; }
+body.theme-crime .lu-card{ position:relative; width:176px; height:238px; perspective:1000px; cursor:pointer;
+  transform:rotate(var(--r,-1.6deg)); animation:luDeal .6s cubic-bezier(.22,1,.36,1) backwards; }
+body.theme-crime .lu-card:nth-child(2){ --r:1.3deg } body.theme-crime .lu-card:nth-child(3){ --r:-.7deg }
+body.theme-crime .lu-card:nth-child(4){ --r:1.8deg } body.theme-crime .lu-card:nth-child(5){ --r:-2.1deg }
+@keyframes luDeal{ from{ opacity:0; transform:rotate(var(--r,-1.6deg)) translateY(-32px) scale(.95); } }
+body.theme-crime .lu-card.flip{ cursor:default; }
+body.theme-crime .lu-inner{ position:absolute; inset:0; transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.3,.9,.28,1); }
+body.theme-crime .lu-card.flip .lu-inner{ transform:rotateY(180deg); }
+body.theme-crime .lu-face{ position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:4px; overflow:hidden; box-shadow:0 18px 40px -16px rgba(0,0,0,.85), inset 0 0 0 1px rgba(0,0,0,.12); }
+/* yellow tape holding the photo to the board (sits above both faces) */
+body.theme-crime .lu-tape{ position:absolute; top:-8px; left:50%; transform:translateX(-50%) rotate(-3deg);
+  width:66px; height:18px; background:rgba(242,193,21,.78); box-shadow:0 2px 5px rgba(0,0,0,.25); z-index:6; pointer-events:none; }
+/* face down: sealed suspect photo */
+body.theme-crime .lu-back{ background:#eceae3; color:#141414; display:flex; flex-direction:column; }
+body.theme-crime .lu-bstrip{ background:#d8342a; color:rgba(255,255,255,.92); font-family:var(--c-fm); font-size:9px;
+  letter-spacing:.16em; text-align:center; padding:6px 0 5px; text-transform:uppercase; }
+body.theme-crime .lu-q{ position:relative; flex:1; display:flex; align-items:center; justify-content:center;
+  font-family:var(--c-fd); font-size:82px; color:rgba(20,20,20,.82); }
+body.theme-crime .lu-q::before{ content:""; position:absolute; inset:0;
+  background:repeating-radial-gradient(circle at 50% 44%, rgba(0,0,0,.07) 0 2px, transparent 2px 7px); }
+body.theme-crime .lu-conf{ font-family:var(--c-fm); font-size:8px; letter-spacing:.2em; color:#3a3a3a; text-align:center; text-transform:uppercase; }
+body.theme-crime .lu-hint{ font-family:var(--c-fd); font-size:13px; color:#b81c14; text-align:center;
+  padding:7px 0 10px; letter-spacing:.06em; opacity:0; }
+body.theme-crime .lu-card.next{ z-index:2; }
+body.theme-crime .lu-card.next .lu-hint{ opacity:1; animation:ak9tappulse 1.6s ease-in-out infinite; }
+body.theme-crime .lu-card.next .lu-back{ box-shadow:0 18px 40px -16px rgba(0,0,0,.85),
+  0 0 0 2px rgba(242,193,21,.65), 0 0 24px rgba(242,193,21,.28), inset 0 0 0 1px rgba(0,0,0,.12); }
+/* face up: the identified suspect (polaroid) */
+body.theme-crime .lu-front{ transform:rotateY(180deg); background:#f6f3ea; display:flex; flex-direction:column; padding:8px 8px 0; }
+body.theme-crime .lu-photo{ position:relative; flex:1; min-height:0; border:1px solid rgba(0,0,0,.4); overflow:hidden;
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 14px,#3a3a3a 14px 15px);
+  display:flex; align-items:center; justify-content:center; font-family:var(--c-fd); font-size:54px; color:#eee; }
+body.theme-crime .lu-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+body.theme-crime .lu-name{ font-family:var(--c-ft); font-size:15px; text-align:center; color:#1c1610;
+  padding:8px 4px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.theme-crime .lu-sub{ font-family:var(--c-fm); font-size:8px; letter-spacing:.16em; color:#8a7a54;
+  text-align:center; padding-bottom:8px; text-transform:uppercase; }
+body.theme-crime .lu-stamp{ position:absolute; top:18px; left:50%; z-index:3; text-transform:uppercase;
+  transform:translateX(-50%) rotate(-10deg) scale(1.7); font-family:var(--c-fd); font-size:14px; letter-spacing:.08em;
+  color:#b81c14; border:3px solid #b81c14; border-radius:5px; padding:2px 10px; opacity:0;
+  background:rgba(246,243,234,.55); box-shadow:0 2px 8px rgba(0,0,0,.35); }
+body.theme-crime .lu-card.flip .lu-stamp{ opacity:.86; transform:translateX(-50%) rotate(-10deg) scale(1);
+  transition:opacity .4s ease .5s, transform .55s cubic-bezier(.18,1.4,.34,1) .5s; }
+/* suspect number under each card */
+body.theme-crime .lu-no{ position:absolute; bottom:-26px; left:50%; transform:translateX(-50%);
+  font-family:var(--c-fm); font-size:9px; letter-spacing:.18em; color:#7a6a45; white-space:nowrap; text-transform:uppercase; }
+/* camera flash overlay */
+.lu-flash{ position:fixed; inset:0; z-index:60; pointer-events:none; opacity:0;
+  background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.95), rgba(255,255,255,.5) 45%, transparent 78%); }
+.lu-flash.go{ animation:luFlash .5s ease-out; }
+@keyframes luFlash{ 0%{opacity:0} 12%{opacity:.9} 100%{opacity:0} }
+/* the full board (finale) */
+body.theme-crime .lu-fboard{ margin-top:20px; display:flex; flex-direction:column; gap:14px; }
+body.theme-crime .lu-frow{ background:linear-gradient(168deg,#dccb9f,#cdb98a 55%,#c1ac7a); color:#2a2113;
+  border-radius:6px; padding:14px 16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  box-shadow:0 16px 36px -18px rgba(0,0,0,.8), inset 0 0 0 1px rgba(0,0,0,.14); animation:luDeal .5s ease backwards; }
+body.theme-crime .lu-fcase{ flex:1; min-width:190px; }
+body.theme-crime .lu-fno{ display:block; font-family:var(--c-fm); font-size:10px; letter-spacing:.16em; color:#8a2a22; }
+body.theme-crime .lu-ftitle{ font-family:var(--c-fd); font-size:20px; color:#1c1610; text-transform:uppercase; line-height:1.1; }
+body.theme-crime .lu-fsus{ display:flex; gap:8px; flex-wrap:wrap; }
+body.theme-crime .lu-fchip{ display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.4);
+  border:1px solid rgba(0,0,0,.18); border-radius:4px; padding:5px 10px 5px 5px;
+  font-family:var(--c-fo); font-weight:600; font-size:13px; color:#241c10; }
+body.theme-crime .lu-fchip i{ width:26px; height:26px; flex:none; border-radius:3px; border:1px solid rgba(0,0,0,.4);
+  background:repeating-linear-gradient(0deg,#4a4a4a 0 8px,#3a3a3a 8px 9px); background-size:cover; background-position:center;
+  display:flex; align-items:center; justify-content:center; color:#eee; font-family:var(--c-fd); font-size:12px; font-style:normal; }
+/* streamer key hint (intro) */
+body.theme-crime .lu-keys{ text-align:center; font-family:var(--c-fm); font-size:10px; letter-spacing:.08em;
+  color:var(--c-muted); margin-top:16px; }
+body.theme-crime .lu-keys b{ color:var(--c-tape); font-weight:400; border:1px solid rgba(242,193,21,.5);
+  border-radius:4px; padding:1px 7px; margin:0 2px; }
+@media (max-width:600px){
+  body.theme-crime .lu-row{ gap:16px; }
+  body.theme-crime .lu-card{ width:142px; height:198px; }
+  body.theme-crime .lu-q{ font-size:62px; }
+  body.theme-crime .lu-photo{ font-size:40px; }
+  body.theme-crime .lu-name{ font-size:13px; }
+}
+@media (prefers-reduced-motion:reduce){
+  body.theme-crime .lu-card, body.theme-crime .lu-frow{ animation:none; }
+  body.theme-crime .lu-inner{ transition:none; }
+  body.theme-crime .lu-card.next .lu-hint{ animation:none; }
+  .lu-flash{ display:none; }
+}

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AK9 AWARDS — The Lineup</title>
+<meta name="description" content="The nominees for the AK9 community awards, revealed live." />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Anton&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/ak9awards/ak9.css" />
+<link rel="stylesheet" href="/ak9awards/ak9-crime.css" />
+<style>
+  /* this page only: the WANTED stamp + month line carry the crime hero — the
+     shared .results-tag box reads as clutter here */
+  body.theme-crime .results-tag{ display:none; }
+</style>
+</head>
+<body>
+  <div class="grid-wrap"><div class="grid"></div></div><div class="aura"></div><div class="beams"></div><div class="grain"></div><div class="vig"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <a class="backlink" href="/ak9awards">← AK9 Awards</a>
+      <span></span>
+    </div>
+
+    <div class="hero">
+      <div class="kick">AleksK9 presents…</div>
+      <div class="word">AK9 AWARDS</div>
+      <div class="results-tag">The Nominees</div>
+      <div class="month" id="month"></div>
+      <div class="rule"></div>
+    </div>
+
+    <div id="view"><div class="spin"></div></div>
+
+    <div class="foot">
+      AK9 AWARDS · a community vote<br>
+      Nominated by the community — voting decides the winners.
+    </div>
+  </div>
+
+  <div class="lu-flash" id="flash"></div>
+
+<script>
+/* ============================================================
+   AK9 AWARDS — nominee reveal ceremony (unlisted, for on-stream use)
+   Streamer walks award by award; each finalist flips over on click.
+   Space / → also advances, so it can be driven from the keyboard.
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const view = $('#view');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let AWARDS = [], IDX = 0, MONTH = '', CRIME = false;
+let STATE = 'loading';   // loading | intro | case | finale
+
+async function apiGet(path) {
+  const r = await fetch(path);
+  let j = null; try { j = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, json: j || {} };
+}
+
+function renderMessage(emoji, h, p, btns) {
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">' + emoji + '</div>' +
+    '<div class="msg-h">' + esc(h) + '</div><div class="msg-p">' + p + '</div>' +
+    (btns ? '<div class="btnrow">' + btns + '</div>' : '') + '</div>';
+}
+
+function flash() {
+  if (reduceMotion) return;
+  const f = $('#flash');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+const toTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+const dots = idx => AWARDS.map((_, j) =>
+  '<span class="cdot' + (j < idx ? ' done' : j === idx ? ' cur' : '') + '"></span>').join('');
+
+/* ---------- intro ---------- */
+function intro() {
+  STATE = 'intro';
+  const nCases = AWARDS.length;
+  const nSus = AWARDS.reduce((t, a) => t + a.nominees.length, 0);
+  if (CRIME) {
+    view.innerHTML =
+      '<div class="nom-intro">The tip line is closed. Detectives worked the board all night and narrowed ' +
+        'every case down to its <b>prime suspects</b>. Tonight, we put faces on the board.</div>' +
+      '<div class="count">' +
+        '<div class="cbox"><b>' + nCases + '</b><span>cases</span></div>' +
+        '<div class="cbox"><b>' + nSus + '</b><span>suspects</span></div>' +
+      '</div>' +
+      '<div class="reveal-cta"><button class="btn reveal-btn pulse" id="startBtn" type="button">📌 Open the case board</button></div>' +
+      '<div class="lu-keys">on stream: <b>space</b> or <b>→</b> reveals the next photo</div>';
+  } else {
+    view.innerHTML =
+      '<div class="reveal-cta">' +
+        '<div class="tally-teaser">' + nCases + ' award' + (nCases === 1 ? '' : 's') + ' · ' + nSus + ' nominees</div>' +
+        '<button class="btn reveal-btn pulse" id="startBtn" type="button">✨ Begin the reveal</button>' +
+      '</div>';
+  }
+  $('#startBtn').addEventListener('click', () => { IDX = 0; step(); });
+}
+
+/* ---------- one case (crime) ---------- */
+function crimeCard(n, k, idx, flipped) {
+  const photo = n.image ? '<img src="' + esc(n.image) + '" alt="">' : esc((n.name || '?').slice(0, 1).toUpperCase());
+  return '<div class="lu-card' + (flipped ? ' flip' : '') + '" data-k="' + k + '" style="animation-delay:' + (k * 0.12).toFixed(2) + 's">' +
+    '<span class="lu-tape"></span>' +
+    '<div class="lu-inner">' +
+      '<div class="lu-face lu-back">' +
+        '<div class="lu-bstrip">AK9 · Suspect Nº' + (k + 1) + '</div>' +
+        '<div class="lu-q">?</div>' +
+        '<div class="lu-conf">Sealed · pending ID</div>' +
+        '<div class="lu-hint">📸 Tap to ID</div>' +
+      '</div>' +
+      '<div class="lu-face lu-front">' +
+        '<div class="lu-photo">' + photo + '</div>' +
+        '<div class="lu-name">@' + esc(n.name) + '</div>' +
+        '<div class="lu-sub">Case AK9-' + pad(idx + 1) + ' · Suspect ' + pad(k + 1) + '</div>' +
+        '<div class="lu-stamp">Identified</div>' +
+      '</div>' +
+    '</div>' +
+    '<span class="lu-no">Exhibit ' + String.fromCharCode(65 + k) + '</span>' +
+    '</div>';
+}
+function crimeCase(a, idx, allRevealed) {
+  return '<div class="brief">Case ' + (idx + 1) + ' of ' + AWARDS.length + ' · the suspects</div>' +
+    '<div class="cprog">' + dots(idx) + '</div>' +
+    '<div class="dossier lu-dossier" style="--tilt:' + (idx % 2 ? '.35' : '-.35') + 'deg">' +
+      '<div class="d-tab">Case Nº AK9-' + pad(idx + 1) + ' · File ' + pad(idx + 1) + '/' + pad(AWARDS.length) + '</div>' +
+      '<div class="d-stamp">Wanted</div>' +
+      '<div class="d-head">' +
+        '<div class="charge">' + esc(a.title) + '</div>' +
+        (a.description ? '<div class="allegation"><b>Allegation:</b> ' + esc(a.description) + '</div>' : '') +
+      '</div>' +
+      '<div class="d-body">' +
+        '<div class="lineup-hd">Suspect line-up · community tips named these ' + a.nominees.length + '</div>' +
+        '<div class="lu-row">' + a.nominees.map((n, k) => crimeCard(n, k, idx, allRevealed)).join('') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="cbtnrow" id="btnrow"><div class="opencue">Tap each sealed photo to put a face on the board</div>' +
+      '<button class="cskip" id="skip" type="button">skip the ceremony · pin the full board</button></div>';
+}
+
+/* ---------- one case (classic) ---------- */
+function classicCase(a, idx, allRevealed) {
+  return '<div class="ceremony">' +
+    '<div class="cprog">' + dots(idx) + '</div>' +
+    '<div class="awards"><div class="award">' +
+      '<div class="anum">AWARD ' + pad(idx + 1) + ' OF ' + pad(AWARDS.length) + '</div>' +
+      '<div class="atitle">' + esc(a.title) + '</div>' +
+      (a.description ? '<div class="adesc">' + esc(a.description) + '</div>' : '') +
+      '<div class="winlbl">The nominees</div>' +
+      '<div class="contenders" id="conts">' + (allRevealed ? a.nominees.map(contHtml).join('') : '') + '</div>' +
+    '</div></div>' +
+    '<div class="cbtnrow" id="btnrow"><div class="opencue" style="font-family:var(--fm);font-size:12px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase">Click to reveal each nominee</div>' +
+      '<button class="cskip" id="skip" type="button">skip the ceremony · show everything</button></div>' +
+    '</div>';
+}
+function contHtml(n) {
+  const av = n.image ? '<span class="av" style="background-image:url(\'' + esc(n.image) + '\')"></span>'
+    : '<span class="av">' + esc((n.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+  return '<div class="cont">' + av + '<span class="cn">' + esc(n.name) + '</span></div>';
+}
+
+/* ---------- ceremony engine ---------- */
+let revealed = 0;
+
+function markNext() {
+  if (!CRIME) return;
+  view.querySelectorAll('.lu-card').forEach(c => c.classList.remove('next'));
+  const first = view.querySelector('.lu-card:not(.flip)');
+  if (first) first.classList.add('next');
+}
+function showNextBtn() {
+  const last = IDX === AWARDS.length - 1;
+  const row = $('#btnrow');
+  row.innerHTML = '<button class="btn reveal-btn pulse" id="nextBtn" type="button">' +
+    (last ? (CRIME ? '📋 Pin the full board →' : 'See the full list →') : (CRIME ? 'Next case →' : 'Next award →')) + '</button>';
+  $('#nextBtn').addEventListener('click', () => { if (last) finale(); else { IDX++; step(); } });
+}
+function revealOne() {
+  const a = AWARDS[IDX];
+  if (revealed >= a.nominees.length) return false;
+  flash();
+  if (CRIME) {
+    const card = view.querySelector('.lu-card[data-k="' + revealed + '"]');
+    if (card) card.classList.add('flip');
+  } else {
+    const wrap = $('#conts');
+    wrap.insertAdjacentHTML('beforeend', contHtml(a.nominees[revealed]));
+  }
+  revealed++;
+  markNext();
+  if (revealed >= a.nominees.length) setTimeout(showNextBtn, reduceMotion ? 0 : 750);
+  return true;
+}
+function step(allRevealed) {
+  STATE = 'case';
+  const a = AWARDS[IDX];
+  revealed = allRevealed ? a.nominees.length : 0;
+  view.innerHTML = CRIME ? crimeCase(a, IDX, !!allRevealed) : classicCase(a, IDX, !!allRevealed);
+  toTop();
+  if (CRIME) view.querySelectorAll('.lu-card').forEach(card => {
+    card.addEventListener('click', () => {
+      if (card.classList.contains('flip')) return;
+      // reveal in order: clicking any sealed photo flips the next one in line
+      revealOne();
+    });
+  });
+  else view.querySelector('.award').addEventListener('click', () => revealOne());
+  $('#skip').addEventListener('click', finale);
+  if (allRevealed) showNextBtn(); else markNext();
+}
+
+/* ---------- finale: the full board ---------- */
+function finale() {
+  STATE = 'finale';
+  if (CRIME) {
+    view.innerHTML = '<div class="brief">Every case on the board. The lineup is <b>locked</b>.</div>' +
+      '<div class="lu-fboard">' + AWARDS.map((a, i) =>
+        '<div class="lu-frow" style="animation-delay:' + (i * 0.06).toFixed(2) + 's">' +
+          '<div class="lu-fcase"><span class="lu-fno">Case AK9-' + pad(i + 1) + '</span>' +
+            '<span class="lu-ftitle">' + esc(a.title) + '</span></div>' +
+          '<div class="lu-fsus">' + a.nominees.map(n =>
+            '<span class="lu-fchip"><i' + (n.image ? ' style="background-image:url(\'' + esc(n.image) + '\')"' : '') + '>' +
+            (n.image ? '' : esc((n.name || '?').slice(0, 1).toUpperCase())) + '</i>@' + esc(n.name) + '</span>').join('') + '</div>' +
+        '</div>').join('') + '</div>' +
+      '<div class="panel center" style="margin-top:30px">' +
+        '<div class="msg-emoji">⚖️</div>' +
+        '<div class="msg-h">The jury is next</div>' +
+        '<div class="msg-p">Voting opens once AK9 gives the word — then the community decides who’s guilty ' +
+          'on every count at <b>tezcreations.com/ak9awards</b>.</div>' +
+      '</div>';
+  } else {
+    view.innerHTML =
+      '<div class="awards go">' + AWARDS.map((a, i) =>
+        '<div class="award" style="animation-delay:' + (i * 0.08).toFixed(2) + 's">' +
+          '<div class="anum">AWARD ' + pad(i + 1) + '</div>' +
+          '<div class="atitle">' + esc(a.title) + '</div>' +
+          (a.description ? '<div class="adesc">' + esc(a.description) + '</div>' : '') +
+          '<div class="contenders">' + a.nominees.map(contHtml).join('') + '</div>' +
+        '</div>').join('') + '</div>' +
+      '<div class="panel center" style="margin-top:26px">' +
+        '<div class="msg-emoji">🗳️</div>' +
+        '<div class="msg-h">Voting opens soon</div>' +
+        '<div class="msg-p">These are your nominees. When voting opens, cast your ballot at <b>tezcreations.com/ak9awards</b>.</div>' +
+      '</div>';
+  }
+  toTop();
+}
+
+/* ---------- keyboard driving (for the streamer) ---------- */
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') {
+    if (STATE === 'loading' || STATE === 'finale') return;
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    if (STATE === 'intro') { IDX = 0; step(); return; }
+    if (STATE === 'case') {
+      if (!revealOne()) { if (IDX === AWARDS.length - 1) finale(); else { IDX++; step(); } }
+    }
+  } else if (e.key === 'ArrowLeft') {
+    if (STATE === 'case' && IDX > 0) { e.preventDefault(); IDX--; step(true); }
+    else if (STATE === 'finale') { e.preventDefault(); IDX = AWARDS.length - 1; step(true); }
+  }
+});
+
+/* ---------- living grid warp (classic backdrop only) ---------- */
+function setupGridWarp() {
+  const grid = document.querySelector('.grid');
+  if (!grid || reduceMotion) return;
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  window.addEventListener('mousemove', (e) => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 2;
+    ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  (function tick() {
+    cx += (tx - cx) * 0.06; cy += (ty - cy) * 0.06;
+    grid.style.transform =
+      'perspective(1200px) rotateX(' + (-cy * 1.6).toFixed(3) + 'deg) rotateY(' + (cx * 1.6).toFixed(3) +
+      'deg) translate(' + (-cx * 8).toFixed(2) + 'px, ' + (-cy * 8).toFixed(2) + 'px) scale(1.08)';
+    requestAnimationFrame(tick);
+  })();
+}
+setupGridWarp();
+
+/* ---------- load ---------- */
+function applyTheme(s) {
+  CRIME = ((s && s.theme) || 'classic') === 'crime';
+  document.body.classList.toggle('theme-crime', CRIME);
+  document.body.dataset.ak9phase = 'nominate';   // hero stamp reads "Wanted"
+  if (CRIME) {
+    if (!document.querySelector('.tape')) {
+      const t = document.createElement('div'); t.className = 'tape t1';
+      t.innerHTML = '<span>CRIME SCENE · DO NOT CROSS · AK9 EVIDENCE</span>';
+      document.body.insertBefore(t, document.body.firstChild);
+    }
+    const kick = document.querySelector('.hero .kick');
+    if (kick) kick.textContent = 'AleksK9 · Forensics Unit presents…';
+    const tag = document.querySelector('.results-tag');
+    if (tag) tag.textContent = 'The Suspect Lineup';
+  }
+}
+async function load() {
+  const r = await apiGet('/api/ak9?route=ballot');
+  if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
+  if (!r.ok) { renderMessage('⚠️', 'Couldn’t load the lineup', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
+  const s = r.json.settings || {};
+  MONTH = s.month_label || '';
+  applyTheme(s);
+  $('#month').textContent = CRIME ? ('The Lineup' + (MONTH ? ' · ' + MONTH : '')) : MONTH;
+  AWARDS = (r.json.awards || []).filter(a => (a.nominees || []).length);
+  if (!AWARDS.length) {
+    renderMessage('🗂️', 'The board is empty',
+      'The finalists haven’t been pinned up yet. In the admin, open <b>Nominations</b>, pick the top names, ' +
+      'hit <b>Set as finalists</b> for each award — then refresh this page.',
+      '<a class="btn ghost" href="/ak9awards/admin.html">Open admin →</a>');
+    STATE = 'loading';
+    return;
+  }
+  intro();
+}
+load();
+</script>
+</body>
+</html>
