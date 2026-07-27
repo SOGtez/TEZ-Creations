@@ -435,6 +435,17 @@ const KICK_CLIENT_ID = "01KVRE8MZK5EY1QMJ178V7FV4V";
 const KICK_SCOPES = "user:read channel:read events:subscribe";
 const DEFAULT_C1 = "2bd46a", DEFAULT_C2 = "4ade80";
 
+/* OAuth relay for Drop #009 Subathon Timer: Twitch/Kick only redirect to the
+   registered /subgoal/ URI, so the subathon setup page starts OAuth with a
+   state prefixed "sb9". When such a return lands here, bounce it (code + state
+   intact) to the subathon page BEFORE any subgoal handling runs. */
+(function(){
+  const q = new URLSearchParams(location.search);
+  if (q.get('code') && (q.get('state') || '').indexOf('sb9') === 0) {
+    location.replace('/drops/009/?' + q.toString());
+  }
+})();
+
 const $ = id => document.getElementById(id);
 const state = { platform:'twitch', id:null, mode:'sync', tierMode:'step',
                 style:'card', font:'classic', match:false, streamUrl:'', start:0 };

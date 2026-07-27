@@ -7,13 +7,15 @@
 //   /api/apps?route=games      (GET)      RAWG game search — Game Gauntlet
 //   /api/apps?route=usercheck  (GET|POST) handle availability + community reports — Handle Hunter
 //   /api/apps?route=waitlist   (GET|POST) TEZ AI waitlist capture + admin list
+//   /api/apps?route=subathon   (GET|POST) subathon timer dashboard — Drop #009
 
 import score from './_score.js';
 import games from './_games.js';
 import usercheck from './_usercheck.js';
 import waitlist from './_waitlist.js';
+import subathon from './_subathon.js';
 
-const ROUTES = { score, games, usercheck, waitlist };
+const ROUTES = { score, games, usercheck, waitlist, subathon };
 
 export default async function handler(req, res) {
   const fn = ROUTES[String(req.query.route || '')];

@@ -13,6 +13,7 @@
 // Env: EVENTSUB_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 import crypto from 'node:crypto';
+import { subathonEvent } from './_subathon-core.js';
 
 // Twitch's HMAC is over messageId + timestamp + raw body — Vercel must not parse it.
 export const config = { api: { bodyParser: false } };
@@ -148,6 +149,23 @@ export default async function handler(req, res) {
     const event = body.event || {};
     const twitchId = String(event.broadcaster_user_id || '');
     if (!twitchId) { res.status(200).json({ ok: true }); return; }
+
+    // ---- Drop #009 Subathon Timer: sub events add time --------------------
+    // channel.subscribe fires once per NEW sub — including each gift recipient
+    // (is_gift=true), so gifts are counted per-seat with the recipient's tier
+    // and we never arm channel.subscription.gift (that would double-count).
+    // channel.subscription.message = a resub share (counted only if enabled).
+    if (subType === 'channel.subscribe' || subType === 'channel.subscription.message') {
+      await subathonEvent({
+        platform: 'twitch', broadcasterId: twitchId,
+        kind: subType === 'channel.subscription.message' ? 'resub' : (event.is_gift ? 'gift' : 'sub'),
+        name: event.user_name || event.user_login || '',
+        count: 1, tier: String(event.tier || '1000'),
+      });
+      res.status(200).json({ ok: true });
+      return;
+    }
+
     const creator = await getCreatorByTwitchId(twitchId);
     if (!creator) { res.status(200).json({ ok: true }); return; }   // no claim for this channel
     const ls = creator.live_state || {};

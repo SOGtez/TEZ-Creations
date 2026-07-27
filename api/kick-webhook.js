@@ -9,6 +9,7 @@
 // renewals do NOT count (a renewal is the same subscriber, like Twitch).
 
 import crypto from 'node:crypto';
+import { subathonEvent } from './_subathon-core.js';
 
 // raw body is required for signature verification — don't let Vercel JSON-parse it
 export const config = { api: { bodyParser: false } };
@@ -74,15 +75,28 @@ export default async function handler(req, res) {
 
   let body; try { body = JSON.parse(raw); } catch (e) { res.status(400).json({ error: 'bad body' }); return; }
 
-  // how many subs does this event add?
+  const broadcasterId = String((body.broadcaster && body.broadcaster.user_id) || '');
+  if (!broadcasterId) { res.status(200).json({ ok: true, counted: 0 }); return; }
+
+  // ---- Drop #009 Subathon Timer: sub events add time (renewals only if the
+  // streamer enabled them — decided inside subathonEvent). Never throws.
+  if (type === 'channel.subscription.new') {
+    await subathonEvent({ platform: 'kick', broadcasterId, kind: 'sub', count: 1,
+      name: (body.subscriber && body.subscriber.username) || '' });
+  } else if (type === 'channel.subscription.gifts') {
+    await subathonEvent({ platform: 'kick', broadcasterId, kind: 'gift',
+      count: Math.max(1, (body.giftees || []).length),
+      name: (body.gifter && body.gifter.username) || '' });
+  } else if (type === 'channel.subscription.renewal') {
+    await subathonEvent({ platform: 'kick', broadcasterId, kind: 'resub', count: 1,
+      name: (body.subscriber && body.subscriber.username) || '' });
+  }
+
+  // ---- Sub Goal count (unchanged): new + gifts only; renewals don't count
   let delta = 0;
   if (type === 'channel.subscription.new') delta = 1;
   else if (type === 'channel.subscription.gifts') delta = Math.max(1, (body.giftees || []).length);
-  // renewals (and anything else) → 0; acknowledge and stop
   if (delta === 0) { res.status(200).json({ ok: true, counted: 0 }); return; }
-
-  const broadcasterId = String((body.broadcaster && body.broadcaster.user_id) || '');
-  if (!broadcasterId) { res.status(200).json({ ok: true, counted: 0 }); return; }
 
   try {
     // read current count, then add (low-volume stream counter; read+patch is fine)

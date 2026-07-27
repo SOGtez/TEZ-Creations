@@ -12,6 +12,17 @@
 */
 const DROPS = [
   {
+    id: "009",
+    title: "Subathon Timer",
+    description:
+      "A subathon timer overlay that runs itself. Connect Twitch and/or Kick once and every sub or gifted sub adds your chosen time to the countdown the moment it happens. Change settings mid-marathon — time per sub, multipliers, the whole look — and your live overlay updates instantly. One permanent link, crash-proof by design.",
+    date: "2026-07-26",
+    type: "tool",
+    category: "Stream Tools",
+    image: "",
+    action: { kind: "use", url: "drops/009/index.html" }
+  },
+  {
     id: "008",
     title: "Bag Radar",
     description:

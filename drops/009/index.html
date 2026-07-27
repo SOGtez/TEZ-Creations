@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- clean-URL shim -->
+<script>(function(){var p=location.pathname.replace(/index\.html$/,"");if(p.charAt(p.length-1)!=="/")p+="/";var b=document.createElement("base");b.href=location.origin+p;document.head.insertBefore(b,document.head.firstChild);})();</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="A subathon timer overlay that runs itself — every sub adds time automatically, and settings changes update your live overlay instantly. Twitch + Kick." />
+<title>Subathon Timer — TEZ Creations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/auth.css" />
+<link rel="stylesheet" href="/tez.css" />
+<style>
+/* ── Drop #009 local styles (on top of the TEZ shell) ── */
+:root{
+  --sb-accent:#3fe08b;
+  --sb-hair:rgba(255,255,255,.08);
+  --sb-hair2:rgba(255,255,255,.14);
+  --sb-card:rgba(255,255,255,.02);
+  --sb-muted:#9aa39c;
+  --fm:'JetBrains Mono',monospace;
+}
+.sb-wrap{max-width:980px;margin:0 auto;padding:48px 20px 100px;position:relative;z-index:2}
+
+/* hero */
+.sb-hero{text-align:center;margin-bottom:38px}
+.sb-kicker{font-family:var(--fm);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--sb-accent)}
+.sb-hero h1{font-size:clamp(34px,6vw,56px);letter-spacing:-.03em;margin:10px 0 12px}
+.sb-hero p{color:var(--sb-muted);max-width:600px;margin:0 auto;line-height:1.65;font-size:15.5px}
+.sb-hero p b{color:#e7ece8;font-weight:600}
+
+/* cards */
+.sb-card{border:1px solid var(--sb-hair);border-radius:18px;background:var(--sb-card);
+  padding:24px 22px;margin-top:18px;backdrop-filter:blur(6px)}
+.sb-card h2{font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sb-card .sub{color:var(--sb-muted);font-size:13px;line-height:1.6;margin-bottom:16px}
+.sb-num{font-family:var(--fm);font-size:11px;color:var(--sb-accent);border:1px solid rgba(63,224,139,.35);
+  border-radius:7px;padding:2px 8px;letter-spacing:.08em}
+
+/* buttons */
+.sb-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;border-radius:12px;
+  padding:12px 20px;color:#04140b;background:linear-gradient(180deg,#4ef29b,#2fca79);
+  border:1px solid rgba(63,224,139,.6);box-shadow:0 8px 26px -10px rgba(63,224,139,.55);
+  transition:.18s cubic-bezier(.16,1,.3,1);text-decoration:none;white-space:nowrap}
+.sb-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.sb-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.sb-btn.ghost{background:rgba(255,255,255,.04);color:#e7ece8;border-color:var(--sb-hair2);box-shadow:none}
+.sb-btn.ghost:hover{background:rgba(255,255,255,.08)}
+.sb-btn.danger{background:transparent;color:#f78a8a;border-color:rgba(247,138,138,.4);box-shadow:none}
+.sb-btn.sm{padding:9px 14px;font-size:13px;border-radius:10px}
+
+/* forms */
+.sb-field{margin-bottom:14px}
+.sb-field label{display:block;font-family:var(--fm);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--sb-muted);margin-bottom:7px}
+.sb-field input[type=number],.sb-field input[type=text],.sb-field select{
+  width:100%;background:rgba(255,255,255,.03);border:1px solid var(--sb-hair2);border-radius:10px;
+  color:#e7ece8;font-family:'Space Grotesk',sans-serif;font-size:14.5px;padding:11px 13px;outline:none;
+  transition:border-color .18s}
+.sb-field input:focus,.sb-field select:focus{border-color:var(--sb-accent)}
+.sb-field input[type=color]{width:46px;height:38px;padding:2px;border:1px solid var(--sb-hair2);
+  border-radius:9px;background:rgba(255,255,255,.03);cursor:pointer}
+.sb-field input[type=range]{width:100%;accent-color:var(--sb-accent)}
+.sb-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.sb-row .sb-field{flex:1;min-width:130px;margin-bottom:0}
+.sb-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.sb-chip{font-family:var(--fm);font-size:12px;color:var(--sb-muted);border:1px solid var(--sb-hair2);
+  border-radius:999px;padding:5px 12px;cursor:pointer;background:none;transition:.15s}
+.sb-chip:hover,.sb-chip.on{color:#04140b;background:var(--sb-accent);border-color:var(--sb-accent)}
+.sb-switch{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#e7ece8;user-select:none}
+.sb-switch input{width:17px;height:17px;accent-color:var(--sb-accent)}
+
+/* connections */
+.sb-conn{display:flex;align-items:center;gap:14px;border:1px solid var(--sb-hair);border-radius:13px;
+  padding:13px 15px;margin-bottom:10px;flex-wrap:wrap}
+.sb-conn .logo{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+.sb-conn .logo svg{width:19px;height:19px}
+.sb-conn.tw .logo{background:rgba(145,71,255,.16)} .sb-conn.tw .logo svg{fill:#a970ff}
+.sb-conn.kk .logo{background:rgba(83,252,24,.12)} .sb-conn.kk .logo svg{fill:#53fc18}
+.sb-conn .who{flex:1;min-width:120px}
+.sb-conn .who b{font-size:14.5px}
+.sb-conn .who span{display:block;font-family:var(--fm);font-size:11px;color:var(--sb-muted);margin-top:2px}
+
+/* live timer state */
+.sb-state{display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:1px solid var(--sb-hair);
+  border-radius:14px;padding:16px 18px;margin-bottom:16px;background:rgba(0,0,0,.25)}
+.sb-clock{font-family:var(--fm);font-weight:600;font-size:38px;color:#fff;font-variant-numeric:tabular-nums}
+.sb-statebadge{font-family:var(--fm);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.08);color:var(--sb-muted)}
+.sb-statebadge.run{background:rgba(63,224,139,.15);color:var(--sb-accent)}
+.sb-statebadge.pause{background:rgba(255,211,92,.15);color:#ffd35c}
+.sb-statebadge.end{background:rgba(63,224,139,.2);color:var(--sb-accent)}
+.sb-stats{font-family:var(--fm);font-size:12px;color:var(--sb-muted);margin-left:auto;text-align:right;line-height:1.7}
+
+/* pro locks */
+.sb-pro{position:relative}
+.sb-pro.locked > *:not(.sb-lock){opacity:.4;pointer-events:none}
+.sb-lock{display:none;position:absolute;inset:0;z-index:3;cursor:pointer;align-items:center;justify-content:center}
+.sb-pro.locked .sb-lock{display:flex}
+.sb-lockpill{font-family:var(--fm);font-size:12px;letter-spacing:.1em;color:#0a0a0b;background:#ffd35c;
+  border-radius:999px;padding:7px 16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.sb-prochip{font-family:var(--fm);font-size:10px;letter-spacing:.14em;color:#ffd35c;
+  border:1px solid rgba(255,211,92,.45);border-radius:999px;padding:2px 9px;text-transform:uppercase}
+
+/* overlay url + preview */
+.sb-url{display:flex;gap:9px;flex-wrap:wrap}
+.sb-url input{flex:1;min-width:220px;font-family:var(--fm);font-size:12.5px;background:rgba(0,0,0,.35);
+  border:1px solid var(--sb-hair2);border-radius:10px;color:#cfe7d8;padding:11px 13px}
+.sb-preview{margin-top:16px;border:1px solid var(--sb-hair);border-radius:14px;overflow:hidden;
+  background:
+    linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%),
+    linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%),#0b0d0c;
+  background-size:24px 24px;background-position:0 0,12px 12px}
+.sb-preview iframe{width:100%;height:250px;border:0;display:block}
+.sb-obs{font-size:13px;color:var(--sb-muted);line-height:1.8;margin-top:14px}
+.sb-obs b{color:#e7ece8;font-weight:600}
+.sb-obs code{font-family:var(--fm);font-size:12px;background:rgba(255,255,255,.06);padding:2px 7px;border-radius:6px}
+
+/* toast */
+.sb-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);z-index:60;
+  background:#e7ece8;color:#0a0a0b;font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;
+  opacity:0;transition:.25s cubic-bezier(.16,1,.3,1);pointer-events:none;box-shadow:0 14px 44px rgba(0,0,0,.5)}
+.sb-toast.show{opacity:1;transform:translateX(-50%)}
+.sb-toast.err{background:#2a1416;color:#f7b0b0;border:1px solid rgba(247,138,138,.4)}
+
+.hidden{display:none !important}
+.sb-note{font-family:var(--fm);font-size:12px;color:var(--sb-muted);line-height:1.7}
+.sb-divider{height:1px;background:var(--sb-hair);margin:20px 0}
+.sb-center{text-align:center}
+@media (max-width:600px){ .sb-clock{font-size:30px} .sb-stats{margin-left:0;text-align:left} }
+</style>
+</head>
+<body>
+
+<!-- Signature brand background -->
+<div class="bg-field" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="glows" aria-hidden="true">
+  <span class="star s1"></span><span class="star s2"></span><span class="star s3"></span>
+  <span class="star s4"></span><span class="star s5"></span>
+</div>
+
+<!-- HEADER (Concept D chrome) -->
+<header>
+  <div class="container nav">
+    <a class="lockup" href="/home" aria-label="TEZ Creations home">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="#3fe08b">
+          <path d="M12 1.5 L14.4 9.6 L22.5 12 L14.4 14.4 L12 22.5 L9.6 14.4 L1.5 12 L9.6 9.6 Z"/>
+        </svg>
+      </span>
+      <span class="wordmark">
+        <span class="name">TEZ Creations</span>
+        <span class="sub">Studio</span>
+      </span>
+    </a>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="/home#drops">Drops</a>
+        <a href="/about">About</a>
+        <a href="/ak9awards">AK9 Awards</a>
+        <a href="/ai">TEZ AI</a>
+      </nav>
+      <div id="acctSlot"></div>
+      <a class="cta" href="/home#drops">← All drops</a>
+    </div>
+  </div>
+</header>
+
+<div class="sb-wrap">
+  <div class="sb-hero">
+    <div class="sb-kicker">Drop #009 · Stream Tools</div>
+    <h1>Subathon Timer</h1>
+    <p>A subathon timer that runs itself. Every sub <b>adds time automatically</b> — Twitch and Kick —
+      and when you change a setting mid-marathon, your live overlay <b>updates instantly</b>.
+      One link, forever. No refreshing, no new URLs.</p>
+  </div>
+
+  <div id="app"><div class="sb-card sb-center" id="loading"><div class="sub" style="margin:6px 0">Loading…</div></div></div>
+</div>
+
+<div class="sb-toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Drop #009 — Subathon Timer setup + live dashboard.
+   Data flow: this page writes through /api/apps?route=subathon
+   (TezAuth session token) → Supabase row → open overlays receive
+   the change over realtime. The overlay URL never changes.
+   ============================================================ */
+const API = '/api/apps?route=subathon';
+const SB_URL = "https://taodbtlgpvaabvcnsekg.supabase.co";
+const SB_KEY = "sb_publishable_imq8qxgP3woB_umzNjMDSw_4CpBrgvp";
+// OAuth redirects are registered for /subgoal/ — it relays "sb9…" states back here.
+const OAUTH_REDIRECT = location.origin + '/subgoal/';
+const TWITCH_CLIENT_ID = 'i5n7ykd3ns3n0fxgbith466dnj51fc';
+const TWITCH_SCOPES = 'channel:read:subscriptions';
+const KICK_CLIENT_ID = '01KVRE8MZK5EY1QMJ178V7FV4V';
+const KICK_SCOPES = 'user:read channel:read events:subscribe';
+
+const $ = id => document.getElementById(id);
+const app = $('app');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+
+let TIMER = null, PRO = false, tickInt = null, sbClient = null;
+
+function toast(msg, err){
+  const t = $('toast');
+  t.textContent = msg; t.classList.toggle('err', !!err); t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3200);
+}
+async function api(op, extra){
+  const r = await fetch(API, {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ op, token: (window.TezAuth && TezAuth.token()) || '', ...(extra || {}) }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Something went wrong.');
+  return j;
+}
+
+/* ---------- OAuth helpers (PKCE for Kick) ---------- */
+function b64url(bytes){ return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function randState(){ const a = new Uint8Array(12); crypto.getRandomValues(a); return 'sb9' + b64url(a); }
+async function sha256b64(v){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)); return b64url(d); }
+function sset(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
+function sget(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+
+async function startConnect(platform){
+  const st = randState();
+  sset('sb9_state', st); sset('sb9_platform', platform);
+  if (platform === 'kick'){
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+    sset('sb9_verifier', verifier);
+    const u = new URL('https://id.kick.com/oauth/authorize');
+    u.searchParams.set('client_id', KICK_CLIENT_ID);
+    u.searchParams.set('redirect_uri', OAUTH_REDIRECT);
+    u.searchParams.set('response_type', 'code');
+    u.searchParams.set('scope', KICK_SCOPES);
+    u.searchParams.set('state', st);
+    u.searchParams.set('code_challenge', await sha256b64(verifier));
+    u.searchParams.set('code_challenge_method', 'S256');
+    location.href = u.toString();
+    return;
+  }
+  const u = new URL('https://id.twitch.tv/oauth2/authorize');
+  u.searchParams.set('client_id', TWITCH_CLIENT_ID);
+  u.searchParams.set('redirect_uri', OAUTH_REDIRECT);
+  u.searchParams.set('response_type', 'code');
+  u.searchParams.set('scope', TWITCH_SCOPES);
+  u.searchParams.set('state', st);
+  location.href = u.toString();
+}
+
+// Returning from OAuth (relayed by /subgoal/): exchange the code, then attach.
+async function handleOAuthReturn(){
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code'), st = q.get('state') || '';
+  if (!code || st.indexOf('sb9') !== 0) return null;
+  history.replaceState(null, '', location.pathname);   // scrub the one-time code
+  if (st !== sget('sb9_state')) { toast('Connection expired — try again.', true); return null; }
+  const platform = sget('sb9_platform') || 'twitch';
+  try{
+    const ep = platform === 'kick' ? '/api/kick-auth' : '/api/twitch?route=auth';
+    const payload = { code, redirect_uri: OAUTH_REDIRECT };
+    if (platform === 'kick') payload.code_verifier = sget('sb9_verifier') || '';
+    const r = await fetch(ep, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Could not connect — try again.');
+    return { platform, conn: j };   // { id, login, display_name, … }
+  }catch(err){ toast(err.message, true); return null; }
+}
+
+/* ---------- views ---------- */
+function viewLoggedOut(){
+  app.innerHTML =
+    '<div class="sb-card sb-center">' +
+      '<h2 style="justify-content:center">Log in to set up your timer</h2>' +
+      '<div class="sub">A free TEZ account keeps your timer tied to you — so your overlay link never changes, ' +
+      'even across streams, PCs and OBS reinstalls.</div>' +
+      '<button class="sb-btn" id="loginBtn">Log in / create free account</button>' +
+    '</div>' + howItWorks();
+  $('loginBtn').addEventListener('click', () => TezAuth.open({ mode:'login' }));
+}
+function howItWorks(){
+  return '<div class="sb-card"><h2>How it works</h2><div class="sub" style="margin-bottom:0;line-height:1.9">' +
+    '1 · Connect your Twitch and/or Kick — one click, one time.<br>' +
+    '2 · Add the overlay URL to OBS and start the timer with your opening hours.<br>' +
+    '3 · Every sub and gifted sub adds your chosen time, the moment it happens.<br>' +
+    '4 · Change any setting mid-subathon — every open overlay updates within a second.</div></div>';
+}
+function viewNoTimer(){
+  app.innerHTML =
+    '<div class="sb-card sb-center">' +
+      '<h2 style="justify-content:center">Create your timer</h2>' +
+      '<div class="sub">One timer per account. Your overlay link is permanent from day one.</div>' +
+      '<button class="sb-btn" id="createBtn">Create my timer</button>' +
+    '</div>' + howItWorks();
+  $('createBtn').addEventListener('click', async () => {
+    try{ const j = await api('create'); TIMER = j.timer; PRO = j.pro; viewDashboard(); watchRow(); }
+    catch(err){ toast(err.message, true); }
+  });
+}
+
+const TWITCH_LOGO = '<svg viewBox="0 0 24 24"><path d="M4.3 1 1.7 5.7V20h5.1v3h2.9l2.9-3h4.3l5.4-5.4V1H4.3zm16 12.7-3.1 3.1h-5.1l-2.9 2.9v-2.9H5V3h15.3v10.7zM17 6.9v5.7h-2V6.9h2zm-5.4 0v5.7h-2V6.9h2z"/></svg>';
+const KICK_LOGO = '<svg viewBox="0 0 24 24"><path d="M1.333 0h8v5.333H12V2.667h2.667V0h8v8H20v2.667h-2.667v2.666H20V16h2.667v8h-8v-2.667H12v-2.666H9.333V24h-8Z"/></svg>';
+
+function connRow(platform, login){
+  const meta = platform === 'kick'
+    ? { cls:'kk', logo:KICK_LOGO, name:'Kick' }
+    : { cls:'tw', logo:TWITCH_LOGO, name:'Twitch' };
+  return '<div class="sb-conn ' + meta.cls + '">' +
+    '<span class="logo">' + meta.logo + '</span>' +
+    '<div class="who">' + (login
+      ? '<b>' + esc(login) + '</b><span>' + meta.name + ' connected — subs add time automatically</span>'
+      : '<b>' + meta.name + '</b><span>not connected</span>') + '</div>' +
+    (login
+      ? '<button class="sb-btn ghost sm" data-disc="' + platform + '">Disconnect</button>'
+      : '<button class="sb-btn sm" data-conn="' + platform + '">Connect ' + meta.name + '</button>') +
+    '</div>';
+}
+
+function proWrap(id, inner){
+  return '<div class="sb-pro' + (PRO ? '' : ' locked') + '" id="' + id + '">' + inner +
+    '<div class="sb-lock" data-lock><span class="sb-lockpill">🔒 Unlock with Pro</span></div></div>';
+}
+
+function viewDashboard(){
+  const t = TIMER, s = t.settings, st = s.style;
+  const overlayUrl = location.origin + '/drops/009/overlay?id=' + t.id;
+  app.innerHTML =
+    // 1 · connections
+    '<div class="sb-card"><h2><span class="sb-num">1</span> Connect your platforms</h2>' +
+      '<div class="sub">Connect once — the webhooks do the rest. You can run Twitch and Kick at the same time into one timer.</div>' +
+      connRow('twitch', t.twitch_login) + connRow('kick', t.kick_login) +
+    '</div>' +
+
+    // 2 · timer control
+    '<div class="sb-card"><h2><span class="sb-num">2</span> Run the timer</h2>' +
+      '<div class="sub">The countdown is stored server-side as an end-time — OBS reloads and PC crashes can\'t lose it.</div>' +
+      '<div class="sb-state">' +
+        '<div class="sb-clock" id="dashClock">--:--:--</div>' +
+        '<span class="sb-statebadge" id="dashBadge">idle</span>' +
+        '<div class="sb-stats" id="dashStats"></div>' +
+      '</div>' +
+      '<div class="sb-row" id="startRow">' +
+        '<div class="sb-field"><label>Start with — hours</label><input type="number" id="startH" min="0" max="1000" value="12"></div>' +
+        '<div class="sb-field"><label>minutes</label><input type="number" id="startM" min="0" max="59" value="0"></div>' +
+        '<button class="sb-btn" id="startBtn">▶ Start subathon</button>' +
+      '</div>' +
+      '<div class="sb-chips" style="margin-top:14px">' +
+        '<button class="sb-btn ghost sm" id="pauseBtn">⏸ Pause</button>' +
+        '<button class="sb-btn ghost sm" id="resumeBtn">▶ Resume</button>' +
+        '<button class="sb-btn danger sm" id="resetBtn">Reset timer</button>' +
+      '</div>' +
+      '<div class="sb-divider"></div>' +
+      proWrap('proManual',
+        '<div class="sb-row"><div class="sb-field"><label>Manual adjust — minutes <span class="sb-prochip">Pro</span></label>' +
+          '<input type="number" id="adjM" min="1" max="6000" value="10"></div>' +
+        '<button class="sb-btn ghost sm" id="addBtn">+ Add time</button>' +
+        '<button class="sb-btn ghost sm" id="subBtn">− Remove time</button></div>') +
+    '</div>' +
+
+    // 3 · overlay url
+    '<div class="sb-card"><h2><span class="sb-num">3</span> Add the overlay to OBS</h2>' +
+      '<div class="sub">This link is <b>permanent</b> — settings changes stream to it live. Never make a new one.</div>' +
+      '<div class="sb-url"><input id="urlBox" readonly value="' + esc(overlayUrl) + '">' +
+        '<button class="sb-btn sm" id="copyBtn">Copy URL</button>' +
+        '<a class="sb-btn ghost sm" href="overlay.html?demo=1" target="_blank">Preview with fake subs ↗</a></div>' +
+      '<div class="sb-obs"><b>OBS:</b> Sources → <code>+</code> → <code>Browser</code> → paste the URL · ' +
+        'Width <code>800</code> · Height <code>320</code> · place it anywhere. Transparent background built in.</div>' +
+    '</div>' +
+
+    // 4 · settings
+    '<div class="sb-card"><h2><span class="sb-num">4</span> Settings <span class="sub" style="margin:0;font-size:12px">— saving pushes to live overlays instantly</span></h2>' +
+      '<div class="sb-row">' +
+        '<div class="sb-field"><label>Time added per sub (seconds)</label><input type="number" id="setSec" min="1" max="3600" value="' + s.sec_per_sub + '">' +
+          '<div class="sb-chips" id="secChips">' +
+            [30,60,120,300].map(v => '<button class="sb-chip' + (s.sec_per_sub === v ? ' on' : '') + '" data-sec="' + v + '">' + (v < 60 ? v + 's' : (v/60) + 'm') + '</button>').join('') +
+          '</div></div>' +
+        '<div class="sb-field"><label>Timer cap (hours · 0 = none)</label><input type="number" id="setCap" min="0" max="1000" value="' + s.cap_hours + '"></div>' +
+      '</div>' +
+      '<div class="sb-divider"></div>' +
+      proWrap('proRules',
+        '<label class="sb-switch" style="margin-bottom:12px"><input type="checkbox" id="setResubs"' + (s.count_resubs ? ' checked' : '') + '> Resubs also add time <span class="sb-prochip">Pro</span></label>' +
+        '<label class="sb-switch" style="margin-bottom:12px"><input type="checkbox" id="setTierOn"' + (s.tier_mult_on ? ' checked' : '') + '> Tier multipliers <span class="sb-prochip">Pro</span></label>' +
+        '<div class="sb-row" style="max-width:420px">' +
+          '<div class="sb-field"><label>Tier 2 ×</label><input type="number" id="setT2" min="1" max="100" value="' + s.tier_mult.t2 + '"></div>' +
+          '<div class="sb-field"><label>Tier 3 ×</label><input type="number" id="setT3" min="1" max="100" value="' + s.tier_mult.t3 + '"></div>' +
+        '</div>') +
+      '<div class="sb-divider"></div>' +
+      proWrap('proStyle',
+        '<div class="sb-row">' +
+          '<div class="sb-field"><label>Overlay theme <span class="sb-prochip">Pro</span></label>' +
+            '<select id="setTheme">' +
+              ['tez','minimal','neon'].map(v => '<option value="' + v + '"' + (st.theme === v ? ' selected' : '') + '>' + v + '</option>').join('') +
+            '</select></div>' +
+          '<div class="sb-field" style="flex:0 0 auto"><label>Accent</label><input type="color" id="setAccent" value="' + esc(st.accent) + '"></div>' +
+          '<div class="sb-field"><label>Label text</label><input type="text" id="setLabel" maxlength="40" value="' + esc(st.label) + '"></div>' +
+          '<div class="sb-field"><label>Size — <span id="sizeVal">' + st.size + '</span>%</label><input type="range" id="setSize" min="50" max="200" value="' + st.size + '"></div>' +
+        '</div>' +
+        '<div class="sb-row" style="margin-top:10px">' +
+          '<label class="sb-switch"><input type="checkbox" id="setShowLabel"' + (st.show_label ? ' checked' : '') + '> Show label</label>' +
+          '<label class="sb-switch"><input type="checkbox" id="setShowToasts"' + (st.show_toasts ? ' checked' : '') + '> Show +time popups</label>' +
+        '</div>') +
+      '<div style="margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+        '<button class="sb-btn" id="saveBtn">Save settings</button>' +
+        '<span class="sb-note">changes hit every open overlay in ~1 second</span>' +
+      '</div>' +
+      '<div class="sb-preview"><iframe id="preview" src="overlay.html?demo=1" title="overlay preview"></iframe></div>' +
+    '</div>';
+
+  // wiring
+  document.querySelectorAll('[data-conn]').forEach(b => b.addEventListener('click', () => startConnect(b.dataset.conn)));
+  document.querySelectorAll('[data-disc]').forEach(b => b.addEventListener('click', async () => {
+    try{ const j = await api('disconnect', { platform: b.dataset.disc }); TIMER = j.timer; viewDashboard(); }
+    catch(err){ toast(err.message, true); }
+  }));
+  document.querySelectorAll('[data-lock]').forEach(l => l.addEventListener('click', () =>
+    TezAuth.requirePro('Resub counting, tier multipliers, overlay styling and manual time tools are Pro features.')));
+
+  const ctl = (action, extra, okMsg) => async () => {
+    try{ const j = await api('control', { action, ...(extra ? extra() : {}) }); TIMER = j.timer; renderState(); if (okMsg) toast(okMsg); }
+    catch(err){ toast(err.message, true); }
+  };
+  $('startBtn').addEventListener('click', ctl('start', () => ({ hours: +$('startH').value || 0, minutes: +$('startM').value || 0 }), 'Subathon started — good luck! 🎉'));
+  $('pauseBtn').addEventListener('click', ctl('pause', null, 'Paused'));
+  $('resumeBtn').addEventListener('click', ctl('resume', null, 'Running'));
+  $('resetBtn').addEventListener('click', () => {
+    if (confirm('Reset the timer? The overlay goes back to "waiting to start".')) ctl('reset', null, 'Timer reset')();
+  });
+  $('addBtn').addEventListener('click', ctl('add', () => ({ minutes: +$('adjM').value || 0 }), 'Time added'));
+  $('subBtn').addEventListener('click', ctl('sub', () => ({ minutes: +$('adjM').value || 0 }), 'Time removed'));
+
+  $('copyBtn').addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText($('urlBox').value); toast('Overlay URL copied'); }
+    catch(e){ $('urlBox').select(); document.execCommand('copy'); toast('Overlay URL copied'); }
+  });
+
+  document.querySelectorAll('#secChips .sb-chip').forEach(c => c.addEventListener('click', () => {
+    $('setSec').value = c.dataset.sec;
+    document.querySelectorAll('#secChips .sb-chip').forEach(x => x.classList.toggle('on', x === c));
+  }));
+  $('setSize') && $('setSize').addEventListener('input', () => { $('sizeVal').textContent = $('setSize').value; refreshPreview(); });
+  ['setTheme','setAccent','setLabel','setShowLabel'].forEach(id => {
+    const el = $(id); if (el) el.addEventListener('change', refreshPreview);
+  });
+  $('saveBtn').addEventListener('click', saveSettings);
+
+  renderState();
+  refreshPreview();
+}
+
+function gatherSettings(){
+  const patch = {
+    sec_per_sub: +$('setSec').value || 60,
+    cap_hours: +$('setCap').value || 0,
+  };
+  if (PRO){
+    patch.count_resubs = $('setResubs').checked;
+    patch.tier_mult_on = $('setTierOn').checked;
+    patch.tier_mult = { t2: +$('setT2').value || 2, t3: +$('setT3').value || 5 };
+    patch.style = {
+      theme: $('setTheme').value,
+      accent: $('setAccent').value,
+      label: $('setLabel').value,
+      show_label: $('setShowLabel').checked,
+      show_toasts: $('setShowToasts').checked,
+      size: +$('setSize').value || 100,
+    };
+  }
+  return patch;
+}
+async function saveSettings(){
+  try{
+    const j = await api('settings', { patch: gatherSettings() });
+    TIMER = j.timer;
+    toast('Saved — live overlays updated ⚡');
+  }catch(err){ toast(err.message, true); }
+}
+function refreshPreview(){
+  const f = $('preview'); if (!f) return;
+  const st = PRO ? {
+    theme: $('setTheme').value, accent: $('setAccent').value.replace('#',''),
+    label: $('setLabel').value, size: $('setSize').value,
+  } : (TIMER ? {
+    theme: TIMER.settings.style.theme, accent: TIMER.settings.style.accent.replace('#',''),
+    label: TIMER.settings.style.label, size: TIMER.settings.style.size,
+  } : {});
+  const q = new URLSearchParams({ demo:'1', ...st });
+  clearTimeout(refreshPreview._h);
+  refreshPreview._h = setTimeout(() => { f.src = 'overlay.html?' + q.toString(); }, 350);
+}
+
+/* ---------- live state (dashboard clock) ---------- */
+function renderState(){
+  const c = $('dashClock'), b = $('dashBadge'), stats = $('dashStats');
+  if (!c || !TIMER) return;
+  const t = TIMER;
+  const sts = t.stats || {};
+  stats.innerHTML = (sts.subs | 0) + ' subs · ' + (sts.resubs | 0) + ' resubs<br>+' +
+    Math.round((sts.added_sec | 0) / 60) + ' min earned';
+  if (!t.ends_at){ c.textContent = '--:--:--'; b.textContent = 'idle'; b.className = 'sb-statebadge'; return; }
+  const base = t.paused_at ? Date.parse(t.paused_at) : Date.now();
+  const rem = Math.max(0, Date.parse(t.ends_at) - base);
+  const s = Math.floor(rem / 1000);
+  c.textContent = Math.floor(s / 3600) + ':' + pad(Math.floor((s % 3600) / 60)) + ':' + pad(s % 60);
+  if (rem <= 0){ b.textContent = 'complete'; b.className = 'sb-statebadge end'; }
+  else if (t.paused_at){ b.textContent = 'paused'; b.className = 'sb-statebadge pause'; }
+  else { b.textContent = 'running'; b.className = 'sb-statebadge run'; }
+}
+clearInterval(tickInt); tickInt = setInterval(renderState, 500);
+
+// realtime: see subs land while the dashboard is open (same feed the overlay uses)
+function watchRow(){
+  if (!TIMER || sbClient) return;
+  const load = () => {
+    if (window.supabase){
+      sbClient = supabase.createClient(SB_URL, SB_KEY);
+      sbClient.channel('sbdash-' + TIMER.id).on('postgres_changes',
+        { event:'UPDATE', schema:'public', table:'subathon_timers', filter:'id=eq.' + TIMER.id },
+        p => { if (p.new){ TIMER = { ...TIMER, ...p.new, settings: p.new.settings || TIMER.settings }; renderState(); } }).subscribe();
+    }
+  };
+  if (window.supabase) load();
+  else { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'; s.onload = load; document.head.appendChild(s); }
+}
+
+/* ---------- boot ---------- */
+let pendingConn = null;
+async function boot(){
+  pendingConn = await handleOAuthReturn();   // may be null
+  const render = async () => {
+    if (!window.TezAuth || !TezAuth.isLoggedIn()){ viewLoggedOut(); return; }
+    try{
+      let j = await api('me');
+      if (!j.timer && pendingConn) j = await api('create');   // came back from OAuth without a timer yet
+      TIMER = j.timer; PRO = j.pro;
+      if (pendingConn && TIMER){
+        const op = pendingConn.platform === 'kick' ? 'connect_kick' : 'connect_twitch';
+        try{
+          const r = await api(op, { conn_id: pendingConn.conn.id });
+          TIMER = r.timer;
+          toast((pendingConn.platform === 'kick' ? 'Kick' : 'Twitch') + ' connected ✓');
+        }catch(err){ toast(err.message, true); }
+        pendingConn = null;
+      }
+      if (!TIMER){ viewNoTimer(); return; }
+      viewDashboard();
+      watchRow();
+    }catch(err){
+      app.innerHTML = '<div class="sb-card sb-center"><div class="sub">' + esc(err.message) + '</div>' +
+        '<button class="sb-btn ghost sm" onclick="location.reload()">Retry</button></div>';
+    }
+  };
+  if (window.TezAuth){ TezAuth.onChange(render); }
+  render();
+}
+// auth.js loads after this script — wait for window.TezAuth before booting
+(function whenAuth(n){
+  if (window.TezAuth || n > 100) boot();
+  else setTimeout(() => whenAuth(n + 1), 50);
+})(0);
+</script>
+<script src="/nav.js" defer></script>
+<script src="/auth.js"></script>
+</body>
+</html>
