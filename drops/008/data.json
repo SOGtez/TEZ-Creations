@@ -1,7 +1,7 @@
 {
   "meta": {
     "sample": false,
-    "updated_at": "2026-07-13",
+    "updated_at": "2026-07-27",
     "schema_version": 1
   },
   "opportunities": [
@@ -28,7 +28,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Local volunteer chapters worldwide give out $1,000, no-strings grants to any project they find worth funding. Apply anytime — no deadline, no niche restriction.",
       "source_url": "https://www.awesomefoundation.org/en/submissions/new"
     },
@@ -60,7 +60,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Unrestricted funding for professional, actively-exhibiting painters, sculptors, and artists working on paper — materials, studio rent, or living expenses. Rolling applications open worldwide; review takes 9–12 months.",
       "source_url": "https://www.pkf.org/apply/how-to-apply/"
     },
@@ -95,7 +95,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Free global photo and video open call from Condé Nast's PhotoVogue, judged on original visual storytelling. Three cash grants from $2,000–$6,000, plus festival presentation and a shot at Vogue publication.",
       "source_url": "https://site.picter.com/photovogue-brave-new-visions-global-open-call-2026"
     },
@@ -130,7 +130,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Rolling grants for US-based experimental visual artists, poets, and performers with a confirmed but unfunded upcoming show. Apply 6–10 weeks before your presentation date.",
       "source_url": "https://www.foundationforcontemporaryarts.org/grants/emergency-grants/guidelines/"
     },
@@ -199,7 +199,7 @@
         "disabled"
       ],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Monthly grants up to £1,000 for individual podcasters worldwide, with priority for disabled, LGBTQIA+, and racially minoritized creators. The current window opens July 17 and closes July 31, 2026.",
       "source_url": "https://contentisqueen.org/microgrants-for-podcasters-2025-new-year-new-format/"
     },
@@ -233,7 +233,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Co-stream Esports World Cup and Esports Nations Cup 2026 matches to earn from a $2,000,000 pool of rewards, with top performers winning a trip worth up to $50,000. Reward eligibility starts around 50 average concurrent viewers.",
       "source_url": "https://esportsworldcup.com/en/creator-program"
     },
@@ -258,7 +258,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Razer's always-open creator program: affiliate commission up to 5%, product discounts, an exclusive Discord, and quarterly gear giveaways, with tiers starting below 5,000 followers. No cash sponsorship is guaranteed at entry tiers; 18+.",
       "source_url": "https://www.razer.com/creator-program"
     },
@@ -286,7 +286,7 @@
         "disabled"
       ],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Grants of up to $10,000 for documentary filmmakers and nonfiction new-media creators living with a disability, at any stage of production. The 2026 open call closes July 31; no letter of inquiry required.",
       "source_url": "https://www.axsfilmfund.org/"
     },
@@ -347,7 +347,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "One-time emergency assistance for painters, printmakers, and sculptors hit by a catastrophic event like fire, flood, or a medical emergency. Requires at least ten years working in a mature phase of your art; a $5,000 award is typical.",
       "source_url": "https://www.gottliebfoundation.org/emergency-grant"
     },
@@ -401,7 +401,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Grants of up to $10,000 for freelance journalists and outlets pursuing investigative stories, plus $1,000–$2,500 seed grants for early-stage reporting. Full proposals need a letter of commitment from a news outlet; seed proposals don't.",
       "source_url": "https://fij.org/apply-for-a-grant/"
     },
@@ -434,7 +434,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Project grants of up to $10,000 for visual artists, including photographers, who have lived in New York City for at least one year. The cycle closes August 3, 2026 or once 40 applications arrive — whichever comes first.",
       "source_url": "https://caferoyalculturalfoundation.org/visual-page-info"
     },
@@ -460,7 +460,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Rolling fund for freelance and self-employed artists, writers, producers, and other creative practitioners living in Scotland. Supports research, development, or delivery of creative projects lasting up to 24 months.",
       "source_url": "https://www.creativescotland.com/funding/funding-programmes/open-funding/open-fund-for-individuals"
     },
@@ -492,7 +492,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Grants for UK-based artists and bands ready to break through to the next career level. Funds recording, touring, and marketing activity; the current round closes August 10.",
       "source_url": "https://prsfoundation.com/funding-support/funding-music-creators/all-career-levels/ppl-momentum-music-fund/"
     },
@@ -519,7 +519,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Research and development awards for artists and creative professionals whose work happens mostly in Wales. Small awards run to £10,000 and large awards to £30,000, covering up to 90% of costs.",
       "source_url": "https://arts.wales/funding/individuals/research-and-development-0"
     },
@@ -579,7 +579,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Helps emerging artists in the UK and Ireland collaborate in person and develop new work across the two countries. Individual artists apply through the British Council Ireland site.",
       "source_url": "https://artscouncil.ie/funding-opportunities/uk-irl-culture-connects-grant/"
     },
@@ -610,7 +610,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Tour and showcase support for Canadian artists with a FACTOR profile and a recent or upcoming release. Support ranges from CA$7,500 in showcase funding up to CA$37,500 combined for top-rated artists.",
       "source_url": "https://www.factor.ca/programs/artist-programs/live-performance/"
     },
@@ -640,7 +640,7 @@
         "disabled"
       ],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Five $1,000 grants for US-based BIPOC artists who identify as Deaf, DeafBlind, DeafDisabled, or Hard of Hearing, across literary, media, performing, tactile, and visual work. Applicants must be 18 or older.",
       "source_url": "https://www.deafspotlight.org/grants/bipoc"
     },
@@ -693,7 +693,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Free-to-enter global photography awards across Series ($25,000), Single Image ($5,000), Student, and Youth competitions. The 2027 edition is open now; the professional Series competition closes January 12, 2027.",
       "source_url": "https://www.worldphoto.org/sony-world-photography-awards"
     },
@@ -717,9 +717,197 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-07-27",
       "blurb": "Free worldwide photo contest open to everyone from smartphone shooters to professionals — enter up to 100 images across 10 categories. Around 1,000 winners share roughly €250,000 in prizes; entries close May 31, 2027.",
       "source_url": "https://www.cewe.co.uk/cewe-photo-award.html"
+    },
+    {
+      "id": "o41",
+      "type": "grant",
+      "title": "Beauty Changes Lives Summer 2026 Scholarships",
+      "org": "Beauty Changes Lives Foundation",
+      "amount_text": "$1,500 – $20,000",
+      "amount": 20000,
+      "deadline": "2026-07-31",
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "beauty"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "education"
+      ],
+      "identity": [
+        "student"
+      ],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "More than a dozen scholarships from $1,500 to $20,000 for current and future beauty professionals in cosmetology, esthetics, barbering, nail technology, and massage therapy. The summer window closes July 31, 2026.",
+      "source_url": "https://beautychangeslives.org/scholarships-opportunities/"
+    },
+    {
+      "id": "o42",
+      "type": "grant",
+      "title": "MY SALON Suite Student Scholarship",
+      "org": "Professional Beauty Association",
+      "amount_text": "$1,500 (10 scholarships)",
+      "amount": 1500,
+      "deadline": "2026-08-15",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "beauty"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "education"
+      ],
+      "identity": [
+        "student"
+      ],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "Ten $1,500 scholarships for US students attending a licensed cosmetology, barbering, esthetics, nail technology, or massage therapy program. Applicants must be US citizens; the next deadline is August 15, 2026.",
+      "source_url": "https://www.probeauty.org/scholarships/"
+    },
+    {
+      "id": "o43",
+      "type": "grant",
+      "title": "Michael Moody Fitness Scholarship",
+      "org": "Michael Moody Fitness",
+      "amount_text": "$1,500",
+      "amount": 1500,
+      "deadline": "2026-08-01",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "fitness"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "education"
+      ],
+      "identity": [
+        "student"
+      ],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "A $1,500 scholarship for a US high school, undergraduate, or graduate student pursuing a health or fitness-related major such as exercise science or kinesiology. Applications close August 1, 2026, or once 1,000 submissions arrive, whichever comes first.",
+      "source_url": "https://www.michaelmoodyfitness.com/national-student-scholarship"
+    },
+    {
+      "id": "o44",
+      "type": "contest",
+      "title": "Amped Fitness Creator Challenge",
+      "org": "Amped Fitness",
+      "amount_text": "$25,000 prize pool ($10,000 grand prize)",
+      "amount": 25000,
+      "deadline": "2026-08-31",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [
+        "instagram",
+        "tiktok"
+      ],
+      "mediums": [
+        "shortform",
+        "video"
+      ],
+      "niches": [
+        "fitness"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [],
+      "identity": [],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "A $25,000 prize pool for US creators who post original content featuring Amped Fitness with #AmpedSummer, judged on creativity, engagement, and brand fit. No purchase or membership is required to enter; the contest runs through August 31, 2026.",
+      "source_url": "https://ampedfitness.com/creator/"
+    },
+    {
+      "id": "o45",
+      "type": "fund",
+      "title": "Pinterest Inclusion Fund",
+      "org": "Pinterest",
+      "amount_text": "Varies",
+      "amount": 1000,
+      "deadline": "2026-08-04",
+      "regions": [
+        "US",
+        "CA",
+        "UK",
+        "EU"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "photo",
+        "video"
+      ],
+      "niches": [
+        "beauty",
+        "lifestyle"
+      ],
+      "follower_min": 0,
+      "stages": [
+        "new",
+        "growing"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "Pinterest's Inclusion Fund gives creators new to the platform in beauty, fashion, and lifestyle spaces coaching, collaboration opportunities, and financial support for content production. Applications are open across the US, Canada, UK, and other countries through August 4, 2026.",
+      "source_url": "https://create.pinterest.com/pinterest-inclusion-fund/"
+    },
+    {
+      "id": "o46",
+      "type": "brand",
+      "title": "Notion for Creators",
+      "org": "Notion",
+      "amount_text": "Varies",
+      "amount": 180,
+      "deadline": null,
+      "regions": [],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "tech"
+      ],
+      "follower_min": 10000,
+      "stages": [
+        "growing",
+        "established"
+      ],
+      "purposes": [
+        "business",
+        "gear"
+      ],
+      "identity": [],
+      "added": "2026-07-27",
+      "verified": "2026-07-27",
+      "blurb": "Approved creators get 6–12 months of Notion's Plus or Business plan free, plus access to creator resources and events. Requires over 10,000 followers and an average of 5,000 views per post across active platforms.",
+      "source_url": "https://www.notion.com/help/notion-for-creators"
     }
   ]
 }
