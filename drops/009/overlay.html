@@ -238,6 +238,8 @@ function startDemo(){
   if (P.get('accent')) style.accent = '#' + String(P.get('accent')).replace('#','');
   if (P.get('label')) style.label = P.get('label');
   if (P.get('size')) style.size = +P.get('size');
+  if (P.get('nolabel')) style.show_label = false;
+  if (P.get('notoasts')) style.show_toasts = false;
   ROW = {
     settings: { sec_per_sub: 60, style },
     ends_at: new Date(Date.now() + 2 * 3600000).toISOString(),

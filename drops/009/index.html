@@ -447,7 +447,7 @@ function viewDashboard(){
     document.querySelectorAll('#secChips .sb-chip').forEach(x => x.classList.toggle('on', x === c));
   }));
   $('setSize') && $('setSize').addEventListener('input', () => { $('sizeVal').textContent = $('setSize').value; refreshPreview(); });
-  ['setTheme','setAccent','setLabel','setShowLabel'].forEach(id => {
+  ['setTheme','setAccent','setLabel','setShowLabel','setShowToasts'].forEach(id => {
     const el = $(id); if (el) el.addEventListener('change', refreshPreview);
   });
   $('saveBtn').addEventListener('click', saveSettings);
@@ -485,13 +485,17 @@ async function saveSettings(){
 }
 function refreshPreview(){
   const f = $('preview'); if (!f) return;
-  const st = PRO ? {
-    theme: $('setTheme').value, accent: $('setAccent').value.replace('#',''),
+  const src = PRO ? {
+    theme: $('setTheme').value, accent: $('setAccent').value,
     label: $('setLabel').value, size: $('setSize').value,
-  } : (TIMER ? {
-    theme: TIMER.settings.style.theme, accent: TIMER.settings.style.accent.replace('#',''),
-    label: TIMER.settings.style.label, size: TIMER.settings.style.size,
-  } : {});
+    show_label: $('setShowLabel').checked, show_toasts: $('setShowToasts').checked,
+  } : (TIMER ? TIMER.settings.style : null);
+  const st = src ? {
+    theme: src.theme, accent: String(src.accent).replace('#',''),
+    label: src.label, size: src.size,
+  } : {};
+  if (src && src.show_label === false) st.nolabel = '1';
+  if (src && src.show_toasts === false) st.notoasts = '1';
   const q = new URLSearchParams({ demo:'1', ...st });
   clearTimeout(refreshPreview._h);
   refreshPreview._h = setTimeout(() => { f.src = 'overlay.html?' + q.toString(); }, 350);
