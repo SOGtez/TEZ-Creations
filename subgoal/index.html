@@ -577,6 +577,10 @@ function setPlatform(p){
 async function boot(){
   // returning from Twitch/Kick with a one-time authorization code?
   const q = new URLSearchParams(location.search);
+  // an "sb9…" state belongs to Drop #009 (subathon) — the relay at the top of
+  // this script is already navigating there. Do NOT consume the one-time code
+  // (an OAuth code dies on first use; exchanging it here would break the relay).
+  if ((q.get('state') || '').indexOf('sb9') === 0) return;
   const code = q.get('code');
   const oerr = q.get('error');   // providers send ?error=access_denied etc. if the user declines
   if (oerr){
