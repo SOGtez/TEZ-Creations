@@ -16,6 +16,9 @@ body.theme-crime{
     radial-gradient(120% 90% at 50% -10%, #221a12 0%, var(--c-bg) 55%),
     repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px);
   color:var(--c-ink); font-family:var(--c-ft); line-height:1.6;
+  /* short screens (reveal CTA / teasers): without this the body box ends at the
+     content and the near-black page base shows below it as a hard bar */
+  min-height:100vh;
 }
 /* hide the platinum background layers */
 body.theme-crime .grid-wrap, body.theme-crime .aura, body.theme-crime .beams,
