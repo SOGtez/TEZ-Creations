@@ -40,7 +40,8 @@ export default async function handler(req, res) {
 
     if (!isClosed(settings)) { res.status(200).json({ revealed: false, settings: pub }); return; }
 
-    const awards = (await sb('GET', 'ak9_awards?select=id,title,description,sort,nominees&order=sort.asc,created_at.asc')).json || [];
+    // select=* so the optional winner_override column never breaks the query
+    const awards = (await sb('GET', 'ak9_awards?select=*&order=sort.asc,created_at.asc')).json || [];
     const votes = (await sb('GET', 'ak9_votes?select=choices')).json || [];
 
     // tally: { awardId: { nomineeId: count } }
@@ -63,7 +64,11 @@ export default async function handler(req, res) {
       noms.sort((x, y) => y.votes - x.votes);
       const total = noms.reduce((sum, n) => sum + n.votes, 0);
       const max = noms.reduce((m, n) => Math.max(m, n.votes), 0);
-      const winnerIds = max > 0 ? noms.filter(n => n.votes === max).map(n => n.id) : [];
+      // winner_override = the broadcaster's final call (e.g. a tie-break) — it
+      // must point at a real nominee; the vote breakdown still shows true counts.
+      const ov = String(a.winner_override || '');
+      const winnerIds = ov && noms.some(n => n.id === ov) ? [ov]
+        : (max > 0 ? noms.filter(n => n.votes === max).map(n => n.id) : []);
       return { id: a.id, title: a.title, description: a.description || '', total, winnerIds, nominees: noms };
     });
 

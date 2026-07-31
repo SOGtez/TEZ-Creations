@@ -100,7 +100,8 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const settings = ((await sb('GET', 'ak9_settings?id=eq.1&select=*&limit=1')).json || [])[0]
         || { month_label: '', deadline: null, voting_open: true, phase: 'vote', nominate_deadline: null, nominate_open: null, theme: 'classic' };
-      const awards = (await sb('GET', 'ak9_awards?select=id,title,description,sort,nominees&order=sort.asc,created_at.asc')).json || [];
+      // select=* so the optional winner_override column is included when present
+      const awards = (await sb('GET', 'ak9_awards?select=*&order=sort.asc,created_at.asc')).json || [];
       const votes = (await sb('GET', 'ak9_votes?select=twitch_user_id,twitch_login,display_name,choices,created_at&order=created_at.asc')).json || [];
       const noms = (await sb('GET', 'ak9_nominations?select=twitch_user_id,choices&order=created_at.asc')).json || [];
 

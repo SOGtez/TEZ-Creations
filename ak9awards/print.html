@@ -143,11 +143,15 @@ function sheet(a, idx, tallies, month, totalVoters){
   const noms = (a.nominees || []).map(n => ({ ...n, votes: t[n.id] || 0 })).sort((x, y) => y.votes - x.votes);
   const total = noms.reduce((s, n) => s + n.votes, 0);
   const max = noms.reduce((m, n) => Math.max(m, n.votes), 0);
-  const winners = max > 0 ? noms.filter(n => n.votes === max) : [];
+  // winner_override = the broadcaster's final call (tie-break) — beats the tally
+  const ov = String(a.winner_override || '');
+  const winners = ov && noms.some(n => n.id === ov) ? noms.filter(n => n.id === ov)
+    : (max > 0 ? noms.filter(n => n.votes === max) : []);
   const solved = winners.length > 0;
   const tie = winners.length > 1;
   const win = winners[0] || null;
-  const pct = solved && total > 0 ? Math.round((max / total) * 100) : 0;
+  const winVotes = win ? win.votes : 0;
+  const pct = solved && total > 0 ? Math.round((winVotes / total) * 100) : 0;
   const suspects = solved ? winners.map(n => '@' + n.name).join(' & ') : '— unsolved —';
   const photo = solved ? (win.image ? '<img src="' + esc(win.image) + '" alt="">' : esc((win.name || '?').slice(0, 1).toUpperCase())) : '?';
   const runners = noms.filter(n => !winners.includes(n) && n.votes > 0)
@@ -170,7 +174,7 @@ function sheet(a, idx, tallies, month, totalVoters){
         (a.description ? '<div class="f"><label>Case notes</label><span class="val">' + esc(a.description) + '</span></div>' : '') +
         '<div class="f"><label>Suspect</label><span class="val susp">' + esc(suspects) + '</span></div>' +
         '<div class="f"><label>Verdict</label><span class="val">' +
-          (solved ? 'GUILTY on all counts — ' + max + ' vote' + (max === 1 ? '' : 's') + ' (' + pct + '% of ' + total + ')' + (tie ? ' · joint verdict' : '') : 'no votes were cast') + '</span></div>' +
+          (solved ? 'GUILTY on all counts — ' + winVotes + ' vote' + (winVotes === 1 ? '' : 's') + ' (' + pct + '% of ' + total + ')' + (tie ? ' · joint verdict' : '') : 'no votes were cast') + '</span></div>' +
         '<div class="f"><label>Sealed by</label><span class="val">AleksK9 · Forensics Unit · ' + esc(month || '') + '</span></div>' +
       '</div>' +
       '<div class="coc"><h5>Chain of Custody</h5><table>' +
