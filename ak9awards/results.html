@@ -174,7 +174,8 @@ function renderResults(data) {
     if (reduceMotion) { crimeShowAll(); return; }
     view.innerHTML = '<div class="reveal-cta" id="revealCta">' +
       '<div class="tally-teaser">' + esc(teaser) + '</div>' +
-      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🔦 Open the case files</button></div>';
+      '<button class="btn reveal-btn pulse" id="revealBtn" type="button">🔦 Open the case files</button>' +
+      '<div class="opencue" style="margin-top:14px">on stream: space or → advances every step</div></div>';
     $('#revealBtn').addEventListener('click', () => crimeStep(0));
     return;
   }
@@ -335,6 +336,20 @@ function crimeShowAll() {
     '<div class="btnrow" style="margin-top:28px;justify-content:center;display:flex"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
   window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
 }
+
+/* ---------- keyboard driving (Space / → / Enter — for the on-stream reveal) ----------
+   Presses whatever the current step's action is: begin → cut the bag open →
+   next case. During the cutting animation nothing matches, so keys can't skip it. */
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'ArrowRight' && e.key !== 'Enter') return;
+  const seal = view.querySelector('.reveal-case:not(.cutting):not(.is-open) .seal');
+  const target = document.getElementById('revealBtn') || document.getElementById('nextCase') ||
+    document.getElementById('cBtn') || seal;
+  if (!target) return;
+  e.preventDefault();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  target.click();
+});
 
 /* ---------- living grid warp (same as the voter page) ---------- */
 function setupGridWarp() {
