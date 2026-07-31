@@ -42,6 +42,18 @@
    ============================================================ */
 const $ = s => document.querySelector(s);
 const view = $('#view');
+
+/* ---------- admin preview (pre-reveal ceremony for the stream) ----------
+   The admin page's "Reveal ceremony" button passes the session token in the
+   #hash (own-tab sessionStorage). With a valid admin token we pull the tallies
+   from the ADMIN api and run the full ceremony while the public results stay
+   sealed. Flipping phase=Closed later is what makes this page public. */
+(function () {
+  const m = /[#&]tok=([^&]+)/.exec(location.hash || '');
+  if (m) { try { sessionStorage.setItem('ak9_results_tok', decodeURIComponent(m[1])); } catch (_) {}
+    history.replaceState(null, '', location.pathname); }
+})();
+const ATOK = sessionStorage.getItem('ak9_results_tok') || '';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = n => String(n).padStart(2, '0');
@@ -373,7 +385,44 @@ function applyTheme(s) {
     if (kick) kick.textContent = 'AleksK9 · Forensics Unit presents…';
   }
 }
+// Shape the admin payload like the public results payload (same winner rules,
+// including winner_override) so the ceremony renders identically.
+function fromAdmin(j) {
+  const tallies = j.tallies || {};
+  const awards = (j.awards || []).map(a => {
+    const t = tallies[a.id] || {};
+    const noms = (Array.isArray(a.nominees) ? a.nominees : []).map(n => ({
+      id: String(n.id || ''), name: String(n.name || ''), image: String(n.image || ''),
+      votes: t[String(n.id || '')] || 0,
+    })).sort((x, y) => y.votes - x.votes);
+    const total = noms.reduce((s, n) => s + n.votes, 0);
+    const max = noms.reduce((m, n) => Math.max(m, n.votes), 0);
+    const ov = String(a.winner_override || '');
+    const winnerIds = ov && noms.some(n => n.id === ov) ? [ov]
+      : (max > 0 ? noms.filter(n => n.votes === max).map(n => n.id) : []);
+    return { id: a.id, title: a.title, description: a.description || '', total, winnerIds, nominees: noms };
+  });
+  const s = j.settings || {};
+  return { revealed: true, totalVoters: j.totalVoters || 0, awards,
+    settings: { month_label: s.month_label || '', deadline: s.deadline || null,
+      voting_open: s.voting_open !== false, theme: s.theme || 'classic' } };
+}
+
 async function load() {
+  // admin preview first — falls back to the public (sealed) view if the token is stale
+  if (ATOK) {
+    try {
+      const r = await fetch('/api/ak9?route=admin', { headers: { Authorization: 'Bearer ' + ATOK } });
+      if (r.ok) {
+        const data = fromAdmin(await r.json());
+        applyTheme(data.settings);
+        const top = document.querySelector('.top span');
+        if (top) top.innerHTML = '<span class="results-tag" style="font-size:10px;padding:4px 10px">🔒 admin preview</span>';
+        renderResults(data);
+        return;
+      }
+    } catch (_) { /* fall through to the public view */ }
+  }
   const r = await apiGet('/api/ak9?route=results');
   if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
   if (!r.ok) { renderMessage('⚠️', 'Couldn’t load results', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }

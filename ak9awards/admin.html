@@ -108,8 +108,11 @@ function renderResults() {
     '<div class="stat" style="animation-delay:.05s"><b>' + awards.length + '</b><span>awards</span></div>' +
     '<div class="stat" style="animation-delay:.1s"><b>' + (d.broadcaster ? '✓' : '—') + '</b><span>follower check ' + (d.broadcaster ? 'connected (@' + esc(d.broadcaster.login) + ')' : 'NOT connected') + '</span></div>' +
     '</div>' +
-    // print.html is a separate tab (own sessionStorage) — hand the token over in the #hash
-    '<div style="margin:2px 0 14px"><button class="btn ghost sm" onclick="window.open(\'/ak9awards/print.html#tok=\' + encodeURIComponent(TOK))">🖨 Print sheets (winner PDFs)</button></div>';
+    // print/results are separate tabs (own sessionStorage) — hand the token over in the #hash
+    '<div style="margin:2px 0 14px;display:flex;gap:8px;flex-wrap:wrap">' +
+    '<button class="btn ghost sm" onclick="window.open(\'/ak9awards/print.html#tok=\' + encodeURIComponent(TOK))">🖨 Print sheets (winner PDFs)</button>' +
+    '<button class="btn ghost sm" onclick="window.open(\'/ak9awards/results.html#tok=\' + encodeURIComponent(TOK))">🎬 Reveal ceremony (admin preview — public stays sealed)</button>' +
+    '</div>';
   if (!awards.length) html += '<div class="panel">No awards yet — add some in “Manage awards”.</div>';
   awards.forEach((a, ai) => {
     const t = tallies[a.id] || {};
