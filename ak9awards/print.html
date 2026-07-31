@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>AK9 AWARDS — Winner evidence sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Anton&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   AK9 AWARDS — printable winner evidence sheets (admin-only data).
+   One Letter page per award; "Save as PDF" via the print dialog.
+   Everything uses print-color-adjust so the red strips / stamps
+   actually print. Open from Admin → Results → Print sheets.
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+:root{
+  --ink:#141414; --red:#d8342a; --red2:#b81c14; --paper:#eceae3;
+  --fd:"Anton",Impact,sans-serif; --fo:"Oswald",sans-serif;
+  --ft:"Special Elite","Courier New",monospace; --fm:"Space Mono",monospace;
+}
+body{background:#12100d;font-family:var(--ft);color:var(--ink)}
+
+/* ---- screen-only control bar ---- */
+.bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:14px 20px;background:#1c1710;border-bottom:2px solid #f2c115;color:#e9e3d4}
+.bar b{font-family:var(--fd);font-weight:400;letter-spacing:.06em;font-size:18px}
+.bar .note{font-family:var(--fm);font-size:11px;color:#9a917d;flex:1;min-width:240px;line-height:1.5}
+.bar .note em{color:#f2c115;font-style:normal}
+.btn{cursor:pointer;font-family:var(--fd);font-size:15px;letter-spacing:.06em;text-transform:uppercase;
+  background:#f2c115;color:#1a1105;border:none;border-radius:5px;padding:10px 20px}
+.msg{max-width:520px;margin:80px auto;text-align:center;font-family:var(--ft);color:#e9e3d4;line-height:1.8}
+.msg a{color:#f2c115}
+
+/* ---- the sheets ---- */
+.sheets{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px 10px 60px}
+.sheet{position:relative;width:8.5in;min-height:10.6in;background:var(--paper);overflow:hidden;
+  box-shadow:0 24px 54px -20px rgba(0,0,0,.9);page-break-after:always;break-after:page}
+.sheet::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(125deg,rgba(255,255,255,.5),transparent 26%,transparent 74%,rgba(255,255,255,.35))}
+
+.strip{background:var(--red);padding:7px 0 6px}
+.brand{font-family:var(--fm);font-weight:700;font-style:italic;font-size:10px;letter-spacing:.12em;
+  color:rgba(255,255,255,.92);white-space:nowrap;overflow:hidden;text-align:center}
+.targets{display:flex;justify-content:space-around;align-items:center;color:#fff;font-size:16px;padding:3px 10px}
+.sidew{position:absolute;top:110px;bottom:60px;width:24px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:9px;letter-spacing:.16em;color:#3a3a3a;writing-mode:vertical-rl;
+  white-space:nowrap;overflow:hidden;z-index:2}
+.sidew.l{left:4px}.sidew.r{right:4px;transform:rotate(180deg)}
+
+.body{position:relative;padding:26px 56px 20px;z-index:1}
+.barrow{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #111;padding:8px 12px;margin-bottom:12px}
+.caseno{font-family:var(--fm);font-weight:700;font-size:22px;letter-spacing:.04em}
+.barcode{flex:1;height:32px;background-image:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 3px,#000 3px 4px,#fff 4px 7px,#000 7px 9px,#fff 9px 11px,#000 11px 12px,#fff 12px 15px)}
+.big{font-family:var(--fd);font-size:64px;letter-spacing:.02em;text-align:center;margin:2px 0 14px;color:#111}
+
+.photo{position:absolute;top:118px;right:52px;width:170px;transform:rotate(3deg);z-index:3}
+.photo .ptape{position:absolute;top:-12px;left:50%;transform:translateX(-50%) rotate(-4deg);width:76px;height:22px;
+  background:rgba(242,193,21,.75);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.photo .frame{display:block;background:#fff;padding:9px 9px 11px;box-shadow:0 10px 22px rgba(0,0,0,.4)}
+.photo .mug{width:100%;aspect-ratio:1;background:repeating-linear-gradient(0deg,#3a3a3a 0 18px,#2c2c2c 18px 19px);
+  display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:56px;color:#eee;overflow:hidden}
+.photo .mug img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .cap{font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-align:center;color:#111;margin-top:7px}
+
+.stamp{position:absolute;right:44px;top:420px;transform:rotate(-11deg);z-index:3;font-family:var(--fd);
+  font-size:44px;color:var(--red2);border:6px solid var(--red2);border-radius:10px;padding:2px 22px;
+  opacity:.82;letter-spacing:.06em}
+.stamp.unsolved{color:#555;border-color:#555}
+
+.fields{max-width:calc(100% - 190px);margin-top:6px}
+.f{display:flex;gap:12px;align-items:baseline;margin:13px 0}
+.f label{font-family:var(--fo);font-weight:600;font-size:15px;color:#111;white-space:nowrap;min-width:118px}
+.f .val{flex:1;border-bottom:1.5px solid #111;font-family:var(--ft);font-size:17px;line-height:1.5;padding-bottom:2px}
+.f .susp{font-weight:700;font-size:21px;color:var(--red2)}
+
+.coc{margin:26px 0 0}
+.coc h5{font-family:var(--fd);font-size:22px;text-align:center;letter-spacing:.03em;margin-bottom:8px;color:#111}
+.coc table{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:12px}
+.coc th,.coc td{border:1.5px solid #111;padding:7px 10px;text-align:left}
+.runners{font-family:var(--fm);font-size:12px;color:#333;margin-top:18px;line-height:1.8}
+.runners b{font-family:var(--fo);font-size:13px;letter-spacing:.04em}
+.cut{border-top:2px dashed #111;margin-top:24px;padding-top:8px;font-family:var(--fm);font-size:10px;
+  letter-spacing:.12em;text-align:center;color:#333}
+.foot{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-family:var(--fm);font-size:9px;
+  letter-spacing:.18em;color:#777;text-transform:uppercase}
+
+/* ---- print ---- */
+@page{size:letter;margin:0}
+@media print{
+  body{background:#fff}
+  .bar,.msg{display:none !important}
+  .sheets{padding:0;gap:0;display:block}
+  .sheet{width:100%;min-height:11in;box-shadow:none;margin:0}
+  .sheet:last-child{page-break-after:auto;break-after:auto}
+  /* PDF flattening turns big drop-shadows into gray slabs — use a crisp edge instead */
+  .photo .frame{box-shadow:none;border:1px solid #bbb}
+}
+</style>
+</head>
+<body>
+  <div class="bar" id="bar" style="display:none">
+    <b>WINNER EVIDENCE SHEETS</b>
+    <span class="note" id="count"></span>
+    <span class="note">In the print dialog turn ON <em>Background graphics</em> (More settings) —
+      then “Save as PDF”. One award per page.</span>
+    <button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+  </div>
+  <div id="view"><div class="msg">Loading the case files…</div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const rep = (s, n) => { let o = ''; for (let i = 0; i < n; i++) o += s; return o; };
+const targets = n => new Array(n).fill('⊕').join(' ');
+
+/* token: passed from the Admin page via #tok= (this tab keeps its own copy) */
+(function(){
+  const m = /[#&]tok=([^&]+)/.exec(location.hash || '');
+  if (m) { try { sessionStorage.setItem('ak9_print_tok', decodeURIComponent(m[1])); } catch (e) {}
+    history.replaceState(null, '', location.pathname); }
+})();
+const TOK = sessionStorage.getItem('ak9_print_tok') || sessionStorage.getItem('ak9_tok') || '';
+
+function needLogin(){
+  $('#view').innerHTML = '<div class="msg">🔒 This page needs an admin login.<br><br>' +
+    'Open the <a href="/ak9awards/admin.html">AK9 admin</a>, log in with Twitch, then use ' +
+    '<b>Results → 🖨 Print sheets</b> — that button carries your login over here.</div>';
+}
+
+function sheet(a, idx, tallies, month, totalVoters){
+  const t = tallies[a.id] || {};
+  const noms = (a.nominees || []).map(n => ({ ...n, votes: t[n.id] || 0 })).sort((x, y) => y.votes - x.votes);
+  const total = noms.reduce((s, n) => s + n.votes, 0);
+  const max = noms.reduce((m, n) => Math.max(m, n.votes), 0);
+  const winners = max > 0 ? noms.filter(n => n.votes === max) : [];
+  const solved = winners.length > 0;
+  const tie = winners.length > 1;
+  const win = winners[0] || null;
+  const pct = solved && total > 0 ? Math.round((max / total) * 100) : 0;
+  const suspects = solved ? winners.map(n => '@' + n.name).join(' & ') : '— unsolved —';
+  const photo = solved ? (win.image ? '<img src="' + esc(win.image) + '" alt="">' : esc((win.name || '?').slice(0, 1).toUpperCase())) : '?';
+  const runners = noms.filter(n => !winners.includes(n) && n.votes > 0)
+    .map(n => esc(n.name) + ' (' + n.votes + ')').join(' · ');
+  return '<div class="sheet">' +
+    '<div class="strip"><div class="brand">' + rep('AK9 FORENSICS UNIT · ', 12) + '</div>' +
+      '<div class="targets">' + targets(17) + '</div>' +
+      '<div class="brand">' + rep('OFFICIAL VERDICT · DO NOT TAMPER · ', 8) + '</div></div>' +
+    '<div class="sidew l">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>' +
+    '<div class="sidew r">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>' +
+    '<div class="body">' +
+      '<div class="barrow"><span class="caseno">AK9-' + pad(idx + 1) + '</span><span class="barcode"></span></div>' +
+      '<div class="big">EVIDENCE</div>' +
+      '<div class="photo"><span class="ptape"></span><span class="frame"><span class="mug">' + photo + '</span>' +
+        '<span class="cap">EXHIBIT A · ' + esc(suspects) + '</span></span></div>' +
+      '<div class="stamp' + (solved ? '' : ' unsolved') + '">' + (solved ? 'GUILTY' : 'UNSOLVED') + '</div>' +
+      '<div class="fields">' +
+        '<div class="f"><label>Agency</label><span class="val">AK9 Forensics Unit</span></div>' +
+        '<div class="f"><label>Offense</label><span class="val">' + esc(a.title) + '</span></div>' +
+        (a.description ? '<div class="f"><label>Case notes</label><span class="val">' + esc(a.description) + '</span></div>' : '') +
+        '<div class="f"><label>Suspect</label><span class="val susp">' + esc(suspects) + '</span></div>' +
+        '<div class="f"><label>Verdict</label><span class="val">' +
+          (solved ? 'GUILTY on all counts — ' + max + ' vote' + (max === 1 ? '' : 's') + ' (' + pct + '% of ' + total + ')' + (tie ? ' · joint verdict' : '') : 'no votes were cast') + '</span></div>' +
+        '<div class="f"><label>Sealed by</label><span class="val">AleksK9 · Forensics Unit · ' + esc(month || '') + '</span></div>' +
+      '</div>' +
+      '<div class="coc"><h5>Chain of Custody</h5><table>' +
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>' +
+        '<tr><td>' + esc(month || '—') + '</td><td>Community tip line</td><td>Prime suspects</td></tr>' +
+        '<tr><td>' + esc(month || '—') + '</td><td>The jury — ' + totalVoters + ' ballot' + (totalVoters === 1 ? '' : 's') + '</td><td>Verdict: ' + (solved ? 'Guilty' : 'Unsolved') + '</td></tr></table></div>' +
+      (runners ? '<div class="runners"><b>ALSO QUESTIONED:</b> ' + runners + '</div>' : '') +
+      '<div class="cut">✂ OFFICIAL AK9 AWARDS RECORD · ' + esc(month || '') + ' · CASE AK9-' + pad(idx + 1) + '</div>' +
+    '</div>' +
+    '<div class="foot">AK9 AWARDS · a community vote · tezcreations.com/ak9awards</div>' +
+    '</div>';
+}
+
+async function load(){
+  if (!TOK){ needLogin(); return; }
+  let r, j;
+  try{
+    r = await fetch('/api/ak9?route=admin', { headers: { Authorization: 'Bearer ' + TOK } });
+    j = await r.json();
+  }catch(e){ $('#view').innerHTML = '<div class="msg">⚠️ Could not load — try again.</div>'; return; }
+  if (r.status === 401 || r.status === 403){ needLogin(); return; }
+  if (!r.ok){ $('#view').innerHTML = '<div class="msg">⚠️ ' + esc(j.error || 'Could not load.') + '</div>'; return; }
+  const awards = j.awards || [], tallies = j.tallies || {}, month = (j.settings || {}).month_label || '';
+  if (!awards.length){ $('#view').innerHTML = '<div class="msg">No awards to print.</div>'; return; }
+  $('#bar').style.display = '';
+  $('#count').textContent = awards.length + ' case files · ' + (j.totalVoters || 0) + ' ballots · ' + month;
+  $('#view').innerHTML = '<div class="sheets">' +
+    awards.map((a, i) => sheet(a, i, tallies, month, j.totalVoters || 0)).join('') + '</div>';
+}
+load();
+</script>
+</body>
+</html>
