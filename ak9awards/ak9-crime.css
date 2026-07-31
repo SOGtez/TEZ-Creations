@@ -262,6 +262,16 @@ body.theme-crime .cbtnrow{ display:flex; justify-content:center; margin-top:26px
 body.theme-crime .opencue{ font-family:var(--c-ft); font-size:13px; letter-spacing:.1em; color:var(--c-muted); text-transform:uppercase; }
 @media (prefers-reduced-motion:reduce){ body.theme-crime .cutline, body.theme-crime .scissors{ display:none; } body.theme-crime .sealface .taphint{ animation:none; } }
 
+/* ---- TEZ wild cards (post-awards encore on results.html) ---- */
+body.theme-crime .wild-teaser{ text-align:center; padding:70px 0 30px; }
+body.theme-crime .wild-line{ font-family:var(--c-ft); font-size:clamp(24px,5vw,42px); color:var(--c-ink);
+  letter-spacing:.04em; animation:fadeUp .9s ease both; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+body.theme-crime .wild-hero{ text-align:center; padding:34px 0 10px; }
+body.theme-crime .wild-hero .word{ font-size:clamp(44px,11vw,104px); animation:fadeUp .7s ease both; }
+body.theme-crime .wild-hero .kick{ animation:fadeUp .6s ease both; }
+body.theme-crime .wild-sub{ font-family:var(--c-fm); font-size:12px; letter-spacing:.3em; text-transform:uppercase;
+  color:var(--c-tape); margin-top:12px; animation:fadeUp .6s .15s ease both; }
+
 /* ============================================================
    nominee reveal ceremony ("the lineup") — reveal.html
    One case (award) at a time; three face-down suspect photos

@@ -180,10 +180,16 @@ function renderResults(data) {
     return;
   }
 
-  // the finale: every award at once, bars growing
+  // the finale: every award at once, bars growing (+ TEZ wild cards)
   const showAll = () => {
     view.innerHTML =
-      '<div class="awards" id="awards">' + awards.map((a, i) => awardCard(a, i)).join('') + '</div>' +
+      '<div class="awards" id="awards">' + awards.map((a, i) => awardCard(a, i)).join('') +
+      WILD.map((c, i) =>
+        '<div class="award"><div class="anum">TEZ WILD CARD ' + pad(i + 1) + '</div>' +
+        '<div class="atitle">' + esc(c.title) + '</div>' +
+        '<div class="winlbl">Hand-picked by TEZ</div>' +
+        '<div class="winner"><span class="av">' + esc((c.winners[0] || '?').slice(0, 1).toUpperCase()) + '</span>' +
+        '<div class="wname">' + esc(wildNames(c)) + '</div><span class="trophy">🃏</span></div></div>').join('') + '</div>' +
       '<div class="btnrow" style="margin-top:28px"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
     requestAnimationFrame(() => requestAnimationFrame(() => $('#awards').classList.add('go')));
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -316,8 +322,8 @@ function crimeStep(idx) {
   const last = idx === awards.length - 1;
   const addNext = () => {
     const row = view.querySelector('.cbtnrow');
-    row.innerHTML = '<button class="btn reveal-btn" id="nextCase" type="button">' + (last ? 'See all case files →' : 'Next case →') + '</button>';
-    row.querySelector('#nextCase').addEventListener('click', () => { if (last) crimeShowAll(); else crimeStep(idx + 1); });
+    row.innerHTML = '<button class="btn reveal-btn" id="nextCase" type="button">' + (last ? 'Continue →' : 'Next case →') + '</button>';
+    row.querySelector('#nextCase').addEventListener('click', () => { if (last) wildTeaser(); else crimeStep(idx + 1); });
   };
   seal.addEventListener('click', () => {
     if (rc.classList.contains('cutting')) return;
@@ -333,8 +339,111 @@ function crimeShowAll() {
   const awards = RES.awards;
   view.innerHTML = '<div class="brief">All cases closed · the full evidence log.</div>' +
     '<div id="awards">' + awards.map((a, i) => crimeEvbag(a, i)).join('') + '</div>' +
+    '<div class="brief" style="margin-top:40px">TEZ Wild Cards · hand-picked, no votes needed.</div>' +
+    '<div id="wilds">' + WILD.map((c, i) => wildEvbag(c, i)).join('') + '</div>' +
     '<div class="btnrow" style="margin-top:28px;justify-content:center;display:flex"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
   window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+/* ============================================================
+   TEZ WILD CARDS — hand-picked encore, revealed after the awards.
+   Teaser ("it's not over…") → big title card → three evidence bags
+   cut open one by one, then the full log. Same seal/cut mechanics.
+   ============================================================ */
+const WILD = [
+  { title: 'Best Production Duo!', winners: ['SOGtez', 'Cuzanthe1'] },
+  { title: 'Upcoming AK9 Creator!', winners: ['4redrumm'] },
+  { title: 'Underrated AK9 Viewer!', winners: ['wagner9x'] },
+];
+const wildNames = c => c.winners.map(w => '@' + w).join(' & ');
+
+function wildTeaser() {
+  view.innerHTML = '<div class="wild-teaser">' +
+    '<div class="wild-line">It’s not over just yet…</div>' +
+    '<div class="cbtnrow"><button class="btn reveal-btn pulse" id="nextCase" type="button">Continue →</button></div></div>';
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  $('#nextCase').addEventListener('click', wildTitle);
+}
+function wildTitle() {
+  view.innerHTML = '<div class="wild-hero">' +
+    '<div class="kick">AK9 AWARDS · after hours</div>' +
+    '<div class="word">TEZ WILD CARDS</div>' +
+    '<div class="wild-sub">' + WILD.length + ' unannounced verdicts · hand-picked</div>' +
+    '<div class="cbtnrow"><button class="btn reveal-btn pulse" id="nextCase" type="button">🃏 Open the first card →</button></div></div>';
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  $('#nextCase').addEventListener('click', () => wildStep(0));
+}
+
+function wildEvbag(c, i) {
+  const month = esc(RES.settings.month_label || '—');
+  const initial = esc((c.winners[0] || '?').slice(0, 1).toUpperCase());
+  return '<div class="evbag">' +
+    '<div class="ev-strip"><div class="ev-brand">' + rep('TEZ SPECIAL INVESTIGATIONS · ', 8) + '</div>' +
+      '<div class="ev-targets">' + targets(15) + '</div>' +
+      '<div class="ev-brand">' + rep('WILD CARD · NOT A VOTE · ', 7) + '</div></div>' +
+    '<div class="ev-sidewarn l">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>' +
+    '<div class="ev-sidewarn r">DO NOT CUT HERE TO OPEN · DO NOT CUT HERE TO OPEN</div>' +
+    '<div class="ev-body">' +
+      '<div class="ev-barrow"><span class="ev-caseno">TEZ-0' + (i + 1) + '</span><span class="ev-barcode"></span></div>' +
+      '<div class="ev-title">WILD CARD</div>' +
+      '<div class="ev-photo"><span class="ptape"></span><span class="frame"><span class="mugimg">' + initial + '</span>' +
+        '<span class="cap">EXHIBIT A · ' + esc(wildNames(c)) + '</span></span></div>' +
+      '<div class="ev-guilty">GUILTY</div>' +
+      '<div class="ev-f"><label>Agency</label><span class="val">TEZ · Special Investigations</span></div>' +
+      '<div class="ev-f"><label>Offense</label><span class="val">' + esc(c.title) + '</span></div>' +
+      '<div class="ev-f"><label>Suspect' + (c.winners.length > 1 ? 's' : '') + '</label><span class="val susp">' + esc(wildNames(c)) + '</span></div>' +
+      '<div class="ev-f"><label>Recovered by</label><span class="val">hand-picked — no votes needed</span></div>' +
+      '<div class="ev-f"><label>Sealed by</label><span class="val">TEZ · Special Investigations</span></div>' +
+      '<div class="ev-coc"><h5>Chain of Custody</h5><table>' +
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>' +
+        '<tr><td>' + month + '</td><td>TEZ’s case notes</td><td>Wild card</td></tr>' +
+        '<tr><td>' + month + '</td><td>TEZ</td><td>Verdict: Guilty</td></tr></table></div>' +
+      '<div class="ev-cut">✂ TO REMOVE CONTENTS CUT ALONG BOTTOM DOTTED LINE</div>' +
+    '</div></div>';
+}
+function wildSealFace(c, which, i) {
+  return '<div class="sealface ' + which + '">' +
+    '<div class="ev-strip"><div class="ev-brand">' + rep('TEZ SPECIAL INVESTIGATIONS · ', 8) + '</div>' +
+      '<div class="ev-targets">' + targets(15) + '</div>' +
+      '<div class="ev-brand">' + rep('WILD CARD · NOT A VOTE · ', 7) + '</div></div>' +
+    '<div class="ev-body">' +
+      '<div class="ev-barrow"><span class="ev-caseno">TEZ-0' + (i + 1) + '</span><span class="ev-barcode"></span></div>' +
+      '<div class="ev-title">WILD CARD</div>' +
+      '<div class="redact-block"><span class="rb"></span><span class="rl">' + esc(c.title) + '</span>' +
+        '<span class="rl2">Suspect redacted · TEZ’s personal pick</span></div>' +
+      '<div class="taphint">✂ Tap to cut open</div>' +
+    '</div>' +
+    '<div class="ev-cut">✂ CUT ALONG DOTTED LINE TO OPEN</div>' +
+    '<div class="seal-btm">TEZ special investigations · do not open</div>' +
+    '<span class="sidew l">DO NOT CUT HERE TO OPEN</span><span class="sidew r">DO NOT CUT HERE TO OPEN</span>' +
+    '</div>';
+}
+function wildStep(i) {
+  const c = WILD[i];
+  const dots = WILD.map((_, j) => '<span class="cdot' + (j < i ? ' done' : j === i ? ' cur' : '') + '"></span>').join('');
+  view.innerHTML = '<div class="brief">Wild card ' + (i + 1) + ' of ' + WILD.length + ' · ' + esc(c.title) + '</div>' +
+    '<div class="cprog">' + dots + '</div>' +
+    '<div class="reveal-case" id="rc"><div class="paper-wrap"><div class="paper">' + wildEvbag(c, i) + '</div></div>' +
+      '<div class="seal">' + wildSealFace(c, 'sf-top', i) + wildSealFace(c, 'sf-bottom', i) +
+        '<span class="cutline"></span><span class="scissors">✂</span></div></div>' +
+    '<div class="cbtnrow"><div class="opencue">Tap the evidence bag to cut it open</div></div>';
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  const rc = view.querySelector('#rc'), seal = rc.querySelector('.seal');
+  const last = i === WILD.length - 1;
+  const addNext = () => {
+    const row = view.querySelector('.cbtnrow');
+    row.innerHTML = '<button class="btn reveal-btn" id="nextCase" type="button">' + (last ? 'See the full evidence log →' : 'Next wild card →') + '</button>';
+    row.querySelector('#nextCase').addEventListener('click', () => { if (last) crimeShowAll(); else wildStep(i + 1); });
+  };
+  seal.addEventListener('click', () => {
+    if (rc.classList.contains('cutting')) return;
+    if (reduceMotion) { rc.classList.add('is-open'); seal.style.display = 'none'; rc.querySelector('.paper').classList.add('revealed'); addNext(); return; }
+    rc.classList.add('cutting');
+    setTimeout(() => rc.classList.add('is-open'), 1050);
+    setTimeout(() => rc.querySelector('.paper').classList.add('revealed'), 2500);
+    setTimeout(() => { seal.style.display = 'none'; }, 2850);
+    setTimeout(addNext, 2950);
+  });
 }
 
 /* ---------- keyboard driving (Space / → / Enter — for the on-stream reveal) ----------
