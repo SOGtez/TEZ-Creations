@@ -16,8 +16,11 @@ import { configured, sb, cors } from './_ak9.js';
 
 function isClosed(s) {
   if (!s) return false;
-  if (s.phase === 'closed') return true;
-  if (s.phase === 'nominate') return false;   // phase 1 — never reveal results
+  // Phase-based cycles (current): the OWNER publishes results by flipping
+  // phase=closed — a passed deadline only stops voting, it never reveals
+  // winners early (the reveal happens on stream, like the nominee lineup).
+  if (s.phase) return s.phase === 'closed';
+  // Legacy rows with no phase column: voting_open/deadline governed the reveal.
   if (s.voting_open === false) return true;
   if (s.deadline && Date.now() > new Date(s.deadline).getTime()) return true;
   return false;

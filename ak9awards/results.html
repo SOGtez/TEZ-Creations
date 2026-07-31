@@ -86,6 +86,13 @@ function renderMessage(emoji, h, p, btns, extra) {
 
 function renderLocked(settings) {
   deadlineMs = settings.deadline ? new Date(settings.deadline).getTime() : null;
+  // deadline already passed → voting is over but the reveal hasn't happened yet.
+  // No countdown here (a finished countdown would reload-loop) — just hold tight.
+  if (deadlineMs && deadlineMs <= Date.now()) {
+    renderMessage('🔒', 'The verdicts are in',
+      'Voting has closed and the ballots are locked. The winners get revealed soon — stay tuned to the stream.');
+    return;
+  }
   const countBlock = deadlineMs
     ? '<div id="lockCount" style="margin-top:22px"><div class="count"></div><div class="countlbl">until voting closes</div></div>'
     : '';
