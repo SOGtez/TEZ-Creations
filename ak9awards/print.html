@@ -88,14 +88,20 @@ body{background:#12100d;font-family:var(--ft);color:var(--ink)}
   letter-spacing:.18em;color:#777;text-transform:uppercase}
 
 /* ---- print ---- */
-@page{size:letter;margin:0}
+/* Real margins (not 0): full-bleed makes some print pipelines rescale/shift the
+   page, which is what pushed each sheet onto two pages. */
+@page{size:letter;margin:0.25in}
 @media print{
   body{background:#fff}
   .bar,.msg{display:none !important}
   .sheets{padding:0;gap:0;display:block}
-  .sheet{width:100%;min-height:11in;box-shadow:none;margin:0}
+  /* FIXED height below the printable area + overflow clip = exactly one page
+     per award, no rounding spill. */
+  .sheet{width:100%;height:10.4in;min-height:0;overflow:hidden;box-shadow:none;margin:0}
   .sheet:last-child{page-break-after:auto;break-after:auto}
-  /* PDF flattening turns big drop-shadows into gray slabs — use a crisp edge instead */
+  /* Alpha gradients + big shadows rasterize as gray/black streaks in PDF
+     flattening — kill the gloss overlay entirely and use crisp edges. */
+  .sheet::after{display:none}
   .photo .frame{box-shadow:none;border:1px solid #bbb}
 }
 </style>
