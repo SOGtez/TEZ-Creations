@@ -31,6 +31,19 @@ export const env = () => ({
 });
 export const configured = () => { const e = env(); return !!(e.secret && e.sbUrl && e.sbKey); };
 
+// Unlisted results-share key: HMAC of a server secret + the cycle label, so it
+// needs no new env/SQL, never appears in the repo, and rotates every cycle.
+// People with ?share=<key> can view results while they're still sealed.
+import crypto from 'node:crypto';
+export function shareKey(label) {
+  const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  return crypto.createHmac('sha256', secret).update('ak9-share:' + String(label || '')).digest('base64url').slice(0, 20);
+}
+export function shareKeyMatches(given, label) {
+  const a = Buffer.from(String(given || '')), b = Buffer.from(shareKey(label));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 export function isAdminLogin(login) {
   return env().admins.includes(String(login || '').toLowerCase());
 }

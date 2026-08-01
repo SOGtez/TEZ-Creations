@@ -12,7 +12,7 @@
 // Vote counts are ONLY ever returned after voting closes — never during, so the
 // live standings can't be watched or gamed. Mirrors the admin tally logic.
 
-import { configured, sb, cors } from './_ak9.js';
+import { configured, sb, cors, shareKeyMatches } from './_ak9.js';
 
 function isClosed(s) {
   if (!s) return false;
@@ -38,7 +38,10 @@ export default async function handler(req, res) {
     const settings = (s || [])[0] || { month_label: '', deadline: null, voting_open: true };
     const pub = { month_label: settings.month_label || '', deadline: settings.deadline || null, voting_open: settings.voting_open !== false, theme: settings.theme || 'classic' };
 
-    if (!isClosed(settings)) { res.status(200).json({ revealed: false, settings: pub }); return; }
+    // Unlisted share link: ?share=<key> reveals for people with the link while
+    // the public stays sealed. The key comes from the admin page.
+    const shared = shareKeyMatches(req.query.share, settings.month_label);
+    if (!isClosed(settings) && !shared) { res.status(200).json({ revealed: false, settings: pub }); return; }
 
     // select=* so the optional winner_override column never breaks the query
     const awards = (await sb('GET', 'ak9_awards?select=*&order=sort.asc,created_at.asc')).json || [];

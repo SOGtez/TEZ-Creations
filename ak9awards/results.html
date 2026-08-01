@@ -54,6 +54,8 @@ const view = $('#view');
     history.replaceState(null, '', location.pathname); }
 })();
 const ATOK = sessionStorage.getItem('ak9_results_tok') || '';
+// unlisted share link (?share=<key> stays in the URL so it can be re-shared)
+const SHARE = new URLSearchParams(location.search).get('share') || '';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = n => String(n).padStart(2, '0');
@@ -547,7 +549,7 @@ async function load() {
       }
     } catch (_) { /* fall through to the public view */ }
   }
-  const r = await apiGet('/api/ak9?route=results');
+  const r = await apiGet('/api/ak9?route=results' + (SHARE ? '&share=' + encodeURIComponent(SHARE) : ''));
   if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
   if (!r.ok) { renderMessage('⚠️', 'Couldn’t load results', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
   applyTheme(r.json.settings || {});

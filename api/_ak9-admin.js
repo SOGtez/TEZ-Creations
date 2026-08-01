@@ -11,7 +11,7 @@
 //   reset_nominations  { confirm:true }   ← clears ALL phase-1 nominations
 //   reset_voter        { twitch_user_id }
 
-import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi, twitchProfiles } from './_ak9.js';
+import { configured, validateToken, bearer, isAdminLogin, getBroadcaster, getBroadcasterRaw, CHANNEL_LOGIN, sb, cors, readBody, probeFollowerApi, twitchProfiles, shareKey } from './_ak9.js';
 import { announce } from './_ak9-discord.js';
 
 // Best-effort: fill each nominee's avatar from Twitch. A nominee's login is its
@@ -139,6 +139,7 @@ export default async function handler(req, res) {
           followerApi: await probeFollowerApi(),   // live end-to-end probe
         },
         you: { login: admin.login },
+        shareKey: shareKey(settings.month_label),   // unlisted results link for this cycle
       });
       return;
     }

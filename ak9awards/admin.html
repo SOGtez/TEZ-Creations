@@ -42,6 +42,13 @@ let TOK = sessionStorage.getItem('ak9_tok') || '';
 let DATA = null;
 
 function toast(m, e) { const t = $('#toast'); t.textContent = m; t.className = 'toast show' + (e ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 2800); }
+// unlisted results link — anyone with it can view the ceremony while the public stays sealed
+async function ak9CopyShare() {
+  if (!DATA || !DATA.shareKey) { toast('Reload the page first.', true); return; }
+  const url = location.origin + '/ak9awards/results?share=' + encodeURIComponent(DATA.shareKey);
+  try { await navigator.clipboard.writeText(url); toast('Unlisted results link copied — anyone with it can view.'); }
+  catch (e) { prompt('Copy the unlisted link:', url); }
+}
 async function api(path, opts = {}) {
   const headers = Object.assign({}, opts.headers || {});
   if (TOK) headers.Authorization = 'Bearer ' + TOK;
@@ -112,6 +119,7 @@ function renderResults() {
     '<div style="margin:2px 0 14px;display:flex;gap:8px;flex-wrap:wrap">' +
     '<button class="btn ghost sm" onclick="window.open(\'/ak9awards/print.html#tok=\' + encodeURIComponent(TOK))">🖨 Print sheets (winner PDFs)</button>' +
     '<button class="btn ghost sm" onclick="window.open(\'/ak9awards/results.html#tok=\' + encodeURIComponent(TOK))">🎬 Reveal ceremony (admin preview — public stays sealed)</button>' +
+    '<button class="btn ghost sm" onclick="ak9CopyShare()">🔗 Copy unlisted results link</button>' +
     '</div>';
   if (!awards.length) html += '<div class="panel">No awards yet — add some in “Manage awards”.</div>';
   awards.forEach((a, ai) => {
