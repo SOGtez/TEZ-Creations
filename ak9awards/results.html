@@ -56,6 +56,11 @@ const view = $('#view');
 const ATOK = sessionStorage.getItem('ak9_results_tok') || '';
 // unlisted share link (?share=<key> stays in the URL so it can be re-shared)
 const SHARE = new URLSearchParams(location.search).get('share') || '';
+
+/* The public home of the winners is now /ak9awards/winners (evidence-sheet
+   gallery). This ceremony page stays as the ADMIN on-stream reveal tool —
+   anyone arriving without an admin token gets sent to the gallery. */
+if (!ATOK) location.replace('/ak9awards/winners' + location.search);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = n => String(n).padStart(2, '0');

@@ -16,7 +16,7 @@
 import { sb, cors } from './_ak9.js';
 
 const SITE = 'https://www.tezcreations.com/ak9awards';
-const RESULTS = SITE + '/results';
+const RESULTS = SITE + '/winners';   // public winners gallery (evidence sheets)
 const RED = 0xd5342a;     // evidence
 const YELLOW = 0xf2c115;  // tape
 const DAY = 86400000, HOUR = 3600000;

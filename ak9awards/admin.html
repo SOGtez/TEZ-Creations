@@ -45,7 +45,7 @@ function toast(m, e) { const t = $('#toast'); t.textContent = m; t.className = '
 // unlisted results link — anyone with it can view the ceremony while the public stays sealed
 async function ak9CopyShare() {
   if (!DATA || !DATA.shareKey) { toast('Reload the page first.', true); return; }
-  const url = location.origin + '/ak9awards/results?share=' + encodeURIComponent(DATA.shareKey);
+  const url = location.origin + '/ak9awards/winners?share=' + encodeURIComponent(DATA.shareKey);
   try { await navigator.clipboard.writeText(url); toast('Unlisted results link copied — anyone with it can view.'); }
   catch (e) { prompt('Copy the unlisted link:', url); }
 }

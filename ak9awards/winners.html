@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AK9 AWARDS — The Winners</title>
+<meta name="description" content="The official winners of the AK9 community awards — the full evidence record." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Anton&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/ak9awards/ak9.css" />
+<link rel="stylesheet" href="/ak9awards/ak9-crime.css" />
+<style>
+/* ============================================================
+   The public winners gallery — the /print evidence sheets, on
+   screen for everyone. Data comes from the public results api,
+   so it seals itself automatically when a new cycle starts.
+   ============================================================ */
+.sheets{display:flex;flex-direction:column;align-items:center;gap:30px;padding:10px 0 30px}
+.sheet{position:relative;width:100%;min-width:0;max-width:780px;background:#eceae3;color:#141414;overflow:hidden;
+  border-radius:3px;box-shadow:0 26px 60px -22px rgba(0,0,0,.92);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet *{box-sizing:border-box;margin:0;padding:0}
+.sheet .strip{background:#d8342a;padding:7px 0 6px}
+.sheet .brand{font-family:var(--c-fm);font-weight:700;font-style:italic;font-size:9px;letter-spacing:.12em;
+  color:rgba(255,255,255,.92);white-space:nowrap;overflow:hidden;text-align:center}
+.sheet .targets{display:flex;justify-content:space-around;align-items:center;color:#fff;font-size:14px;padding:3px 10px}
+.sheet .sidew{position:absolute;top:100px;bottom:56px;width:22px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--c-fm);font-size:8px;letter-spacing:.16em;color:#3a3a3a;writing-mode:vertical-rl;
+  white-space:nowrap;overflow:hidden;z-index:2}
+.sheet .sidew.l{left:3px}.sheet .sidew.r{right:3px;transform:rotate(180deg)}
+.sheet .body{position:relative;padding:24px 48px 18px;z-index:1}
+.sheet .barrow{display:flex;align-items:center;gap:13px;background:#fff;border:1.5px solid #111;padding:7px 11px;margin-bottom:11px}
+/* .barrow ups specificity over the crime theme's top-bar .caseno chip style */
+.sheet .barrow .caseno{font-family:var(--c-fm);font-weight:700;font-size:19px;letter-spacing:.04em;
+  color:#141414;border:none;padding:0;text-transform:none}
+.sheet .barcode{flex:1;height:28px;background-image:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 3px,#000 3px 4px,#fff 4px 7px,#000 7px 9px,#fff 9px 11px,#000 11px 12px,#fff 12px 15px)}
+.sheet .big{font-family:var(--c-fd);font-size:52px;letter-spacing:.02em;text-align:center;margin:2px 0 12px;color:#111}
+.sheet .photo{position:absolute;top:104px;right:44px;width:150px;transform:rotate(3deg);z-index:3}
+.sheet .photo .ptape{position:absolute;top:-11px;left:50%;transform:translateX(-50%) rotate(-4deg);width:68px;height:20px;
+  background:rgba(242,193,21,.75);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.sheet .photo .frame{display:block;background:#fff;padding:8px 8px 10px;box-shadow:0 9px 20px rgba(0,0,0,.4)}
+.sheet .photo .mug{width:100%;aspect-ratio:1;background:repeating-linear-gradient(0deg,#3a3a3a 0 16px,#2c2c2c 16px 17px);
+  display:flex;align-items:center;justify-content:center;font-family:var(--c-fd);font-size:48px;color:#eee;overflow:hidden}
+.sheet .photo .mug img{width:100%;height:100%;object-fit:cover;display:block}
+.sheet .photo .cap{font-family:var(--c-fm);font-size:8px;letter-spacing:.08em;text-align:center;color:#111;margin-top:6px}
+.sheet .vstamp{position:absolute;right:38px;top:370px;transform:rotate(-11deg);z-index:3;font-family:var(--c-fd);
+  font-size:38px;color:#b81c14;border:5px solid #b81c14;border-radius:9px;padding:2px 18px;opacity:.82;letter-spacing:.06em}
+.sheet .vstamp.unsolved{color:#555;border-color:#555}
+.sheet .fields{max-width:calc(100% - 170px);margin-top:4px}
+.sheet .f{display:flex;gap:11px;align-items:baseline;margin:11px 0}
+.sheet .f label{font-family:var(--c-fo);font-weight:600;font-size:13.5px;color:#111;white-space:nowrap;min-width:104px}
+.sheet .f .val{flex:1;border-bottom:1.5px solid #111;font-family:var(--c-ft);font-size:15px;line-height:1.5;padding-bottom:2px}
+.sheet .f .susp{font-weight:700;font-size:19px;color:#b81c14}
+.sheet .coc{margin:22px 0 0}
+.sheet .coc h5{font-family:var(--c-fd);font-size:19px;text-align:center;letter-spacing:.03em;margin-bottom:7px;color:#111}
+.sheet .coc table{width:100%;table-layout:fixed;border-collapse:collapse;font-family:var(--c-fm);font-size:11px}
+.sheet .coc th,.sheet .coc td{border:1.5px solid #111;padding:6px 9px;text-align:left}
+.sheet .runners{font-family:var(--c-fm);font-size:11px;color:#333;margin-top:15px;line-height:1.8}
+.sheet .runners b{font-family:var(--c-fo);font-size:12px;letter-spacing:.04em}
+.sheet .cut{border-top:2px dashed #111;margin-top:20px;padding-top:7px;font-family:var(--c-fm);font-size:9px;
+  letter-spacing:.12em;text-align:center;color:#333}
+
+/* wild-card divider */
+.wild-break{text-align:center;margin:56px 0 8px}
+.wild-break .word{font-size:clamp(38px,9vw,84px)}
+
+@media (max-width:640px){
+  .sheet .body{padding:18px 30px 14px}
+  .sheet .big{font-size:38px}
+  .sheet .photo{position:static;transform:none;width:132px;margin:0 auto 14px}
+  .sheet .fields{max-width:none}
+  .sheet .vstamp{position:static;display:inline-block;margin:8px 0;font-size:30px}
+  .sheet .sidew{display:none}
+  .sheet .coc th,.sheet .coc td{font-size:9.5px;padding:5px 6px;word-break:break-word}
+}
+</style>
+</head>
+<body>
+  <div class="grid-wrap"><div class="grid"></div></div><div class="aura"></div><div class="beams"></div><div class="grain"></div><div class="vig"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <a class="backlink" href="/ak9awards">← AK9 Awards</a>
+      <span></span>
+    </div>
+
+    <div class="hero">
+      <div class="kick">AleksK9 presents…</div>
+      <div class="word">AK9 AWARDS</div>
+      <div class="month" id="month"></div>
+      <div class="rule"></div>
+    </div>
+
+    <div id="view"><div class="spin"></div></div>
+
+    <div class="foot">
+      AK9 AWARDS · a community vote<br>
+      Winners are decided by follower votes — one ballot per Twitch account.
+    </div>
+  </div>
+
+<script>
+const $ = s => document.querySelector(s);
+const view = $('#view');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const rep = (s, n) => { let o = ''; for (let i = 0; i < n; i++) o += s; return o; };
+const targets = n => new Array(n).fill('⊕').join(' ');
+const SHARE = new URLSearchParams(location.search).get('share') || '';
+
+const WILD = [
+  { title: 'Best Production Duo!', winners: ['SOGtez', 'Cuzanthe1'] },
+  { title: 'Upcoming AK9 Creator!', winners: ['4redrumm'] },
+  { title: 'Underrated AK9 Viewer!', winners: ['wagner9x'] },
+];
+const wildNames = c => c.winners.map(w => '@' + w).join(' & ');
+
+function renderMessage(emoji, h, p, btns) {
+  view.innerHTML = '<div class="panel center"><div class="msg-emoji">' + emoji + '</div>' +
+    '<div class="msg-h">' + esc(h) + '</div><div class="msg-p">' + p + '</div>' +
+    (btns ? '<div class="btnrow">' + btns + '</div>' : '') + '</div>';
+}
+
+function stripTop() {
+  return '<div class="strip"><div class="brand">' + rep('AK9 FORENSICS UNIT · ', 10) + '</div>' +
+    '<div class="targets">' + targets(15) + '</div>' +
+    '<div class="brand">' + rep('OFFICIAL VERDICT · DO NOT TAMPER · ', 7) + '</div></div>' +
+    '<div class="sidew l">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>' +
+    '<div class="sidew r">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>';
+}
+
+function sheet(a, idx, month, totalVoters) {
+  const noms = a.nominees || [];
+  const winners = noms.filter(n => (a.winnerIds || []).indexOf(n.id) !== -1);
+  const solved = winners.length > 0;
+  const tie = winners.length > 1;
+  const win = winners[0] || null;
+  const winVotes = win ? win.votes : 0;
+  const pct = solved && a.total > 0 ? Math.round((winVotes / a.total) * 100) : 0;
+  const suspects = solved ? winners.map(n => '@' + n.name).join(' & ') : '— unsolved —';
+  const photo = solved ? (win.image ? '<img src="' + esc(win.image) + '" alt="">' : esc((win.name || '?').slice(0, 1).toUpperCase())) : '?';
+  const runners = noms.filter(n => winners.indexOf(n) === -1 && n.votes > 0)
+    .map(n => esc(n.name) + ' (' + n.votes + ')').join(' · ');
+  return '<div class="sheet">' + stripTop() +
+    '<div class="body">' +
+      '<div class="barrow"><span class="caseno">AK9-' + pad(idx + 1) + '</span><span class="barcode"></span></div>' +
+      '<div class="big">EVIDENCE</div>' +
+      '<div class="photo"><span class="ptape"></span><span class="frame"><span class="mug">' + photo + '</span>' +
+        '<span class="cap">EXHIBIT A · ' + esc(suspects) + '</span></span></div>' +
+      '<div class="vstamp' + (solved ? '' : ' unsolved') + '">' + (solved ? 'GUILTY' : 'UNSOLVED') + '</div>' +
+      '<div class="fields">' +
+        '<div class="f"><label>Agency</label><span class="val">AK9 Forensics Unit</span></div>' +
+        '<div class="f"><label>Offense</label><span class="val">' + esc(a.title) + '</span></div>' +
+        (a.description ? '<div class="f"><label>Case notes</label><span class="val">' + esc(a.description) + '</span></div>' : '') +
+        '<div class="f"><label>Suspect</label><span class="val susp">' + esc(suspects) + '</span></div>' +
+        '<div class="f"><label>Verdict</label><span class="val">' +
+          (solved ? 'GUILTY on all counts — ' + winVotes + ' vote' + (winVotes === 1 ? '' : 's') + ' (' + pct + '% of ' + a.total + ')' + (tie ? ' · joint verdict' : '') : 'no votes were cast') + '</span></div>' +
+        '<div class="f"><label>Sealed by</label><span class="val">AleksK9 · Forensics Unit · ' + esc(month) + '</span></div>' +
+      '</div>' +
+      '<div class="coc"><h5>Chain of Custody</h5><table>' +
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>' +
+        '<tr><td>' + esc(month) + '</td><td>Community tip line</td><td>Prime suspects</td></tr>' +
+        '<tr><td>' + esc(month) + '</td><td>The jury — ' + totalVoters + ' ballot' + (totalVoters === 1 ? '' : 's') + '</td><td>Verdict: ' + (solved ? 'Guilty' : 'Unsolved') + '</td></tr></table></div>' +
+      (runners ? '<div class="runners"><b>ALSO QUESTIONED:</b> ' + runners + '</div>' : '') +
+      '<div class="cut">✂ OFFICIAL AK9 AWARDS RECORD · ' + esc(month) + ' · CASE AK9-' + pad(idx + 1) + '</div>' +
+    '</div></div>';
+}
+
+function wildSheet(c, i, month) {
+  const initial = esc((c.winners[0] || '?').slice(0, 1).toUpperCase());
+  return '<div class="sheet">' +
+    '<div class="strip"><div class="brand">' + rep('TEZ SPECIAL INVESTIGATIONS · ', 8) + '</div>' +
+      '<div class="targets">' + targets(15) + '</div>' +
+      '<div class="brand">' + rep('WILD CARD · NOT A VOTE · ', 7) + '</div></div>' +
+    '<div class="sidew l">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>' +
+    '<div class="sidew r">' + rep('CASE FILE · OFFICIAL COPY · ', 4) + '</div>' +
+    '<div class="body">' +
+      '<div class="barrow"><span class="caseno">TEZ-0' + (i + 1) + '</span><span class="barcode"></span></div>' +
+      '<div class="big">WILD CARD</div>' +
+      '<div class="photo"><span class="ptape"></span><span class="frame"><span class="mug">' + initial + '</span>' +
+        '<span class="cap">EXHIBIT A · ' + esc(wildNames(c)) + '</span></span></div>' +
+      '<div class="vstamp">GUILTY</div>' +
+      '<div class="fields">' +
+        '<div class="f"><label>Agency</label><span class="val">TEZ · Special Investigations</span></div>' +
+        '<div class="f"><label>Offense</label><span class="val">' + esc(c.title) + '</span></div>' +
+        '<div class="f"><label>Suspect' + (c.winners.length > 1 ? 's' : '') + '</label><span class="val susp">' + esc(wildNames(c)) + '</span></div>' +
+        '<div class="f"><label>Verdict</label><span class="val">hand-picked — no votes needed</span></div>' +
+        '<div class="f"><label>Sealed by</label><span class="val">TEZ · Special Investigations · ' + esc(month) + '</span></div>' +
+      '</div>' +
+      '<div class="coc"><h5>Chain of Custody</h5><table>' +
+        '<tr><th>Date</th><th>From</th><th>To</th></tr>' +
+        '<tr><td>' + esc(month) + '</td><td>TEZ’s case notes</td><td>Wild card</td></tr>' +
+        '<tr><td>' + esc(month) + '</td><td>TEZ</td><td>Verdict: Guilty</td></tr></table></div>' +
+      '<div class="cut">✂ OFFICIAL AK9 AWARDS RECORD · ' + esc(month) + ' · TEZ WILD CARD 0' + (i + 1) + '</div>' +
+    '</div></div>';
+}
+
+function applyTheme(s) {
+  const crime = ((s && s.theme) || 'classic') === 'crime';
+  document.body.classList.toggle('theme-crime', crime);
+  document.body.dataset.ak9phase = 'closed';
+  if (crime && !document.querySelector('.tape')) {
+    const t = document.createElement('div'); t.className = 'tape t1';
+    t.innerHTML = '<span>CRIME SCENE · DO NOT CROSS · AK9 EVIDENCE</span>';
+    document.body.insertBefore(t, document.body.firstChild);
+  }
+  const kick = document.querySelector('.hero .kick');
+  if (crime && kick) kick.textContent = 'AleksK9 · Forensics Unit presents…';
+}
+
+async function load() {
+  let r, j = {};
+  try {
+    r = await fetch('/api/ak9?route=results' + (SHARE ? '&share=' + encodeURIComponent(SHARE) : ''));
+    j = await r.json();
+  } catch (e) { renderMessage('⚠️', 'Couldn’t load the winners', 'Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
+  if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
+  if (!r.ok) { renderMessage('⚠️', 'Couldn’t load the winners', 'Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
+  applyTheme(j.settings || {});
+  const month = (j.settings && j.settings.month_label) || '';
+  $('#month').textContent = 'The Winners' + (month ? ' · ' + month : '');
+  if (!j.revealed) {
+    renderMessage('🔒', 'The verdicts are sealed',
+      'This cycle’s winners haven’t been announced yet. Come back after the reveal!',
+      '<a class="btn" href="/ak9awards">Back to AK9 →</a>');
+    return;
+  }
+  const awards = j.awards || [];
+  const voters = j.totalVoters || 0;
+  view.innerHTML =
+    '<div class="brief">The official evidence record · ' + voters + ' ballot' + (voters === 1 ? '' : 's') + ' cast · every verdict final.</div>' +
+    '<div class="sheets">' + awards.map((a, i) => sheet(a, i, month, voters)).join('') + '</div>' +
+    '<div class="wild-break"><div class="kick">AK9 AWARDS · after hours</div>' +
+      '<div class="word">TEZ WILD CARDS</div>' +
+      '<div class="wild-sub">hand-picked · no votes needed</div></div>' +
+    '<div class="sheets">' + WILD.map((c, i) => wildSheet(c, i, month)).join('') + '</div>' +
+    '<div class="btnrow" style="margin-top:26px;display:flex;justify-content:center"><a class="btn ghost" href="/ak9awards">Back to AK9 →</a></div>';
+}
+load();
+</script>
+</body>
+</html>

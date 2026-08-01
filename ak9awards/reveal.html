@@ -314,6 +314,15 @@ async function load() {
   if (r.status === 503) { renderMessage('🛠️', 'Coming soon', 'AK9 AWARDS isn’t live yet. Check back shortly.'); return; }
   if (!r.ok) { renderMessage('⚠️', 'Couldn’t load the lineup', 'Something went wrong. Please try again in a moment.', '<button class="btn" onclick="location.reload()">Retry</button>'); return; }
   const s = r.json.settings || {};
+  // finished cycle → this page has served its purpose; send people to the record
+  if (s.phase === 'closed') {
+    applyTheme(s);
+    $('#month').textContent = s.month_label || '';
+    renderMessage('🏆', 'This cycle is finished',
+      'The suspects were revealed, the jury voted, and the verdicts are in.',
+      '<a class="btn" href="/ak9awards/winners">See the winners →</a>');
+    return;
+  }
   MONTH = s.month_label || '';
   applyTheme(s);
   $('#month').textContent = CRIME ? ('The Lineup' + (MONTH ? ' · ' + MONTH : '')) : MONTH;
