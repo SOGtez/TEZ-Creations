@@ -446,8 +446,10 @@ function boot() {
   }
 
   // phase = vote (or closed)
-  if (!TOK || !ME) { renderGuest(); return; }
+  // closed comes FIRST: everyone — logged in or not — gets the winners link
+  // (renderClosed handles a null ME; the guest login screen would hide it)
   if (votingClosed()) { renderClosed(); return; }
+  if (!TOK || !ME) { renderGuest(); return; }
   if (!ME.broadcasterReady && !ME.isAdmin) {
     renderMessage('⏳', 'Voting opens soon', 'The ballot isn’t quite ready yet. Check back in a bit!'); return;
   }
