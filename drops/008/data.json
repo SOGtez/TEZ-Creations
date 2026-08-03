@@ -1,7 +1,7 @@
 {
   "meta": {
     "sample": false,
-    "updated_at": "2026-07-13",
+    "updated_at": "2026-08-03",
     "schema_version": 1
   },
   "opportunities": [
@@ -28,7 +28,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Local volunteer chapters worldwide give out $1,000, no-strings grants to any project they find worth funding. Apply anytime — no deadline, no niche restriction.",
       "source_url": "https://www.awesomefoundation.org/en/submissions/new"
     },
@@ -60,7 +60,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Unrestricted funding for professional, actively-exhibiting painters, sculptors, and artists working on paper — materials, studio rent, or living expenses. Rolling applications open worldwide; review takes 9–12 months.",
       "source_url": "https://www.pkf.org/apply/how-to-apply/"
     },
@@ -95,7 +95,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Free global photo and video open call from Condé Nast's PhotoVogue, judged on original visual storytelling. Three cash grants from $2,000–$6,000, plus festival presentation and a shot at Vogue publication.",
       "source_url": "https://site.picter.com/photovogue-brave-new-visions-global-open-call-2026"
     },
@@ -130,7 +130,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Rolling grants for US-based experimental visual artists, poets, and performers with a confirmed but unfunded upcoming show. Apply 6–10 weeks before your presentation date.",
       "source_url": "https://www.foundationforcontemporaryarts.org/grants/emergency-grants/guidelines/"
     },
@@ -177,7 +177,7 @@
       "org": "Content is Queen",
       "amount_text": "Up to £1,000",
       "amount": 1000,
-      "deadline": "2026-07-31",
+      "deadline": "2026-08-31",
       "regions": [],
       "states": [],
       "platforms": [],
@@ -199,8 +199,8 @@
         "disabled"
       ],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
-      "blurb": "Monthly grants up to £1,000 for individual podcasters worldwide, with priority for disabled, LGBTQIA+, and racially minoritized creators. The current window opens July 17 and closes July 31, 2026.",
+      "verified": "2026-08-03",
+      "blurb": "Monthly grants up to £1,000 for individual podcasters worldwide, with priority for disabled, LGBTQIA+, and racially minoritized creators. The current window opens August 14 and closes August 31, 2026.",
       "source_url": "https://contentisqueen.org/microgrants-for-podcasters-2025-new-year-new-format/"
     },
     {
@@ -233,7 +233,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Co-stream Esports World Cup and Esports Nations Cup 2026 matches to earn from a $2,000,000 pool of rewards, with top performers winning a trip worth up to $50,000. Reward eligibility starts around 50 average concurrent viewers.",
       "source_url": "https://esportsworldcup.com/en/creator-program"
     },
@@ -258,7 +258,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Razer's always-open creator program: affiliate commission up to 5%, product discounts, an exclusive Discord, and quarterly gear giveaways, with tiers starting below 5,000 followers. No cash sponsorship is guaranteed at entry tiers; 18+.",
       "source_url": "https://www.razer.com/creator-program"
     },
@@ -347,7 +347,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "One-time emergency assistance for painters, printmakers, and sculptors hit by a catastrophic event like fire, flood, or a medical emergency. Requires at least ten years working in a mature phase of your art; a $5,000 award is typical.",
       "source_url": "https://www.gottliebfoundation.org/emergency-grant"
     },
@@ -401,7 +401,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Grants of up to $10,000 for freelance journalists and outlets pursuing investigative stories, plus $1,000–$2,500 seed grants for early-stage reporting. Full proposals need a letter of commitment from a news outlet; seed proposals don't.",
       "source_url": "https://fij.org/apply-for-a-grant/"
     },
@@ -434,7 +434,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Project grants of up to $10,000 for visual artists, including photographers, who have lived in New York City for at least one year. The cycle closes August 3, 2026 or once 40 applications arrive — whichever comes first.",
       "source_url": "https://caferoyalculturalfoundation.org/visual-page-info"
     },
@@ -460,7 +460,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Rolling fund for freelance and self-employed artists, writers, producers, and other creative practitioners living in Scotland. Supports research, development, or delivery of creative projects lasting up to 24 months.",
       "source_url": "https://www.creativescotland.com/funding/funding-programmes/open-funding/open-fund-for-individuals"
     },
@@ -492,7 +492,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Grants for UK-based artists and bands ready to break through to the next career level. Funds recording, touring, and marketing activity; the current round closes August 10.",
       "source_url": "https://prsfoundation.com/funding-support/funding-music-creators/all-career-levels/ppl-momentum-music-fund/"
     },
@@ -519,7 +519,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Research and development awards for artists and creative professionals whose work happens mostly in Wales. Small awards run to £10,000 and large awards to £30,000, covering up to 90% of costs.",
       "source_url": "https://arts.wales/funding/individuals/research-and-development-0"
     },
@@ -610,7 +610,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Tour and showcase support for Canadian artists with a FACTOR profile and a recent or upcoming release. Support ranges from CA$7,500 in showcase funding up to CA$37,500 combined for top-rated artists.",
       "source_url": "https://www.factor.ca/programs/artist-programs/live-performance/"
     },
@@ -640,7 +640,7 @@
         "disabled"
       ],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Five $1,000 grants for US-based BIPOC artists who identify as Deaf, DeafBlind, DeafDisabled, or Hard of Hearing, across literary, media, performing, tactile, and visual work. Applicants must be 18 or older.",
       "source_url": "https://www.deafspotlight.org/grants/bipoc"
     },
@@ -693,7 +693,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Free-to-enter global photography awards across Series ($25,000), Single Image ($5,000), Student, and Youth competitions. The 2027 edition is open now; the professional Series competition closes January 12, 2027.",
       "source_url": "https://www.worldphoto.org/sony-world-photography-awards"
     },
@@ -717,9 +717,193 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-08-03",
       "blurb": "Free worldwide photo contest open to everyone from smartphone shooters to professionals — enter up to 100 images across 10 categories. Around 1,000 winners share roughly €250,000 in prizes; entries close May 31, 2027.",
       "source_url": "https://www.cewe.co.uk/cewe-photo-award.html"
+    },
+    {
+      "id": "o41",
+      "type": "brand",
+      "title": "DoorDash for Creators",
+      "org": "DoorDash",
+      "amount_text": "Varies",
+      "amount": 0,
+      "deadline": null,
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [
+        "web"
+      ],
+      "mediums": [
+        "video",
+        "shortform"
+      ],
+      "niches": [
+        "food"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "business"
+      ],
+      "identity": [],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "DoorDash pays US-based creators for short videos featuring local, independently owned restaurants, posted through the DoorDash app and paid out via HyperWallet after approval. Participation is free with no application deadline.",
+      "source_url": "https://help.doordash.com/en-us/consumers/article/doordash-for-creators-faqs"
+    },
+    {
+      "id": "o42",
+      "type": "brand",
+      "title": "Instacart Tastemakers",
+      "org": "Instacart",
+      "amount_text": "Varies",
+      "amount": 0,
+      "deadline": null,
+      "regions": [
+        "US",
+        "CA"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [
+        "food"
+      ],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "business"
+      ],
+      "identity": [],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "Instacart pays US and Canada food creators a commission when their audience buys groceries through shoppable recipe or grocery-list links shared on social media or a personal site. Ongoing program with no listed deadline.",
+      "source_url": "https://company.instacart.com/updates/introducing-instacart-tastemakers-a-new-way-to-inspire-your-audience-and-monetize-your-content"
+    },
+    {
+      "id": "o43",
+      "type": "accelerator",
+      "title": "Trusted Creator Fellowship",
+      "org": "News Creator Corps",
+      "amount_text": "$5,000 stipend",
+      "amount": 5000,
+      "deadline": "2026-08-17",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [
+        "instagram",
+        "tiktok",
+        "twitch",
+        "youtube"
+      ],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "education"
+      ],
+      "identity": [],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "An 8-week fellowship from News Creator Corps for US-based information-focused creators (local news, health, parenting, and more), with training in fact-checking and sourcing plus a $5,000 completion stipend. A few seats are reserved for full-time college students 25 or younger; applications close August 17, 2026.",
+      "source_url": "https://newscreatorcorps.org/programs/trusted-creator/apply/"
+    },
+    {
+      "id": "o44",
+      "type": "grant",
+      "title": "BEA Scholarships in Broadcasting & Electronic Media",
+      "org": "Broadcast Education Association (BEA)",
+      "amount_text": "$1,000 - $4,000",
+      "amount": 1000,
+      "deadline": "2026-10-16",
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [],
+      "purposes": [
+        "education"
+      ],
+      "identity": [
+        "student"
+      ],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "The Broadcast Education Association gives nine scholarships of $1,000 to $4,000 to junior, senior, and graduate students studying electronic media at BEA member colleges. Applications close October 16, 2026.",
+      "source_url": "https://beaweb.org/wp/scholarships/"
+    },
+    {
+      "id": "o45",
+      "type": "grant",
+      "title": "Media Artists Program: Creation",
+      "org": "Toronto Arts Council",
+      "amount_text": "Up to CA$15,000",
+      "amount": 15000,
+      "deadline": "2026-10-15",
+      "regions": [
+        "CA"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "video"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "growing",
+        "established"
+      ],
+      "purposes": [
+        "project"
+      ],
+      "identity": [],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "Toronto Arts Council funds up to CA$15,000 for professional media artists who have lived in Toronto for at least a year to create or complete new film, video, audio, or digital-media work. The 2026 deadline is October 15.",
+      "source_url": "https://torontoartscouncil.org/grants/media-artists-program-creation/"
+    },
+    {
+      "id": "o46",
+      "type": "grant",
+      "title": "Gorilla Creative Film Scholarship",
+      "org": "Gorilla Creative",
+      "amount_text": "$1,000",
+      "amount": 1000,
+      "deadline": null,
+      "regions": [
+        "US"
+      ],
+      "states": [],
+      "platforms": [],
+      "mediums": [
+        "video"
+      ],
+      "niches": [],
+      "follower_min": 0,
+      "stages": [
+        "new"
+      ],
+      "purposes": [
+        "education"
+      ],
+      "identity": [
+        "student"
+      ],
+      "added": "2026-08-03",
+      "verified": "2026-08-03",
+      "blurb": "Gorilla Creative awards six $1,000 scholarships a year, plus a filmmaker Q&A session, to US students pursuing a degree in film, TV, or multimedia. Applications are accepted year-round with awards given each January and May.",
+      "source_url": "https://www.gorillacreative.com/scholarships"
     }
   ]
 }
