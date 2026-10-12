@@ -1,7 +1,7 @@
 {
   "meta": {
     "sample": false,
-    "updated_at": "2026-07-13",
+    "updated_at": "2026-10-12",
     "schema_version": 1
   },
   "opportunities": [
@@ -28,7 +28,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Local volunteer chapters worldwide give out $1,000, no-strings grants to any project they find worth funding. Apply anytime — no deadline, no niche restriction.",
       "source_url": "https://www.awesomefoundation.org/en/submissions/new"
     },
@@ -60,7 +60,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Unrestricted funding for professional, actively-exhibiting painters, sculptors, and artists working on paper — materials, studio rent, or living expenses. Rolling applications open worldwide; review takes 9–12 months.",
       "source_url": "https://www.pkf.org/apply/how-to-apply/"
     },
@@ -71,7 +71,7 @@
       "org": "PhotoVogue (Condé Nast)",
       "amount_text": "$6,000 top grant ($12,000 total across 3 grants)",
       "amount": 6000,
-      "deadline": "2026-09-11",
+      "deadline": "2026-10-01",
       "regions": [],
       "states": [],
       "platforms": [
@@ -95,7 +95,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Free global photo and video open call from Condé Nast's PhotoVogue, judged on original visual storytelling. Three cash grants from $2,000–$6,000, plus festival presentation and a shot at Vogue publication.",
       "source_url": "https://site.picter.com/photovogue-brave-new-visions-global-open-call-2026"
     },
@@ -130,7 +130,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Rolling grants for US-based experimental visual artists, poets, and performers with a confirmed but unfunded upcoming show. Apply 6–10 weeks before your presentation date.",
       "source_url": "https://www.foundationforcontemporaryarts.org/grants/emergency-grants/guidelines/"
     },
@@ -258,7 +258,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Razer's always-open creator program: affiliate commission up to 5%, product discounts, an exclusive Discord, and quarterly gear giveaways, with tiers starting below 5,000 followers. No cash sponsorship is guaranteed at entry tiers; 18+.",
       "source_url": "https://www.razer.com/creator-program"
     },
@@ -293,11 +293,11 @@
     {
       "id": "o26",
       "type": "grant",
-      "title": "Artist Project Grant (Summer 2026)",
+      "title": "Artist Project Grant (Winter 2027)",
       "org": "Salt Lick Incubator",
       "amount_text": "Up to $15,000",
       "amount": 15000,
-      "deadline": "2026-07-15",
+      "deadline": "2027-02-15",
       "regions": [
         "US"
       ],
@@ -319,7 +319,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Project grants of up to $15,000 for emerging artists making melody- and lyric-driven music — alt-folk, americana, bluegrass, indie rock, R&B, soul. Applicants must be eligible to work in the US with no more than three full-length albums released.",
       "source_url": "https://www.saltlickincubator.org/apply"
     },
@@ -347,7 +347,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "One-time emergency assistance for painters, printmakers, and sculptors hit by a catastrophic event like fire, flood, or a medical emergency. Requires at least ten years working in a mature phase of your art; a $5,000 award is typical.",
       "source_url": "https://www.gottliebfoundation.org/emergency-grant"
     },
@@ -375,7 +375,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Rolling emergency relief grants of $3,000 for craft artists who make original three-dimensional work by hand — pottery, glass, textiles, jewelry, wood, metal. Requires a US-based, public-facing practice for at least the last two years.",
       "source_url": "https://cerfplus.org/get-relief/apply-for-help/craft-emergency-relief-fund/"
     },
@@ -386,7 +386,7 @@
       "org": "Fund for Investigative Journalism",
       "amount_text": "Up to $10,000",
       "amount": 10000,
-      "deadline": "2026-09-14",
+      "deadline": "2027-01-29",
       "regions": [],
       "states": [],
       "platforms": [],
@@ -401,18 +401,18 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Grants of up to $10,000 for freelance journalists and outlets pursuing investigative stories, plus $1,000–$2,500 seed grants for early-stage reporting. Full proposals need a letter of commitment from a news outlet; seed proposals don't.",
       "source_url": "https://fij.org/apply-for-a-grant/"
     },
     {
       "id": "o30",
       "type": "grant",
-      "title": "Visual Arts Grant (Summer 2026)",
+      "title": "Visual Arts Grant (Fall 2026)",
       "org": "Café Royal Cultural Foundation",
       "amount_text": "Up to $10,000",
       "amount": 10000,
-      "deadline": "2026-08-03",
+      "deadline": "2026-11-02",
       "regions": [
         "US"
       ],
@@ -434,8 +434,8 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
-      "blurb": "Project grants of up to $10,000 for visual artists, including photographers, who have lived in New York City for at least one year. The cycle closes August 3, 2026 or once 40 applications arrive — whichever comes first.",
+      "verified": "2026-10-12",
+      "blurb": "Project grants of up to $10,000 for visual artists, including photographers, who have lived in New York City for at least one year. The cycle closes November 2, 2026 or once 40 applications arrive — whichever comes first.",
       "source_url": "https://caferoyalculturalfoundation.org/visual-page-info"
     },
     {
@@ -471,7 +471,7 @@
       "org": "PRS Foundation",
       "amount_text": "£5,000 – £15,000",
       "amount": 19000,
-      "deadline": "2026-08-10",
+      "deadline": "2026-10-26",
       "regions": [
         "UK"
       ],
@@ -492,7 +492,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Grants for UK-based artists and bands ready to break through to the next career level. Funds recording, touring, and marketing activity; the current round closes August 10.",
       "source_url": "https://prsfoundation.com/funding-support/funding-music-creators/all-career-levels/ppl-momentum-music-fund/"
     },
@@ -610,7 +610,7 @@
       ],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Tour and showcase support for Canadian artists with a FACTOR profile and a recent or upcoming release. Support ranges from CA$7,500 in showcase funding up to CA$37,500 combined for top-rated artists.",
       "source_url": "https://www.factor.ca/programs/artist-programs/live-performance/"
     },
@@ -693,7 +693,7 @@
       "purposes": [],
       "identity": [],
       "added": "2026-07-13",
-      "verified": "2026-07-13",
+      "verified": "2026-10-12",
       "blurb": "Free-to-enter global photography awards across Series ($25,000), Single Image ($5,000), Student, and Youth competitions. The 2027 edition is open now; the professional Series competition closes January 12, 2027.",
       "source_url": "https://www.worldphoto.org/sony-world-photography-awards"
     },
